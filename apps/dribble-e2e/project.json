@@ -1,0 +1,9 @@
+{
+  "name": "dribble-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/dribble-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["dribble"],
+  "// targets": "to see all targets run: nx show project dribble-e2e --web",
+  "targets": {}
+}
