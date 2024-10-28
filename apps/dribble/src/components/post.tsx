@@ -16,7 +16,7 @@ export default function PostCard({ data }: PostCardProps) {
   const onPress = () => {
     router.push(`/post/${data.id}`);
   }
-  return <Card className="w-full p-4" isPressable={true} onPress={onPress} style={{ borderRadius: '0px' }}>
+  return <Card className="w-full p-4 rounded-none" isPressable={true} onPress={onPress}>
     <CardHeader>
       <Avatar src={avatarName} />
       <div className="ml-2">
@@ -27,11 +27,11 @@ export default function PostCard({ data }: PostCardProps) {
       <p>{data.content}</p>
     </CardBody>
     <CardFooter>
-      <p style={{ display: 'flex', alignItems: 'center' }}>
+      <p className="flex items-center">
         {data.likeCount}
-        <HeartFilledIcon size={25} style={{ marginLeft: '6px', marginRight: '18px' }} />
+        <HeartFilledIcon size={25} className="ml-2 mr-4" />
         {data.commentCount}
-        <CommentIcon size={22} style={{ marginLeft: '6px' }} />
+        <CommentIcon size={22} className="ml-2" />
       </p>
     </CardFooter>
   </Card>
