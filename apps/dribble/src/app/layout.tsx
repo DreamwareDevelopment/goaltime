@@ -1,4 +1,5 @@
 import './global.css';
+import { Providers } from './providers';
 
 export const metadata = {
   title: 'Welcome to dribble',
@@ -13,7 +14,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en">
       <body>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
