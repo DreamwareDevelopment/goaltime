@@ -15,16 +15,17 @@ import {
 import ThemeSwitch from "../components/theme-switcher";
 import { BasketballIcon } from "./icons";
 
-export type NavigationProps = {
+export type NavibarProps = {
   user?: User;
 }
 
-export default function Navbar({ user }: NavigationProps) {
+export default function Navbar({ user }: NavibarProps) {
   const menuItems = {
     Home: "/",
     Settings: "/settings",
     Logout: "/logout"
   };
+  const avatarName = user?.avatarUrl || user?.username;
   return (
     <NextUINavbar className="py-2 px-0" isBordered shouldHideOnScroll>
       <NavbarBrand className="hidden md:flex">
@@ -44,7 +45,7 @@ export default function Navbar({ user }: NavigationProps) {
           <ThemeSwitch className="pt-1" />
         </NavbarItem>
         <NavbarItem>
-          {user?.name ? <Avatar name={user.name} /> : <Button as={Link} color="primary" href="/login">Login</Button>}
+          {avatarName ? <Avatar name={avatarName} /> : <Button as={Link} color="primary" href="/login">Login</Button>}
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu>

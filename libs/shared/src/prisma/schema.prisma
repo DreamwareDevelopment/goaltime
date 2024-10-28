@@ -12,19 +12,20 @@ model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   email     String   @unique 
-  name      String
+  username  String
   posts     Post[]
   comments  Comment[]
+  avatarUrl String?
 }
 
 model Post {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  published Boolean  @default(false)
-  title     String
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+  content   String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  avatarUrl String?
+  username  String
   comments  Comment[]
   likeCount Int      @default(0)
 }
@@ -37,5 +38,7 @@ model Comment {
   postId    Int
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
+  avatarUrl String?
+  username  String
   likeCount Int      @default(0)
 }
