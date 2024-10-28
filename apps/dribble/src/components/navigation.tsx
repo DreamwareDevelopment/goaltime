@@ -45,7 +45,7 @@ export default function Navbar({ user }: NavibarProps) {
           <ThemeSwitch className="pt-1" />
         </NavbarItem>
         <NavbarItem>
-          {avatarName ? <Avatar name={avatarName} /> : <Button as={Link} color="primary" href="/login">Login</Button>}
+          {avatarName ? <Avatar name={avatarName} /> : <Button as={Link} color="warning" href="/login">Login</Button>}
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu>
