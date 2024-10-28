@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardBody } from "@nextui-org/react";
-import ThemeSwitch from "../components/theme-switcher";
+import Navbar from "../components/navigation";
 
 export default function Index() {
   /*
@@ -10,16 +10,16 @@ export default function Index() {
    * Note: The corresponding styles are in the ./index.tailwind file.
    */
   return (
-    <div>
+    <div className="w-full flex flex-col">
+      <Navbar user={undefined} />
       <Card>
         <CardHeader>
           <h1>NextUI Hero Image</h1>
         </CardHeader>
         <CardBody>
-        <p>Beautiful, fast and modern React UI library.</p>
+          <p>Beautiful, fast and modern React UI library.</p>
         </CardBody>
       </Card>
-      <ThemeSwitch />
     </div>
   );
 }
