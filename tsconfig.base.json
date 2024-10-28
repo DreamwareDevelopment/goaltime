@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@dribble/shared": ["libs/shared/src/index.ts"]
+      "@dribble/shared": ["libs/shared/src/index.ts"],
+      "@dribble/shared/models": ["libs/shared/type_gen/.prisma/client"]
     }
   },
   "exclude": ["node_modules", "tmp"]

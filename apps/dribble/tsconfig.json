@@ -29,7 +29,8 @@
     "../../apps/dribble/.next/types/**/*.ts",
     "../../dist/apps/dribble/.next/types/**/*.ts",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "./type_gen/.prisma/client"
   ],
   "exclude": [
     "node_modules",

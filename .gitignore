@@ -4,6 +4,7 @@
 dist
 tmp
 /out-tsc
+type_gen
 
 # dependencies
 node_modules
@@ -44,3 +45,5 @@ Thumbs.db
 # Next.js
 .next
 out
+
+.env
