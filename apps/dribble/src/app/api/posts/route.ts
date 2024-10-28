@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const response: PaginationResponse<Post> = {
     page,
     pageSize,
-    total: dummyPostData.length,
+    total: Math.ceil(dummyPostData.length / pageSize),
     data: paginatedPosts,
   };
 

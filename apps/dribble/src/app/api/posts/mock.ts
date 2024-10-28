@@ -10,3 +10,8 @@ export const dummyPostData: Post[] = Array.from({ length: 100 }, (_, index) => (
   likeCount: Math.floor(Math.random() * 100),
   commentCount: Math.floor(Math.random() * 50),
 }));
+
+export const dummyPostLookup: Record<number, Post> = dummyPostData.reduce((acc, post) => {
+  acc[post.id] = post;
+  return acc;
+}, {} as Record<number, Post>);

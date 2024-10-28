@@ -14,7 +14,7 @@ export default function PostCard({ data }: PostCardProps) {
     return null;
   }
   const onPress = () => {
-    router.push(`/post/${data.id}`);
+    router.push(`/posts/${data.id}`);
   }
   return <Card className="w-full p-4 rounded-none" isPressable={true} onPress={onPress}>
     <CardHeader>
