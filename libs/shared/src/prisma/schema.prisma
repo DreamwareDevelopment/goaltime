@@ -2,17 +2,21 @@ datasource db {
   url      = env("DATABASE_URL")
   provider = "postgres"
 }
+
 generator client {
   provider = "prisma-client-js"
   output   = "../../type_gen/.prisma/client"
 }
+
 model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   email     String   @unique 
-  name      String?
+  name      String
   posts     Post[]
+  comments  Comment[]
 }
+
 model Post {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -21,4 +25,17 @@ model Post {
   title     String
   author    User?    @relation(fields: [authorId], references: [id])
   authorId  Int?
+  comments  Comment[]
+  likeCount Int      @default(0)
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  content   String
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  likeCount Int      @default(0)
 }
