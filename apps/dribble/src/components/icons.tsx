@@ -35,9 +35,9 @@ export const SunFilledIcon = ({
   <svg
     aria-hidden="true"
     focusable="false"
-    height={size || height}
     role="presentation"
     viewBox="0 0 24 24"
+    height={size || height}
     width={size || width}
     {...props}
   >
@@ -57,9 +57,9 @@ export const HeartFilledIcon = ({
   <svg
     aria-hidden="true"
     focusable="false"
-    height={size || height}
     role="presentation"
     viewBox="0 0 24 24"
+    height={size || height}
     width={size || width}
     {...props}
   >
@@ -72,6 +72,28 @@ export const HeartFilledIcon = ({
     />
   </svg>
 );
+
+export const CommentIcon = ({
+  size = 24,
+  width,
+  height,
+  ...props
+}: IconSvgProps) => (
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    role="presentation"
+    viewBox="0 0 498 512"
+    height={size || height}
+    width={size || width}
+    {...props}
+  >
+    <g>
+      <path fill="currentColor" d="M464 480a15.986 15.986 0 0 1-6.802-1.506 15.987 15.987 0 0 1-5.518-4.254l-70.4-84.48a15.987 15.987 0 0 0-5.518-4.254A15.986 15.986 0 0 0 368.96 384H80a47.999 47.999 0 0 1-48-48V80a48 48 0 0 1 48-48h352a48 48 0 0 1 48 48v384a16 16 0 0 1-10.56 15.04 15.996 15.996 0 0 1-5.44.96ZM80 64a16 16 0 0 0-16 16v256a16.002 16.002 0 0 0 16 16h288.96a47.999 47.999 0 0 1 36.96 17.28L448 419.84V80a16.002 16.002 0 0 0-16-16H80Zm336 64c0-4.243-1.686-8.313-4.686-11.314A16.004 16.004 0 0 0 400 112H112a16.003 16.003 0 0 0-11.314 27.314c3.001 3 7.071 4.686 11.314 4.686h288c4.243 0 8.313-1.686 11.314-4.686 3-3.001 4.686-7.071 4.686-11.314Zm0 80c0-4.243-1.686-8.313-4.686-11.314A16.004 16.004 0 0 0 400 192H112a16.003 16.003 0 0 0-11.314 27.314c3.001 3 7.071 4.686 11.314 4.686h288c4.243 0 8.313-1.686 11.314-4.686 3-3.001 4.686-7.071 4.686-11.314Zm0 80c0-4.243-1.686-8.313-4.686-11.314A16.004 16.004 0 0 0 400 272H112a16.003 16.003 0 0 0-11.314 27.314c3.001 3 7.071 4.686 11.314 4.686h288c4.243 0 8.313-1.686 11.314-4.686 3-3.001 4.686-7.071 4.686-11.314Z"/>
+    </g>
+  </svg>
+);
+
 
 export const BasketballIcon = ({
   size = 24,

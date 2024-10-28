@@ -12,7 +12,8 @@ export default function Index() {
     username: "zander_pyle",
     authorId: 12345,
     content: "This is a sample post content for testing purposes.",
-    likeCount: 42
+    likeCount: 42,
+    commentCount: 10,
   };
   return (
     <div className="w-full flex flex-col">

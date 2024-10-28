@@ -1,6 +1,6 @@
 import { Post } from "@dribble/shared/models";
 import { Card, CardHeader, CardBody, CardFooter, Avatar } from "@nextui-org/react";
-import { HeartFilledIcon } from "./icons";
+import { CommentIcon, HeartFilledIcon } from "./icons";
 import { useRouter } from "next/navigation";
 
 export type PostCardProps = {
@@ -29,7 +29,9 @@ export default function PostCard({ data }: PostCardProps) {
     <CardFooter>
       <p style={{ display: 'flex', alignItems: 'center' }}>
         {data.likeCount}
-        <HeartFilledIcon size={25} style={{ marginLeft: '6px' }} />
+        <HeartFilledIcon size={25} style={{ marginLeft: '6px', marginRight: '18px' }} />
+        {data.commentCount}
+        <CommentIcon size={22} style={{ marginLeft: '6px' }} />
       </p>
     </CardFooter>
   </Card>
