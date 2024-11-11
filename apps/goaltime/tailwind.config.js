@@ -4,7 +4,7 @@ const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
 const { join } = require('path');
 
 module.exports = {
-  darkMode: ['class'],
+  darkMode: ['media'],
   content: [
     join(
       __dirname,
