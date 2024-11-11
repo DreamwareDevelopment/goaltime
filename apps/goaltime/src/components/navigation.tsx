@@ -12,7 +12,7 @@ import {
   Button
 } from "@nextui-org/react";
 
-import ThemeSwitch from "../components/theme-switcher";
+import ThemeSwitch from "./theme-switcher";
 import { BasketballIcon } from "./icons";
 
 export type NavibarProps = {
