@@ -1,5 +1,5 @@
 {
-  "compileOnSave": false,
+  "compileOnSave": true,
   "compilerOptions": {
     "rootDir": ".",
     "sourceMap": true,
@@ -18,7 +18,7 @@
       "@goaltime/shared": ["libs/shared/src/index.ts"],
       "@goaltime/shared/models": ["libs/shared/type_gen/.prisma/client"],
       "@goaltime/ui-components": ["libs/ui-components/src/index.ts"],
-      "@goaltime/ui-components/server": ["libs/ui-components/src/server.ts"]
+      "@goaltime/ui-components/*": ["libs/ui-components/src/*"],
     }
   },
   "exclude": ["node_modules", "tmp"]
