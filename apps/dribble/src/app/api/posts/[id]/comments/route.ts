@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateDummyComments } from "./mock";
-import { PaginationResponse } from "@dribble/shared";
-import { Comment } from "@dribble/shared/models";
+import { PaginationResponse } from "@goaltime/shared";
+import { Comment } from "@goaltime/shared/models";
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const { id } = params;

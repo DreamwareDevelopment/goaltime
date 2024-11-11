@@ -1,9 +1,9 @@
 {
-  "name": "dribble",
+  "name": "goaltime",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/dribble",
+  "sourceRoot": "apps/goaltime",
   "projectType": "application",
   "tags": [],
-  "// targets": "to see all targets run: nx show project dribble --web",
+  "// targets": "to see all targets run: nx show project goaltime --web",
   "targets": {}
 }

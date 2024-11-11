@@ -3,8 +3,8 @@
 import { Divider, Pagination, ScrollShadow, Spinner } from "@nextui-org/react";
 import Navbar from "../../../components/navigation";
 import PostCard from "../../../components/post";
-import { Post, Comment } from "@dribble/shared/models";
-import { PaginationResponse } from "@dribble/shared";
+import { Post, Comment } from "@goaltime/shared/models";
+import { PaginationResponse } from "@goaltime/shared";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 

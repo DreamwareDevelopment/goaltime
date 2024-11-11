@@ -1,4 +1,4 @@
-import { Post } from "@dribble/shared/models";
+import { Post } from "@goaltime/shared/models";
 
 export const dummyPostData: Post[] = Array.from({ length: 100 }, (_, index) => ({
   id: index + 1,

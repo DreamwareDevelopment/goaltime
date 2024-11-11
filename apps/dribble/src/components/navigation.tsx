@@ -1,4 +1,4 @@
-import { User } from "@dribble/shared/models";
+import { User } from "@goaltime/shared/models";
 import {
   Navbar as NextUINavbar, 
   NavbarBrand, 
@@ -30,7 +30,7 @@ export default function Navbar({ user }: NavibarProps) {
     <NextUINavbar className="py-2 px-0" isBordered shouldHideOnScroll>
       <NavbarBrand className="hidden md:flex gap-2">
         <BasketballIcon size={44} />
-        <p className="font-bold text-warning text-inherit">dribble</p>
+        <p className="font-bold text-warning text-inherit">goaltime</p>
       </NavbarBrand>
       <NavbarMenuToggle className="md:hidden" />
       <NavbarContent className="hidden md:flex" justify="center">

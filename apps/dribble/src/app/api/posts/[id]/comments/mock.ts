@@ -1,4 +1,4 @@
-import { Comment } from "@dribble/shared/models";
+import { Comment } from "@goaltime/shared/models";
 
 export const generateDummyComments = (postId: number, count = 50): Comment[] => {
   return Array.from({ length: count }, (_, index) => ({

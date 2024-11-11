@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dummyPostData } from "./mock";
-import { Post } from "@dribble/shared/models";
-import { PaginationResponse } from "@dribble/shared";
+import { Post } from "@goaltime/shared/models";
+import { PaginationResponse } from "@goaltime/shared";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

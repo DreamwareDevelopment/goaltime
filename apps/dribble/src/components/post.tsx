@@ -1,4 +1,4 @@
-import { Post } from "@dribble/shared/models";
+import { Post } from "@goaltime/shared/models";
 import { Card, CardHeader, CardBody, CardFooter, Avatar } from "@nextui-org/react";
 import { CommentIcon, HeartFilledIcon } from "./icons";
 import { useRouter } from "next/navigation";

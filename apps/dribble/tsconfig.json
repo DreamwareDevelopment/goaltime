@@ -26,8 +26,8 @@
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    "../../apps/dribble/.next/types/**/*.ts",
-    "../../dist/apps/dribble/.next/types/**/*.ts",
+    "../../apps/goaltime/.next/types/**/*.ts",
+    "../../dist/apps/goaltime/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "./type_gen/.prisma/client"
