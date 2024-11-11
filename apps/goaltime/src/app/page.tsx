@@ -1,5 +1,3 @@
-"use client";
-
 import Navbar from "../components/navigation";
 
 export default function Index() {
