@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Phone, MessageSquare, Clock, Target, Settings } from 'lucide-react'
+import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell } from 'lucide-react'
 import { Button } from "@goaltime/ui-components"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@goaltime/ui-components"
 import { Progress } from "@goaltime/ui-components"
@@ -15,32 +15,68 @@ export default function Dashboard() {
     { id: 1, name: "Startup Work", committed: 20, completed: 18, color: "#8884d8" },
     { id: 2, name: "Exercise", committed: 5, completed: 4, color: "#82ca9d" },
     { id: 3, name: "Learning Spanish", committed: 3, completed: 2, color: "#ffc658" },
+    { id: 4, name: "Reading", committed: 10, completed: 7, color: "#ff7f50" },
+    { id: 5, name: "Meditation", committed: 7, completed: 5, color: "#6a5acd" },
+    { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc" },
   ]
 
   const schedule = [
-    { id: 1, name: "Startup Work", time: "10:00 AM - 12:00 PM", callEnabled: true, messageEnabled: false },
-    { id: 2, name: "Exercise", time: "1:00 PM - 2:00 PM", callEnabled: false, messageEnabled: true },
-    { id: 3, name: "Learning Spanish", time: "7:00 PM - 8:00 PM", callEnabled: true, messageEnabled: true },
+    { id: 1, name: "Startup Work", time: "10:00 AM - 12:00 PM", callEnabled: true, messageEnabled: false, pushEnabled: false },
+    { id: 2, name: "Exercise", time: "1:00 PM - 2:00 PM", callEnabled: false, messageEnabled: true, pushEnabled: false },
+    { id: 3, name: "Learning Spanish", time: "7:00 PM - 8:00 PM", callEnabled: true, messageEnabled: true, pushEnabled: true },
+    { id: 4, name: "Reading", time: "3:00 PM - 4:00 PM", callEnabled: false, messageEnabled: false, pushEnabled: true },
+    { id: 5, name: "Meditation", time: "6:00 AM - 6:30 AM", callEnabled: false, messageEnabled: false, pushEnabled: false },
+    { id: 6, name: "Cooking", time: "5:00 PM - 6:00 PM", callEnabled: true, messageEnabled: false, pushEnabled: false },
   ]
 
   const chartData = {
     week: [
-      { name: 'Mon', "Startup Work": 4, "Exercise": 1, "Learning Spanish": 0.5 },
-      { name: 'Tue', "Startup Work": 3, "Exercise": 1, "Learning Spanish": 0.5 },
-      { name: 'Wed', "Startup Work": 4, "Exercise": 0, "Learning Spanish": 0.5 },
-      { name: 'Thu', "Startup Work": 3, "Exercise": 1, "Learning Spanish": 0.5 },
-      { name: 'Fri', "Startup Work": 4, "Exercise": 1, "Learning Spanish": 0 },
-      { name: 'Sat', "Startup Work": 0, "Exercise": 0, "Learning Spanish": 0 },
-      { name: 'Sun', "Startup Work": 0, "Exercise": 0, "Learning Spanish": 0 },
+      { name: 'Mon', "Startup Work": 4, "Exercise": 1, "Learning Spanish": 0.5, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
+      { name: 'Tue', "Startup Work": 3, "Exercise": 1, "Learning Spanish": 0.5, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
+      { name: 'Wed', "Startup Work": 4, "Exercise": 0, "Learning Spanish": 0.5, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
+      { name: 'Thu', "Startup Work": 3, "Exercise": 1, "Learning Spanish": 0.5, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
+      { name: 'Fri', "Startup Work": 4, "Exercise": 1, "Learning Spanish": 0, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
+      { name: 'Sat', "Startup Work": 0, "Exercise": 0, "Learning Spanish": 0, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
+      { name: 'Sun', "Startup Work": 0, "Exercise": 0, "Learning Spanish": 0, "Reading": 1, "Meditation": 0.5, "Cooking": 1 },
     ],
     month: [
-      { name: 'Week 1', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2 },
-      { name: 'Week 2', "Startup Work": 16, "Exercise": 3, "Learning Spanish": 2 },
-      { name: 'Week 3', "Startup Work": 20, "Exercise": 5, "Learning Spanish": 3 },
-      { name: 'Week 4', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2 },
+      { name: 'Week 1', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2, "Reading": 5, "Meditation": 3.5, "Cooking": 5 },
+      { name: 'Week 2', "Startup Work": 16, "Exercise": 3, "Learning Spanish": 2, "Reading": 5, "Meditation": 3.5, "Cooking": 5 },
+      { name: 'Week 3', "Startup Work": 20, "Exercise": 5, "Learning Spanish": 3, "Reading": 5, "Meditation": 3.5, "Cooking": 5 },
+      { name: 'Week 4', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2, "Reading": 5, "Meditation": 3.5, "Cooking": 5 },
+    ],
+    year: [
+      { name: 'Jan', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Feb', "Startup Work": 16, "Exercise": 3, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Mar', "Startup Work": 20, "Exercise": 5, "Learning Spanish": 3, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Apr', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'May', "Startup Work": 16, "Exercise": 3, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Jun', "Startup Work": 20, "Exercise": 5, "Learning Spanish": 3, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Jul', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Aug', "Startup Work": 16, "Exercise": 3, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Sep', "Startup Work": 20, "Exercise": 5, "Learning Spanish": 3, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Oct', "Startup Work": 18, "Exercise": 4, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Nov', "Startup Work": 16, "Exercise": 3, "Learning Spanish": 2, "Reading": 20, "Meditation": 14, "Cooking": 20 },
+      { name: 'Dec', "Startup Work": 20, "Exercise": 5, "Learning Spanish": 3, "Reading": 20, "Meditation": 14, "Cooking": 20 },
     ],
   }
   const [timeRange, setTimeRange] = useState<keyof typeof chartData>('week')
+  const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set())
+
+  const toggleGoal = (goalName: string) => {
+    setSelectedGoals(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(goalName)) {
+        newSet.delete(goalName)
+      } else {
+        newSet.add(goalName)
+      }
+      return newSet
+    })
+  }
+
+  const filteredGoals = selectedGoals.size > 0 ? goals.filter(goal => selectedGoals.has(goal.name)) : goals
+  const selectedGoalText = selectedGoals.size > 0 ? `${selectedGoals.size} selected` : "All Goals"
 
   return (
     <div className="container mx-auto p-4">
@@ -101,8 +137,16 @@ export default function Dashboard() {
                     aria-label={`Toggle message for ${item.name}`}
                     pressed={item.messageEnabled}
                     onPressedChange={() => {}}
+                    className="mr-2"
                   >
                     <MessageSquare className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle
+                    aria-label={`Toggle push notifications for ${item.name}`}
+                    pressed={item.pushEnabled}
+                    onPressedChange={() => {}}
+                  >
+                    <Bell className="h-4 w-4" />
                   </Toggle>
                 </div>
               </div>
@@ -135,6 +179,7 @@ export default function Dashboard() {
               <SelectContent>
                 <SelectItem value="week">This Week</SelectItem>
                 <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
               </SelectContent>
             </Select>
           </CardHeader>
@@ -146,7 +191,7 @@ export default function Dashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                {goals.map((goal) => (
+                {filteredGoals.map((goal) => (
                   <Bar key={goal.id} dataKey={goal.name} fill={goal.color} />
                 ))}
               </BarChart>
