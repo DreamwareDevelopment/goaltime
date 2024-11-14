@@ -8,7 +8,8 @@ import { Progress } from "@goaltime/ui-components"
 import { Avatar, AvatarFallback, AvatarImage } from "@goaltime/ui-components"
 import { Toggle } from "@goaltime/ui-components"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@goaltime/ui-components"
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { MultiSelect, Option } from "@goaltime/ui-components"
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {
   const goals = [
@@ -61,22 +62,10 @@ export default function Dashboard() {
     ],
   }
   const [timeRange, setTimeRange] = useState<keyof typeof chartData>('week')
-  const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set())
+  const [selectedGoals, setSelectedGoals] = useState<Option[]>([])
 
-  const toggleGoal = (goalName: string) => {
-    setSelectedGoals(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(goalName)) {
-        newSet.delete(goalName)
-      } else {
-        newSet.add(goalName)
-      }
-      return newSet
-    })
-  }
-
-  const filteredGoals = selectedGoals.size > 0 ? goals.filter(goal => selectedGoals.has(goal.name)) : goals
-  const selectedGoalText = selectedGoals.size > 0 ? `${selectedGoals.size} selected` : "All Goals"
+  const allGoals: Option[] = goals.map((goal) => ({ value: goal.name, label: goal.name, color: goal.color }))
+  const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.name) > -1) : goals
 
   return (
     <div className="container mx-auto p-4">
@@ -170,7 +159,7 @@ export default function Dashboard() {
         </Card>
 
         <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2">
             <CardTitle>Goal Progress</CardTitle>
             <Select value={timeRange} onValueChange={(value) => setTimeRange(value as keyof typeof chartData)}>
               <SelectTrigger className="w-[180px]">
@@ -184,18 +173,30 @@ export default function Dashboard() {
             </Select>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
+            <ResponsiveContainer width="100%" height={350} className="pr-8">
               <BarChart data={chartData[timeRange]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Legend />
                 {filteredGoals.map((goal) => (
                   <Bar key={goal.id} dataKey={goal.name} fill={goal.color} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
+            <CardFooter>
+              <MultiSelect
+                className="w-full mt-4"
+                defaultOptions={allGoals}
+                placeholder="Select goals to track"
+                hidePlaceholderWhenSelected
+                hideClearAllButton
+                value={selectedGoals.length > 0 ? selectedGoals : allGoals}
+                onChange={(value) => {
+                  setSelectedGoals(value)
+                }}
+              />
+            </CardFooter>
           </CardContent>
         </Card>
       </div>
