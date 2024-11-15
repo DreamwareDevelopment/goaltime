@@ -1,14 +1,15 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell } from 'lucide-react'
-import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, SliderMainItem, SliderThumbItem } from "@goaltime/ui-components"
+import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell, Trash2 } from 'lucide-react'
+import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Checkbox, SliderMainItem, SliderThumbItem } from "@goaltime/ui-components"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@goaltime/ui-components"
 import { Progress } from "@goaltime/ui-components"
 import { Avatar, AvatarFallback, AvatarImage } from "@goaltime/ui-components"
 import { Toggle } from "@goaltime/ui-components"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@goaltime/ui-components"
 import { MultiSelect, Option } from "@goaltime/ui-components"
+import { FloatingLabelInput } from "@goaltime/ui-components"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {
@@ -20,6 +21,12 @@ export default function Dashboard() {
     { id: 5, name: "Meditation", committed: 7, completed: 5, color: "#6a5acd" },
     { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc" }
   ]
+  const [milestones, setMilestones] = useState([
+    { id: 1, text: "Review project proposal", completed: false },
+    { id: 2, text: "Prepare for team meeting", completed: true },
+    { id: 3, text: "Update progress report", completed: false },
+  ])
+  const [newMilestone, setNewMilestone] = useState("")
 
   const schedule = [
     { id: 1, name: "Startup Work", time: "10:00 AM - 12:00 PM", callEnabled: true, messageEnabled: false, pushEnabled: false },
@@ -67,6 +74,27 @@ export default function Dashboard() {
   const allGoals: Option[] = goals.map((goal) => ({ value: goal.name, label: goal.name, color: goal.color }))
   const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.name) > -1) : goals
 
+  const addMilestone = () => {
+    if (newMilestone.trim() !== "") {
+      setMilestones([...milestones, { id: Date.now(), text: newMilestone.trim(), completed: false }])
+      setNewMilestone("")
+    }
+  }
+
+  const toggleMilestone = (id: number) => {
+    setMilestones(milestones.map(milestone =>
+      milestone.id === id ? { ...milestone, completed: !milestone.completed } : milestone
+    ))
+  }
+
+  const deleteMilestone = (id: number) => {
+    setMilestones(milestones.filter(milestone => milestone.id !== id))
+  }
+
+  const clearCompletedMilestones = () => {
+    setMilestones(milestones.filter(milestone => !milestone.completed))
+  }
+
   return (
     <div className="container mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
@@ -87,7 +115,50 @@ export default function Dashboard() {
                     key={goal.id}
                     className="border border-muted flex items-center justify-center h-52 rounded-md"
                   >
-                    {goal.name}
+                    <Card className="w-full h-full overflow-y-auto border-none">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle>Milestones</CardTitle>
+                        <Button variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-4">
+                          {milestones.map((milestone) => (
+                            <li key={milestone.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`milestone-${milestone.id}`}
+                                checked={milestone.completed}
+                                onCheckedChange={() => toggleMilestone(milestone.id)}
+                              />
+                              <label
+                                htmlFor={`milestone-${milestone.id}`}
+                                className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
+                              >
+                                {milestone.text}
+                              </label>
+                              <Button
+                                className="flex-shrink-0"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteMilestone(milestone.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </li>
+                          ))}
+                          <li className="flex items-center space-x-4 pt-4">
+                            <FloatingLabelInput
+                              className="flex-grow"
+                              type="text"
+                              label="Add a new milestone..."
+                              value={newMilestone}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
+                              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
+                            />
+                            <Button onClick={addMilestone}>Add</Button>
+                          </li>
+                        </ul>
+                      </CardContent>
+                    </Card>
                   </SliderMainItem>
                 ))}
               </CarouselMainContainer>

@@ -8,3 +8,7 @@ export * from './components/ui/toggle';
 export * from './components/ui/select';
 export * from './components/ui/multi-select';
 export * from './components/ui/carousel';
+export * from './components/ui/input';
+export * from './components/ui/label';
+export * from './components/ui/floating-input';
+export * from './components/ui/checkbox';
