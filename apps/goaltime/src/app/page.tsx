@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell } from 'lucide-react'
-import { Button } from "@goaltime/ui-components"
+import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, SliderMainItem, SliderThumbItem } from "@goaltime/ui-components"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@goaltime/ui-components"
 import { Progress } from "@goaltime/ui-components"
 import { Avatar, AvatarFallback, AvatarImage } from "@goaltime/ui-components"
@@ -18,7 +18,7 @@ export default function Dashboard() {
     { id: 3, name: "Learning Spanish", committed: 3, completed: 2, color: "#ffc658" },
     { id: 4, name: "Reading", committed: 10, completed: 7, color: "#ff7f50" },
     { id: 5, name: "Meditation", committed: 7, completed: 5, color: "#6a5acd" },
-    { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc" },
+    { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc" }
   ]
 
   const schedule = [
@@ -78,6 +78,48 @@ export default function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="md:col-span-2 overflow-hidden">
+          <Carousel orientation="vertical" className="flex items-center gap-2">
+            <div className="relative basis-3/4 ">
+              <CarouselMainContainer className="h-[793px]">
+                {goals.map((goal, index) => (
+                  <SliderMainItem
+                    key={goal.id}
+                    className="border border-muted flex items-center justify-center h-52 rounded-md"
+                  >
+                    {goal.name}
+                  </SliderMainItem>
+                ))}
+              </CarouselMainContainer>
+            </div>
+            <CarouselThumbsContainer className="basis-1/4 max-h-[793px]">
+              {goals.map((goal, index) => (
+                <SliderThumbItem
+                  key={goal.id}
+                  index={index}
+                  color={goal.color}
+                  className="rounded-md bg-transparent"
+                >
+                  <span className="border border-muted flex items-center justify-center h-full w-full rounded-md cursor-pointer bg-background">
+                    {goal.name}
+                  </span>
+                </SliderThumbItem>
+              ))}
+              <SliderThumbItem
+                key="new-goal"
+                index={goals.length}
+                className="rounded-md bg-accent"
+                onButtonClick={() => {
+                  console.log("new goal")
+                }}
+              >
+                <span className="border border-muted flex items-center justify-center h-full w-full rounded-md cursor-pointer bg-background">
+                  New Goal
+                </span>
+              </SliderThumbItem>
+            </CarouselThumbsContainer>
+          </Carousel>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Goals</CardTitle>

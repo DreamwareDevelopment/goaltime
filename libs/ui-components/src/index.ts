@@ -7,3 +7,4 @@ export * from './components/ui/avatar';
 export * from './components/ui/toggle';
 export * from './components/ui/select';
 export * from './components/ui/multi-select';
+export * from './components/ui/carousel';
