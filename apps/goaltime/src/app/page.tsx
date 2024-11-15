@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell, Trash2 } from 'lucide-react'
-import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Checkbox, SliderMainItem, SliderThumbItem } from "@goaltime/ui-components"
+import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Checkbox, Separator, SliderMainItem, SliderThumbItem } from "@goaltime/ui-components"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@goaltime/ui-components"
 import { Progress } from "@goaltime/ui-components"
 import { Avatar, AvatarFallback, AvatarImage } from "@goaltime/ui-components"
@@ -10,6 +10,8 @@ import { Toggle } from "@goaltime/ui-components"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@goaltime/ui-components"
 import { MultiSelect, Option } from "@goaltime/ui-components"
 import { FloatingLabelInput } from "@goaltime/ui-components"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@goaltime/ui-components"
+import { AutosizeTextarea } from "@goaltime/ui-components"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {
@@ -98,7 +100,7 @@ export default function Dashboard() {
   return (
     <div className="container mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">AI Time Manager</h1>
+        <h1 className="text-2xl font-bold">Goal Time</h1>
         <Avatar>
           <AvatarImage src="https://github.com/shadcn.png" alt="User" />
           <AvatarFallback>CN</AvatarFallback>
@@ -113,52 +115,77 @@ export default function Dashboard() {
                 {goals.map((goal, index) => (
                   <SliderMainItem
                     key={goal.id}
-                    className="border border-muted flex items-center justify-center h-52 rounded-md"
+                    className="border border-muted flex items-center justify-center h-52 rounded-md overflow-y-auto"
                   >
-                    <Card className="w-full h-full overflow-y-auto border-none">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle>Milestones</CardTitle>
-                        <Button variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className="space-y-4">
-                          {milestones.map((milestone) => (
-                            <li key={milestone.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`milestone-${milestone.id}`}
-                                checked={milestone.completed}
-                                onCheckedChange={() => toggleMilestone(milestone.id)}
-                              />
-                              <label
-                                htmlFor={`milestone-${milestone.id}`}
-                                className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
-                              >
-                                {milestone.text}
-                              </label>
-                              <Button
-                                className="flex-shrink-0"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => deleteMilestone(milestone.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </li>
-                          ))}
-                          <li className="flex items-center space-x-4 pt-4">
-                            <FloatingLabelInput
-                              className="flex-grow"
-                              type="text"
-                              label="Add a new milestone..."
-                              value={newMilestone}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
-                              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
-                            />
-                            <Button onClick={addMilestone}>Add</Button>
-                          </li>
-                        </ul>
-                      </CardContent>
-                    </Card>
+                    <Accordion type="single" className="w-full h-full" defaultValue="milestones">
+                      <AccordionItem value="milestones" className="border-none">
+                        <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
+                        <AccordionContent className="w-full h-full">
+                          <Card className="w-full h-full border-none shadow-none">
+                            <CardContent>
+                              <ul className="space-y-4">
+                                {milestones.map((milestone) => (
+                                  <li key={milestone.id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`milestone-${milestone.id}`}
+                                      checked={milestone.completed}
+                                      onCheckedChange={() => toggleMilestone(milestone.id)}
+                                    />
+                                    <label
+                                      htmlFor={`milestone-${milestone.id}`}
+                                      className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
+                                    >
+                                      {milestone.text}
+                                    </label>
+                                    <Button
+                                      className="flex-shrink-0"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => deleteMilestone(milestone.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </li>
+                                ))}
+                                <li className="flex items-center space-x-4 pt-4 pr-3">
+                                  <FloatingLabelInput
+                                    className="flex-grow"
+                                    type="text"
+                                    label="Add a new milestone..."
+                                    value={newMilestone}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
+                                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
+                                  />
+                                  <Button onClick={addMilestone}>Add</Button>
+                                </li>
+                              </ul>
+                            </CardContent>
+                            <CardFooter className="w-full flex flex-row items-center justify-center">
+                              <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
+                            </CardFooter>
+                          </Card>
+                        </AccordionContent>
+                      </AccordionItem>
+                      <div className="pl-6">
+                        <Separator />
+                      </div>
+                      <AccordionItem value="notes" className="border-none">
+                        <AccordionTrigger className="text-xl font-bold px-8">Today&apos;s Notes</AccordionTrigger>
+                        <AccordionContent className="p-6 pt-0">
+                          <AutosizeTextarea placeholder={`Add a note for today's ${goal.name}`} />
+                        </AccordionContent>
+                      </AccordionItem>
+                      <div className="pl-6">
+                        <Separator />
+                      </div>
+                      <AccordionItem value="settings" className="border-none">
+                        <AccordionTrigger className="text-xl font-bold px-8">Settings</AccordionTrigger>
+                        <AccordionContent className="p-6 pt-0">
+                          <AutosizeTextarea placeholder={`Add a note for today's ${goal.name}`} />
+                          TODO: Add settings
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </SliderMainItem>
                 ))}
               </CarouselMainContainer>

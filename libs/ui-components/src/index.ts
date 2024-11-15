@@ -12,3 +12,6 @@ export * from './components/ui/input';
 export * from './components/ui/label';
 export * from './components/ui/floating-input';
 export * from './components/ui/checkbox';
+export * from './components/ui/accordion';
+export * from './components/ui/autosize-textarea';
+export * from './components/ui/separator';
