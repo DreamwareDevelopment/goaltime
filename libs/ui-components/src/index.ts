@@ -15,3 +15,4 @@ export * from './components/ui/checkbox';
 export * from './components/ui/accordion';
 export * from './components/ui/autosize-textarea';
 export * from './components/ui/separator';
+export * from './components/ui/scroll-area';
