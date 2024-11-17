@@ -6,6 +6,7 @@ import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Check
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@goaltime/ui-components"
 import { Progress } from "@goaltime/ui-components"
 import { Avatar, AvatarFallback, AvatarImage } from "@goaltime/ui-components"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@goaltime/ui-components"
 import { Toggle } from "@goaltime/ui-components"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@goaltime/ui-components"
 import { MultiSelect, Option } from "@goaltime/ui-components"
@@ -122,49 +123,104 @@ export default function Dashboard() {
                         <AccordionItem value="milestones" className="border-none">
                           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
                           <AccordionContent className="w-full h-full">
-                            <Card className="w-full h-full border-none shadow-none">
-                              <CardContent>
-                                <ul className="space-y-4">
-                                  {milestones.map((milestone) => (
-                                    <li key={milestone.id} className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id={`milestone-${milestone.id}`}
-                                        checked={milestone.completed}
-                                        onCheckedChange={() => toggleMilestone(milestone.id)}
-                                      />
-                                      <label
-                                        htmlFor={`milestone-${milestone.id}`}
-                                        className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
-                                      >
-                                        {milestone.text}
-                                      </label>
-                                      <Button
-                                        className="flex-shrink-0"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => deleteMilestone(milestone.id)}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </li>
-                                  ))}
-                                  <li className="flex items-center space-x-4 pt-4 pr-3">
-                                    <FloatingLabelInput
-                                      className="flex-grow"
-                                      type="text"
-                                      label="Add a new milestone..."
-                                      value={newMilestone}
-                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
-                                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
-                                    />
-                                    <Button onClick={addMilestone}>Add</Button>
-                                  </li>
-                                </ul>
-                              </CardContent>
-                              <CardFooter className="w-full flex flex-row items-center justify-center">
-                                <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
-                              </CardFooter>
-                            </Card>
+                            <Tabs defaultValue="daily" className="w-full">
+                              <div className="w-full pl-6 pr-8">
+                              <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="daily">Daily</TabsTrigger>
+                                  <TabsTrigger value="lifetime">Lifetime</TabsTrigger>
+                                </TabsList>
+                              </div>
+                              <TabsContent value="daily">
+                                <Card className="w-full h-full border-none shadow-none">
+                                  <CardContent>
+                                    <ul className="space-y-4">
+                                      {milestones.map((milestone) => (
+                                        <li key={milestone.id} className="flex items-center space-x-2">
+                                          <Checkbox
+                                            id={`milestone-${milestone.id}`}
+                                            checked={milestone.completed}
+                                            onCheckedChange={() => toggleMilestone(milestone.id)}
+                                          />
+                                          <label
+                                            htmlFor={`milestone-${milestone.id}`}
+                                            className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
+                                          >
+                                            {milestone.text}
+                                          </label>
+                                          <Button
+                                            className="flex-shrink-0"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => deleteMilestone(milestone.id)}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </li>
+                                      ))}
+                                      <li className="flex items-center space-x-4 pt-4 pr-3">
+                                        <FloatingLabelInput
+                                          className="flex-grow"
+                                          type="text"
+                                          label="Add a new milestone..."
+                                          value={newMilestone}
+                                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
+                                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
+                                        />
+                                        <Button onClick={addMilestone}>Add</Button>
+                                      </li>
+                                    </ul>
+                                  </CardContent>
+                                  <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
+                                    <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
+                                  </CardFooter>
+                                </Card>
+                              </TabsContent>
+                              <TabsContent value="lifetime">
+                                <Card className="w-full h-full border-none shadow-none">
+                                  <CardContent>
+                                    <ul className="space-y-4">
+                                      {milestones.map((milestone) => (
+                                        <li key={milestone.id} className="flex items-center space-x-2">
+                                          <Checkbox
+                                            id={`milestone-${milestone.id}`}
+                                            checked={milestone.completed}
+                                            onCheckedChange={() => toggleMilestone(milestone.id)}
+                                          />
+                                          <label
+                                            htmlFor={`milestone-${milestone.id}`}
+                                            className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
+                                          >
+                                            {milestone.text}
+                                          </label>
+                                          <Button
+                                            className="flex-shrink-0"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => deleteMilestone(milestone.id)}
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        </li>
+                                      ))}
+                                      <li className="flex items-center space-x-4 pt-4 pr-3">
+                                        <FloatingLabelInput
+                                          className="flex-grow"
+                                          type="text"
+                                          label="Add a new milestone..."
+                                          value={newMilestone}
+                                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
+                                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
+                                        />
+                                        <Button onClick={addMilestone}>Add</Button>
+                                      </li>
+                                    </ul>
+                                  </CardContent>
+                                  <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
+                                    <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
+                                  </CardFooter>
+                                </Card>
+                              </TabsContent>
+                            </Tabs>
                           </AccordionContent>
                         </AccordionItem>
                         <div className="pl-6 pr-4">
