@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect, Option } from "@goaltime/ui-components"
 import { FloatingLabelInput } from "@goaltime/ui-components"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@goaltime/ui-components"
-import { AutosizeTextarea } from "@goaltime/ui-components"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {
@@ -229,7 +228,7 @@ export default function Dashboard() {
                         <AccordionItem value="notes" className="border-none">
                           <AccordionTrigger className="text-xl font-bold px-8">Today&apos;s Notes</AccordionTrigger>
                           <AccordionContent className="p-6 pt-0">
-                            <AutosizeTextarea placeholder={`Add a note for today's ${goal.name}`} />
+                            
                           </AccordionContent>
                         </AccordionItem>
                         <div className="pl-6 pr-4">
@@ -238,7 +237,6 @@ export default function Dashboard() {
                         <AccordionItem value="settings" className="border-none">
                           <AccordionTrigger className="text-xl font-bold px-8">Settings</AccordionTrigger>
                           <AccordionContent className="p-6 pt-0">
-                            <AutosizeTextarea placeholder={`Add a note for today's ${goal.name}`} />
                             TODO: Add settings
                           </AccordionContent>
                         </AccordionItem>
