@@ -1,0 +1,9 @@
+{
+  "name": "goaltime-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/goaltime-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["goaltime"],
+  "// targets": "to see all targets run: nx show project goaltime-e2e --web",
+  "targets": {}
+}

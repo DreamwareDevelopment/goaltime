@@ -35,6 +35,16 @@
     "dev": { "dependsOn": ["^type-gen"] }
   },
   "generators": {
-    "@nx/next": { "application": { "style": "tailwind", "linter": "eslint" } }
+    "@nx/next": {
+      "application": {
+        "style": "tailwind",
+        "linter": "eslint"
+      }
+    },
+    "@nx/react": {
+      "library": {
+        "unitTestRunner": "jest"
+      }
+    }
   }
 }

@@ -1,0 +1,10 @@
+// This file exist only to make the shadcn-ui cli happy ¯\_(ツ)_/¯
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@goaltime/ui-components": ["libs/ui-components/src/index.ts"],
+      "@goaltime/ui-components/*": ["libs/ui-components/src/*"]
+    }
+  }
+}

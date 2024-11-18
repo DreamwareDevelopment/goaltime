@@ -13,33 +13,5 @@ model User {
   createdAt DateTime @default(now())
   email     String   @unique 
   username  String
-  posts     Post[]
-  comments  Comment[]
   avatarUrl String?
-}
-
-model Post {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now())
-  content      String
-  author       User     @relation(fields: [authorId], references: [id])
-  authorId     Int
-  avatarUrl    String?
-  username     String
-  comments     Comment[]
-  likeCount    Int      @default(0)
-  commentCount Int      @default(0)
-}
-
-model Comment {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  content   String
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    Int
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  avatarUrl String?
-  username  String
-  likeCount Int      @default(0)
 }
