@@ -1,3 +1,5 @@
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 import './global.css';
 import { Providers } from './providers';
 
@@ -14,6 +16,7 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en">
       <body>
+        <SpeedInsights />
         <Providers>{children}</Providers>
       </body>
     </html>
