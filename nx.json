@@ -14,7 +14,7 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
-  "nxCloudId": "671bc010a2ad01397064ee9d",
+  "nxCloudId": "673ad176e7757bb786a40d78",
   "plugins": [
     {
       "plugin": "@nx/next/plugin",
@@ -25,35 +25,14 @@
         "serveStaticTargetName": "serve-static"
       }
     },
-    {
-      "plugin": "@nx/playwright/plugin",
-      "options": {
-        "targetName": "e2e"
-      }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
-      }
-    }
+    { "plugin": "@nx/playwright/plugin", "options": { "targetName": "e2e" } },
+    { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
+    { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" } }
   ],
   "targetDefaults": {
-    "e2e-ci--**/*": {
-      "dependsOn": ["^build"]
-    },
-    "build": {
-      "dependsOn": ["^type-gen"]
-    },
-    "dev": {
-      "dependsOn": ["^type-gen"]
-    }
+    "e2e-ci--**/*": { "dependsOn": ["^build"] },
+    "build": { "dependsOn": ["^type-gen"] },
+    "dev": { "dependsOn": ["^type-gen"] }
   },
   "generators": {
     "@nx/next": {
