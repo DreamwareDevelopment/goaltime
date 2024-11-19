@@ -20,5 +20,5 @@ model User {
   createdAt DateTime @default(now())
   email     String   @unique 
   name      String
-  avatarUrl String?
+  avatarUrl String
 }
