@@ -30,7 +30,8 @@
     { "plugin": "@nx/jest/plugin", "options": { "targetName": "test" } }
   ],
   "targetDefaults": {
-    "e2e-ci--**/*": { "dependsOn": ["^build"] }
+    "e2e-ci--**/*": { "dependsOn": ["^build"] },
+    "build": { "dependsOn": ["^build"] }
   },
   "generators": {
     "@nx/next": {
