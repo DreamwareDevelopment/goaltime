@@ -1,17 +1,24 @@
 datasource db {
-  url      = env("DATABASE_URL")
-  provider = "postgres"
+  provider = "postgresql"
+  // Uses connection pooling
+  url = env("POSTGRES_PRISMA_URL")
+  // Uses direct connection, ⚠️ make sure to keep this to `POSTGRES_URL_NON_POOLING`
+  // or you'll have dangling databases from migrations
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+  schemas = ["public", "auth"]
 }
 
 generator client {
   provider = "prisma-client-js"
   output   = "../../type_gen/.prisma/client"
+  previewFeatures = ["multiSchema"]
 }
 
 model User {
+  @@schema("public")
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   email     String   @unique 
-  username  String
+  name      String
   avatarUrl String?
 }

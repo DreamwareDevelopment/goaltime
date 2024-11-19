@@ -31,7 +31,7 @@
   ],
   "targetDefaults": {
     "e2e-ci--**/*": { "dependsOn": ["^build"] },
-    "build": { "dependsOn": ["^type-gen"] },
+    "build": { "dependsOn": ["^migrate"] },
     "dev": { "dependsOn": ["^type-gen"] }
   },
   "generators": {

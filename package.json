@@ -5,7 +5,7 @@
   "scripts": {},
   "private": true,
   "dependencies": {
-    "@prisma/client": "^5.21.1",
+    "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-checkbox": "^1.1.2",
@@ -76,7 +76,7 @@
     "nx": "20.0.5",
     "postcss": "8.4.38",
     "prettier": "^2.6.2",
-    "prisma": "^5.21.1",
+    "prisma": "^5.22.0",
     "supabase": "^1.219.2",
     "tailwindcss": "3.4.14",
     "ts-jest": "^29.1.0",

@@ -13,6 +13,24 @@
         "command": "npx prisma generate --schema ./src/prisma/schema.prisma",
         "cwd": "libs/shared"
       }
+    },
+    "migrate-dev": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name {args.name}",
+        "cwd": "libs/shared"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "dependsOn": ["type-gen"],
+      "options": {
+        "command": "npx prisma migrate deploy --schema ./src/prisma/schema.prisma",
+        "cwd": "libs/shared"
+      }
     }
   }
 }
