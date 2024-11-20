@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MultiSelect, Option } from "@/ui-components/multi-select"
 import { FloatingLabelInput } from "@/ui-components/floating-input"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion"
+import { PlateEditor } from "@/plate-ui/plate-editor"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {
@@ -232,7 +233,9 @@ export default function Dashboard() {
                         <AccordionItem value="notes" className="border-none">
                           <AccordionTrigger className="text-xl font-bold px-8">Today&apos;s Notes</AccordionTrigger>
                           <AccordionContent className="p-6 pt-0">
-                            
+                            <div className="h-full w-full" data-registry="plate">
+                              <PlateEditor />
+                            </div>
                           </AccordionContent>
                         </AccordionItem>
                         <div className="pl-6 pr-4">

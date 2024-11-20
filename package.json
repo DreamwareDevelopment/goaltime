@@ -21,6 +21,8 @@
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toggle": "^1.1.0",
     "@udecode/cn": "^39.0.0",
+    "@udecode/plate-basic-elements": "^40.0.2",
+    "@udecode/plate-basic-marks": "^40.0.0",
     "@udecode/plate-common": "^40.0.3",
     "@vercel/speed-insights": "^1.1.0",
     "class-variance-authority": "^0.7.0",
