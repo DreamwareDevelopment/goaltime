@@ -19,6 +19,7 @@
       "@/shared": ["libs/shared/src/index.ts"],
       "@/shared/models": ["libs/shared/type_gen/.prisma/client"],
       "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
+      "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

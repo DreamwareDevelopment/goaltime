@@ -4,7 +4,8 @@
     "outDir": "../../dist/out-tsc",
     "types": ["node"],
     "paths": {
-      "@/ui-components/*": ["libs/ui-components/src/components/ui/*"]
+      "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
+      "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"]
     }
   },
   "files": [
