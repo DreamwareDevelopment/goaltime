@@ -30,7 +30,7 @@
     "../../dist/apps/goaltime/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts",
-    "./type_gen/.prisma/client"
+    "../../libs/shared/type_gen/.prisma/client"
   ],
   "exclude": [
     "node_modules",
