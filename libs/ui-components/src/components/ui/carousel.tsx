@@ -14,6 +14,8 @@ import { ChevronRightIcon } from "lucide-react";
 import { cn } from "../../utils";
 import { ChevronLeftIcon } from "@radix-ui/react-icons";
 import { createContext } from "react";
+import { useAtom } from "jotai";
+import { editorFocusedAtom } from "../../state/atoms";
 
 type CarouselContextProps = {
   carouselOptions?: EmblaOptionsType;
@@ -68,6 +70,7 @@ const Carousel = forwardRef<
     },
     ref,
   ) => {
+    const [editorFocused] = useAtom(editorFocusedAtom);
     const [emblaMainRef, emblaMainApi] = useEmblaCarousel(
       {
         ...carouselOptions,
@@ -106,7 +109,7 @@ const Carousel = forwardRef<
 
     const handleKeyDown = useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (!emblaMainApi) return;
+        if (!emblaMainApi || editorFocused) return;
         switch (event.key) {
           case "ArrowLeft":
             event.preventDefault();
