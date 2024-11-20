@@ -1,10 +1,24 @@
 // This file exist only to make the shadcn-ui cli happy ¯\_(ツ)_/¯
 {
   "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@goaltime/ui-components": ["libs/ui-components/src/index.ts"],
-      "@goaltime/ui-components/*": ["libs/ui-components/src/*"]
+      "@/shared": ["libs/shared/src/index.ts"],
+      "@/shared/models": ["libs/shared/type_gen/.prisma/client"],
+      "@/ui-components": ["libs/ui-components/src/index.ts"],
+      "@/ui-components/*": ["libs/ui-components/src/*"],
     }
-  }
+  },
 }

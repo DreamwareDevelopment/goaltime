@@ -2,16 +2,16 @@
 
 import React, { useState } from 'react'
 import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell, Trash2 } from 'lucide-react'
-import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Checkbox, ScrollArea, Separator, SliderMainItem, SliderThumbItem } from "@goaltime/ui-components"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@goaltime/ui-components"
-import { Progress } from "@goaltime/ui-components"
-import { Avatar, AvatarFallback, AvatarImage } from "@goaltime/ui-components"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@goaltime/ui-components"
-import { Toggle } from "@goaltime/ui-components"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@goaltime/ui-components"
-import { MultiSelect, Option } from "@goaltime/ui-components"
-import { FloatingLabelInput } from "@goaltime/ui-components"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@goaltime/ui-components"
+import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Checkbox, ScrollArea, Separator, SliderMainItem, SliderThumbItem } from "@/ui-components"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components"
+import { Progress } from "@/ui-components"
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components"
+import { Toggle } from "@/ui-components"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components"
+import { MultiSelect, Option } from "@/ui-components"
+import { FloatingLabelInput } from "@/ui-components"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {

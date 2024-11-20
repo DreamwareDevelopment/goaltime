@@ -10,7 +10,7 @@
     "cssVariables": true
   },
   "aliases": {
-    "components": "@goaltime/ui-components/components",
-    "utils": "@goaltime/ui-components/utils"
+    "components": "@/ui-components/components",
+    "utils": "@/ui-components/utils"
   }
 }
