@@ -2,16 +2,20 @@
 
 import React, { useState } from 'react'
 import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell, Trash2 } from 'lucide-react'
-import { Button, Carousel, CarouselMainContainer, CarouselThumbsContainer, Checkbox, ScrollArea, Separator, SliderMainItem, SliderThumbItem } from "@/ui-components"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components"
-import { Progress } from "@/ui-components"
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components"
-import { Toggle } from "@/ui-components"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components"
-import { MultiSelect, Option } from "@/ui-components"
-import { FloatingLabelInput } from "@/ui-components"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components"
+import { Button } from "@/ui-components/button"
+import { ScrollArea } from "@/ui-components/scroll-area"
+import { Checkbox } from "@/ui-components/checkbox"
+import { Separator } from "@/ui-components/separator"
+import { Carousel, CarouselMainContainer, CarouselThumbsContainer, SliderMainItem, SliderThumbItem } from "@/ui-components/carousel"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
+import { Progress } from "@/ui-components/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs"
+import { Toggle } from "@/ui-components/toggle"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
+import { MultiSelect, Option } from "@/ui-components/multi-select"
+import { FloatingLabelInput } from "@/ui-components/floating-input"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 export default function Dashboard() {

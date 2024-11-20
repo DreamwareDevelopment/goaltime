@@ -15,10 +15,10 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["./*"],
       "@/shared": ["libs/shared/src/index.ts"],
       "@/shared/models": ["libs/shared/type_gen/.prisma/client"],
-      "@/ui-components": ["libs/ui-components/src/index.ts"],
-      "@/ui-components/*": ["libs/ui-components/src/*"],
+      "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
     }
   },
   "exclude": ["node_modules", "tmp"]
