@@ -146,7 +146,7 @@ const Carousel = forwardRef<
         }
       },
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [emblaMainApi, orientation, direction],
+      [emblaMainApi, orientation, direction, editorFocused],
     );
 
     const onThumbClick = useCallback(

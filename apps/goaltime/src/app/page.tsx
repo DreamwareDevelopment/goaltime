@@ -123,7 +123,7 @@ export default function Dashboard() {
                     className="border border-muted flex items-center justify-center h-52 rounded-md"
                   >
                     <ScrollArea className="w-full h-full">
-                      <Accordion type="single" className="w-full h-full" defaultValue="milestones">
+                      <Accordion type="single" collapsible className="w-full h-full" defaultValue="milestones">
                         <AccordionItem value="milestones" className="border-none">
                           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
                           <AccordionContent className="w-full h-full">
