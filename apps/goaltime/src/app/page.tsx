@@ -9,14 +9,16 @@ import { GoalProgressCard } from './page_components/GoalProgressCard'
 import { GoalScheduleCard } from './page_components/GoalScheduleCard'
 import { QuickActionsCard } from './page_components/QuickActionsCard'
 import { GoalyticsCard } from './page_components/GoalyticsCard'
+import { Goal } from './page_components/GoalCard'
+import { Milestone, MilestoneView } from './page_components/MilestonesCard'
 
 export default function Dashboard() {
-  const milestones = [
-    { id: 1, text: "Review project proposal", completed: false },
-    { id: 2, text: "Prepare for team meeting", completed: true },
-    { id: 3, text: "Update progress report", completed: false },
+  const milestones: Milestone[] = [
+    { id: 1, text: "Review project proposal", completed: false, view: MilestoneView.Daily },
+    { id: 2, text: "Prepare for team meeting", completed: true, view: MilestoneView.Daily },
+    { id: 3, text: "Update progress report", completed: false, view: MilestoneView.Daily },
   ];
-  const goals = [
+  const goals: Goal[] = [
     { id: 1, name: "Startup Work", committed: 20, completed: 18, color: "#8884d8", milestones },
     { id: 2, name: "Exercise", committed: 5, completed: 4, color: "#82ca9d", milestones },
     { id: 3, name: "Learning Spanish", committed: 3, completed: 2, color: "#ffc658", milestones },
