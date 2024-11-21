@@ -60,7 +60,7 @@ export function GoalCard({ goal }: GoalProps) {
 
   return (
     <ScrollArea className="w-full h-full" key={goal.id}>
-      <Accordion type="single" collapsible className="w-full h-full" defaultValue="milestones">
+      <Accordion type="single" collapsible className="w-full h-full">
         <AccordionItem value="milestones" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
           <AccordionContent className="w-full h-full">

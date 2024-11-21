@@ -5,7 +5,6 @@ import React, { useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 import { Button } from "@/ui-components/button"
-import { Carousel, CarouselMainContainer, CarouselThumbsContainer, SliderMainItem, SliderThumbItem } from "@/ui-components/carousel"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
@@ -13,7 +12,7 @@ import { Toggle } from "@/ui-components/toggle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
 import { MultiSelect, Option } from "@/ui-components/multi-select"
 
-import { GoalCard } from './page_components/GoalCard'
+import { GoalCarousel } from './page_components/GoalCarousel'
 
 export default function Dashboard() {
   const milestones = [
@@ -87,48 +86,7 @@ export default function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="md:col-span-2 overflow-hidden">
-          <Carousel orientation="vertical" className="flex items-center gap-2">
-            <div className="relative basis-3/4 ">
-              <CarouselMainContainer className="h-[793px]">
-                {goals.map((goal, index) => (
-                  <SliderMainItem
-                    key={goal.id}
-                    className="border border-muted flex items-center justify-center h-52 rounded-md"
-                  >
-                    <GoalCard goal={goal} />
-                  </SliderMainItem>
-                ))}
-              </CarouselMainContainer>
-            </div>
-            <CarouselThumbsContainer className="basis-1/4 max-h-[793px]">
-              {goals.map((goal, index) => (
-                <SliderThumbItem
-                  key={goal.id}
-                  index={index}
-                  color={goal.color}
-                  className="rounded-md bg-transparent"
-                >
-                  <span className="border border-muted flex items-center justify-center h-full w-full rounded-md cursor-pointer bg-background">
-                    {goal.name}
-                  </span>
-                </SliderThumbItem>
-              ))}
-              <SliderThumbItem
-                key="new-goal"
-                index={goals.length}
-                className="rounded-md bg-accent"
-                onButtonClick={() => {
-                  console.log("new goal")
-                }}
-              >
-                <span className="border border-muted flex items-center justify-center h-full w-full rounded-md cursor-pointer bg-background">
-                  New Goal
-                </span>
-              </SliderThumbItem>
-            </CarouselThumbsContainer>
-          </Carousel>
-        </Card>
+        <GoalCarousel goals={goals} />
         <Card>
           <CardHeader>
             <CardTitle>Goals</CardTitle>
