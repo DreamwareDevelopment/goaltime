@@ -114,8 +114,8 @@ const Carousel = forwardRef<
           if (!emblaMainApi || editorFocused) return;
           switch (event.key) {
             case "ArrowLeft":
-              event.preventDefault();
               if (orientation === "horizontal") {
+                event.preventDefault();
                 if (direction === "rtl") {
                   ScrollNext();
                   return;
@@ -124,8 +124,8 @@ const Carousel = forwardRef<
               }
               break;
             case "ArrowRight":
-              event.preventDefault();
               if (orientation === "horizontal") {
+                event.preventDefault();
                 if (direction === "rtl") {
                   ScrollPrev();
                   return;
@@ -134,14 +134,14 @@ const Carousel = forwardRef<
               }
               break;
             case "ArrowUp":
-              event.preventDefault();
               if (orientation === "vertical") {
+                event.preventDefault();
                 ScrollPrev();
               }
               break;
             case "ArrowDown":
-              event.preventDefault();
               if (orientation === "vertical") {
+                event.preventDefault();
                 ScrollNext();
               }
               break;
