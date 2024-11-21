@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from "@/libs/ui-components/src/utils"
 import { PlateEditor } from "@/plate-ui/plate-editor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { Button } from "@/ui-components/button";
@@ -28,11 +29,11 @@ export interface Goal {
 }
 
 
-export interface GoalProps {
+export interface GoalProps extends React.HTMLAttributes<HTMLDivElement> {
   goal: Goal;
 }
 
-export function GoalCard({ goal }: GoalProps) {
+export function GoalCard({ goal, className }: GoalProps) {
   const [milestones, setMilestones] = useState<Milestone[]>(goal.milestones)
   const [newMilestone, setNewMilestone] = useState<string>("")
   console.log(`GoalCard ${goal.id}`)
@@ -59,7 +60,7 @@ export function GoalCard({ goal }: GoalProps) {
   }
 
   return (
-    <ScrollArea className="w-full h-full" key={goal.id}>
+    <ScrollArea className={cn(className)} key={goal.id}>
       <Accordion type="single" collapsible className="w-full h-full">
         <AccordionItem value="milestones" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>

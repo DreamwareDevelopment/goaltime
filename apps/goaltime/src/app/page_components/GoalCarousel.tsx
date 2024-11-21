@@ -1,15 +1,18 @@
+'use client';
+
+import { cn } from "@/libs/ui-components/src/utils"
 import { Card } from "@/libs/ui-components/src/components/ui/card"
 import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer } from "@/libs/ui-components/src/components/ui/carousel"
 
 import { Goal, GoalCard } from "./GoalCard"
 
-export interface GoalCarouselProps {
+export interface GoalCarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]
 }
 
-export function GoalCarousel({ goals }: GoalCarouselProps) {
+export function GoalCarousel({ goals, className }: GoalCarouselProps) {
   return (
-    <Card className="md:col-span-2 overflow-hidden">
+    <Card className={cn(className)}>
       <Carousel orientation="vertical" className="flex items-center gap-2">
         <div className="relative basis-3/4 ">
           <CarouselMainContainer className="h-[793px]">
@@ -18,7 +21,7 @@ export function GoalCarousel({ goals }: GoalCarouselProps) {
                 key={goal.id}
                 className="border border-muted flex items-center justify-center h-52 rounded-md"
               >
-                <GoalCard goal={goal} />
+                <GoalCard goal={goal} className="h-full w-full" />
               </SliderMainItem>
             ))}
           </CarouselMainContainer>
