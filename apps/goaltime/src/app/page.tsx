@@ -1,39 +1,34 @@
 'use client'
 
+import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell } from 'lucide-react'
 import React, { useState } from 'react'
-import { Plus, Phone, MessageSquare, Clock, Target, Settings, Bell, Trash2 } from 'lucide-react'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+
 import { Button } from "@/ui-components/button"
-import { ScrollArea } from "@/ui-components/scroll-area"
-import { Checkbox } from "@/ui-components/checkbox"
-import { Separator } from "@/ui-components/separator"
 import { Carousel, CarouselMainContainer, CarouselThumbsContainer, SliderMainItem, SliderThumbItem } from "@/ui-components/carousel"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs"
 import { Toggle } from "@/ui-components/toggle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
 import { MultiSelect, Option } from "@/ui-components/multi-select"
-import { FloatingLabelInput } from "@/ui-components/floating-input"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion"
-import { PlateEditor } from "@/plate-ui/plate-editor"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+
+import { GoalCard } from './page_components/GoalCard'
 
 export default function Dashboard() {
-  const goals = [
-    { id: 1, name: "Startup Work", committed: 20, completed: 18, color: "#8884d8" },
-    { id: 2, name: "Exercise", committed: 5, completed: 4, color: "#82ca9d" },
-    { id: 3, name: "Learning Spanish", committed: 3, completed: 2, color: "#ffc658" },
-    { id: 4, name: "Reading", committed: 10, completed: 7, color: "#ff7f50" },
-    { id: 5, name: "Meditation", committed: 7, completed: 5, color: "#6a5acd" },
-    { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc" }
-  ]
-  const [milestones, setMilestones] = useState([
+  const milestones = [
     { id: 1, text: "Review project proposal", completed: false },
     { id: 2, text: "Prepare for team meeting", completed: true },
     { id: 3, text: "Update progress report", completed: false },
-  ])
-  const [newMilestone, setNewMilestone] = useState("")
+  ];
+  const goals = [
+    { id: 1, name: "Startup Work", committed: 20, completed: 18, color: "#8884d8", milestones },
+    { id: 2, name: "Exercise", committed: 5, completed: 4, color: "#82ca9d", milestones },
+    { id: 3, name: "Learning Spanish", committed: 3, completed: 2, color: "#ffc658", milestones },
+    { id: 4, name: "Reading", committed: 10, completed: 7, color: "#ff7f50", milestones },
+    { id: 5, name: "Meditation", committed: 7, completed: 5, color: "#6a5acd", milestones },
+    { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc", milestones }
+  ]
 
   const schedule = [
     { id: 1, name: "Startup Work", time: "10:00 AM - 12:00 PM", callEnabled: true, messageEnabled: false, pushEnabled: false },
@@ -81,27 +76,6 @@ export default function Dashboard() {
   const allGoals: Option[] = goals.map((goal) => ({ value: goal.name, label: goal.name, color: goal.color }))
   const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.name) > -1) : goals
 
-  const addMilestone = () => {
-    if (newMilestone.trim() !== "") {
-      setMilestones([...milestones, { id: Date.now(), text: newMilestone.trim(), completed: false }])
-      setNewMilestone("")
-    }
-  }
-
-  const toggleMilestone = (id: number) => {
-    setMilestones(milestones.map(milestone =>
-      milestone.id === id ? { ...milestone, completed: !milestone.completed } : milestone
-    ))
-  }
-
-  const deleteMilestone = (id: number) => {
-    setMilestones(milestones.filter(milestone => milestone.id !== id))
-  }
-
-  const clearCompletedMilestones = () => {
-    setMilestones(milestones.filter(milestone => !milestone.completed))
-  }
-
   return (
     <div className="container mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
@@ -122,133 +96,7 @@ export default function Dashboard() {
                     key={goal.id}
                     className="border border-muted flex items-center justify-center h-52 rounded-md"
                   >
-                    <ScrollArea className="w-full h-full">
-                      <Accordion type="single" collapsible className="w-full h-full" defaultValue="milestones">
-                        <AccordionItem value="milestones" className="border-none">
-                          <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
-                          <AccordionContent className="w-full h-full">
-                            <Tabs defaultValue="daily" className="w-full">
-                              <div className="w-full pl-6 pr-8">
-                              <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="daily">Daily</TabsTrigger>
-                                  <TabsTrigger value="lifetime">Lifetime</TabsTrigger>
-                                </TabsList>
-                              </div>
-                              <TabsContent value="daily">
-                                <Card className="w-full h-full border-none shadow-none">
-                                  <CardContent>
-                                    <ul className="space-y-4">
-                                      {milestones.map((milestone) => (
-                                        <li key={milestone.id} className="flex items-center space-x-2">
-                                          <Checkbox
-                                            id={`milestone-${milestone.id}`}
-                                            checked={milestone.completed}
-                                            onCheckedChange={() => toggleMilestone(milestone.id)}
-                                          />
-                                          <label
-                                            htmlFor={`milestone-${milestone.id}`}
-                                            className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
-                                          >
-                                            {milestone.text}
-                                          </label>
-                                          <Button
-                                            className="flex-shrink-0"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => deleteMilestone(milestone.id)}
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </li>
-                                      ))}
-                                      <li className="flex items-center space-x-4 pt-4 pr-3">
-                                        <FloatingLabelInput
-                                          className="flex-grow"
-                                          type="text"
-                                          label="Add a new milestone..."
-                                          value={newMilestone}
-                                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
-                                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
-                                        />
-                                        <Button onClick={addMilestone}>Add</Button>
-                                      </li>
-                                    </ul>
-                                  </CardContent>
-                                  <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
-                                    <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
-                                  </CardFooter>
-                                </Card>
-                              </TabsContent>
-                              <TabsContent value="lifetime">
-                                <Card className="w-full h-full border-none shadow-none">
-                                  <CardContent>
-                                    <ul className="space-y-4">
-                                      {milestones.map((milestone) => (
-                                        <li key={milestone.id} className="flex items-center space-x-2">
-                                          <Checkbox
-                                            id={`milestone-${milestone.id}`}
-                                            checked={milestone.completed}
-                                            onCheckedChange={() => toggleMilestone(milestone.id)}
-                                          />
-                                          <label
-                                            htmlFor={`milestone-${milestone.id}`}
-                                            className={`flex-grow ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}
-                                          >
-                                            {milestone.text}
-                                          </label>
-                                          <Button
-                                            className="flex-shrink-0"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => deleteMilestone(milestone.id)}
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        </li>
-                                      ))}
-                                      <li className="flex items-center space-x-4 pt-4 pr-3">
-                                        <FloatingLabelInput
-                                          className="flex-grow"
-                                          type="text"
-                                          label="Add a new milestone..."
-                                          value={newMilestone}
-                                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
-                                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
-                                        />
-                                        <Button onClick={addMilestone}>Add</Button>
-                                      </li>
-                                    </ul>
-                                  </CardContent>
-                                  <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
-                                    <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
-                                  </CardFooter>
-                                </Card>
-                              </TabsContent>
-                            </Tabs>
-                          </AccordionContent>
-                        </AccordionItem>
-                        <div className="pl-6 pr-4">
-                          <Separator />
-                        </div>
-                        <AccordionItem value="notes" className="border-none">
-                          <AccordionTrigger className="text-xl font-bold px-8">Today&apos;s Notes</AccordionTrigger>
-                          <AccordionContent className="p-6 pt-0">
-                            <div className="h-full w-full" data-registry="plate">
-                              <PlateEditor />
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                        <div className="pl-6 pr-4">
-                          <Separator />
-                        </div>
-                        <AccordionItem value="settings" className="border-none">
-                          <AccordionTrigger className="text-xl font-bold px-8">Settings</AccordionTrigger>
-                          <AccordionContent className="p-6 pt-0">
-                            TODO: Add settings
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </ScrollArea>
+                    <GoalCard goal={goal} />
                   </SliderMainItem>
                 ))}
               </CarouselMainContainer>

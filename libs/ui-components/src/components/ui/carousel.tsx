@@ -14,7 +14,7 @@ import { ChevronRightIcon } from "lucide-react";
 import { cn } from "../../utils";
 import { ChevronLeftIcon } from "@radix-ui/react-icons";
 import { createContext } from "react";
-import { useAtom } from "jotai";
+import { useAtomCallback } from "jotai/utils";
 import { editorFocusedAtom } from "../../state/atoms";
 
 type CarouselContextProps = {
@@ -70,7 +70,7 @@ const Carousel = forwardRef<
     },
     ref,
   ) => {
-    const [editorFocused] = useAtom(editorFocusedAtom);
+    console.log(`Carousel rendered`);
     const [emblaMainRef, emblaMainApi] = useEmblaCarousel(
       {
         ...carouselOptions,
@@ -107,46 +107,49 @@ const Carousel = forwardRef<
 
     const direction = carouselOptions?.direction ?? (dir as DirectionOption);
 
-    const handleKeyDown = useCallback(
-      (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (!emblaMainApi || editorFocused) return;
-        switch (event.key) {
-          case "ArrowLeft":
-            event.preventDefault();
-            if (orientation === "horizontal") {
-              if (direction === "rtl") {
-                ScrollNext();
-                return;
-              }
-              ScrollPrev();
-            }
-            break;
-          case "ArrowRight":
-            event.preventDefault();
-            if (orientation === "horizontal") {
-              if (direction === "rtl") {
+    const handleKeyDown = useAtomCallback(
+      useCallback((get, set, event: React.KeyboardEvent<HTMLDivElement>) => {
+          const editorFocused = get(editorFocusedAtom);
+
+          if (!emblaMainApi || editorFocused) return;
+          switch (event.key) {
+            case "ArrowLeft":
+              event.preventDefault();
+              if (orientation === "horizontal") {
+                if (direction === "rtl") {
+                  ScrollNext();
+                  return;
+                }
                 ScrollPrev();
-                return;
               }
-              ScrollNext();
-            }
-            break;
-          case "ArrowUp":
-            event.preventDefault();
-            if (orientation === "vertical") {
-              ScrollPrev();
-            }
-            break;
-          case "ArrowDown":
-            event.preventDefault();
-            if (orientation === "vertical") {
-              ScrollNext();
-            }
-            break;
-        }
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [emblaMainApi, orientation, direction, editorFocused],
+              break;
+            case "ArrowRight":
+              event.preventDefault();
+              if (orientation === "horizontal") {
+                if (direction === "rtl") {
+                  ScrollPrev();
+                  return;
+                }
+                ScrollNext();
+              }
+              break;
+            case "ArrowUp":
+              event.preventDefault();
+              if (orientation === "vertical") {
+                ScrollPrev();
+              }
+              break;
+            case "ArrowDown":
+              event.preventDefault();
+              if (orientation === "vertical") {
+                ScrollNext();
+              }
+              break;
+          }
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [emblaMainApi, orientation, direction],
+      ),
     );
 
     const onThumbClick = useCallback(
