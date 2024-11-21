@@ -2,7 +2,6 @@
 
 import { Plate } from '@udecode/plate-common/react';
 import { useAtom } from 'jotai/react';
-import { useEffect, useRef } from 'react';
 
 import { useCreateEditor } from './use-create-editor';
 import { Editor, EditorContainer } from './editor';
