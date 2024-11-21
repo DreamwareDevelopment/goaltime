@@ -4,13 +4,13 @@ import React from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 
-import { GoalCarousel } from './page_components/GoalCarousel'
-import { GoalProgressCard } from './page_components/GoalProgressCard'
-import { GoalScheduleCard } from './page_components/GoalScheduleCard'
-import { QuickActionsCard } from './page_components/QuickActionsCard'
-import { GoalyticsCard } from './page_components/GoalyticsCard'
-import { Goal } from './page_components/GoalCard'
-import { Milestone, MilestoneView } from './page_components/MilestonesCard'
+import { GoalCarousel } from '../components/GoalCarousel'
+import { GoalProgressCard } from '../components/GoalProgressCard'
+import { GoalScheduleCard } from '../components/GoalScheduleCard'
+import { QuickActionsCard } from '../components/QuickActionsCard'
+import { GoalyticsCard } from '../components/GoalyticsCard'
+import { Goal } from '../components/GoalCard'
+import { Milestone, MilestoneView } from '../components/MilestonesCard'
 
 export default function Dashboard() {
   const milestones: Milestone[] = [
