@@ -12,9 +12,11 @@ import { FloatingLabelInput } from '@/ui-components/floating-input'
 import { Label } from '@/ui-components/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui-components/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui-components/tooltip'
+import { Input } from '@/ui-components/input'
+import { AutosizeTextarea } from '@/ui-components/text-area'
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui-components/popover'
+
 import { Milestone } from './MilestonesCard'
-import { Input } from '@/libs/ui-components/src/components/ui/input'
 
 export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
 export type Priority = 'High' | 'Medium' | 'Low'
@@ -70,7 +72,7 @@ export interface GoalSetupCardProps extends React.HTMLAttributes<HTMLDivElement>
 export default function GoalSetupCard({ color, className }: GoalSetupCardProps) {
   const [currentGoal, setCurrentGoal] = useState<Goal>(defaultGoal(colorPresets[0]))
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setCurrentGoal(prev => ({ ...prev, [name]: value }))
   }
@@ -92,8 +94,8 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
   }
 
   return (
-    <Card className={cn(className)}>
-      <CardHeader className="pb-4">
+    <Card className={cn(className, "border-none")}>
+      <CardHeader className="pb-5">
         <CardTitle className="text-2xl font-bold">Set Your Goal</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -104,12 +106,12 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
           onChange={handleInputChange}
           label="Title"
         />
-        <FloatingLabelInput
+        <AutosizeTextarea
           id="description"
           name="description"
           value={currentGoal.description || ''}
           onChange={handleInputChange}
-          label="Description (optional)"
+          placeholder="Description (optional)"
         />
         <div className="flex flex-row flex-wrap w-full gap-5">
           <div className="space-y-2">
@@ -122,10 +124,10 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
                 value={currentGoal.commitment}
                 onChange={handleInputChange}
                 min={0}
-                placeholder="Enter weekly hours commitment"
+                placeholder="Enter..."
                 className="pr-10"
               />
-              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                 hrs
               </span>
             </div>
@@ -148,13 +150,13 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-[20px] pt-1">
             <Label className="ml-2">Color</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal"
+                  className="justify-start text-left font-normal"
                 >
                   <div className="w-4 h-4 rounded-full mr-2" style={{ backgroundColor: currentGoal.color }} />
                   <Palette className="mr-2 h-4 w-4" />
@@ -200,7 +202,7 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
             ))}
           </div>
         </div>
-        <ShinyButton variant="gooeyLeft" className="w-full" onClick={handleSave} style={{ backgroundColor: currentGoal.color }}>
+        <ShinyButton variant="gooeyLeft" className="w-full max-w-[707px] ml-[2px]" onClick={handleSave} style={{ backgroundColor: currentGoal.color }}>
           <Save className="mr-2 h-4 w-4" /> Save Goal
         </ShinyButton>
       </CardContent>
