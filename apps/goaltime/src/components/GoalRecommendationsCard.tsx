@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Button } from '@/ui-components/button'
+import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Badge } from '@/ui-components/badge'
-import { Lightbulb, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { Lightbulb, Plus } from 'lucide-react'
 import { Priority } from './GoalSetupCard'
 
 export interface GoalRecommendation {
@@ -39,14 +40,14 @@ export function GoalRecommendationsCard({ className }: React.HTMLAttributes<HTML
         <div className="space-y-4">
           {displayedRecommendations.map((goal, index) => (
             <Card key={index}>
-              <CardContent className="flex items-center justify-between p-4">
+              <CardContent className="flex flex-wrap items-center justify-between p-4">
                 <div>
                   <h3 className="font-semibold">{goal.title}</h3>
                   <div className="text-sm text-muted-foreground">
-                    {goal.description} • {goal.commitment} hours/week
+                    {goal.description} • <span className="font-semibold text-nowrap">{goal.commitment} hours/week</span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center justify-between gap-4 py-4">
                   <Badge variant={goal.priority === 'High' ? 'destructive' : goal.priority === 'Medium' ? 'default' : 'secondary'}>
                     {goal.priority}
                   </Badge>
@@ -60,23 +61,23 @@ export function GoalRecommendationsCard({ className }: React.HTMLAttributes<HTML
           ))}
         </div>
         {recommendations.length > 1 && (
-          <Button
-            variant="link"
-            onClick={toggleExpanded}
-            className="mt-4 w-full"
-          >
-            {expanded ? (
-              <>
-                <ChevronUp className="mr-2 h-4 w-4" />
-                View less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="mr-2 h-4 w-4" />
-                View more
-              </>
-            )}
-          </Button>
+          <div className="flex justify-center">
+            <ShinyButton
+              variant="linkHover1"
+              onClick={toggleExpanded}
+              className="mt-4"
+            >
+              {expanded ? (
+                <>
+                  View less
+                </>
+              ) : (
+                <>
+                  View more
+                </>
+              )}
+            </ShinyButton>
+          </div>
         )}
       </CardContent>
     </Card>

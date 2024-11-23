@@ -37,7 +37,7 @@ const FloatingLabelInput = React.forwardRef<
   React.PropsWithoutRef<FloatingLabelInputProps>
 >(({ id, label, className, ...props }, ref) => {
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative text-nowrap", className)}>
       <FloatingInput ref={ref} id={id} {...props} />
       <FloatingLabel htmlFor={id}>{label}</FloatingLabel>
     </div>

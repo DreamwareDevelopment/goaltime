@@ -142,7 +142,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
               id={`new-milestone-${goal.id}`}
               className="flex-grow"
               type="text"
-              label="Add a new milestone..."
+              label="New milestone..."
               value={newMilestone}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
               onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}

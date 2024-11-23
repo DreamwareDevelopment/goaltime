@@ -109,11 +109,11 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
           name="description"
           value={currentGoal.description || ''}
           onChange={handleInputChange}
-          label="What is this goal about? Why is it important to you? (optional)"
+          label="Description (optional)"
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="col-span-1 space-y-2">
-            <Label className="ml-2" htmlFor="commitment">Weekly Hours Commitment</Label>
+        <div className="flex flex-row flex-wrap w-full gap-5">
+          <div className="space-y-2">
+            <Label className="ml-2 text-nowrap" htmlFor="commitment">Weekly Commitment</Label>
             <div className="relative">
               <Input
                 id="commitment"
