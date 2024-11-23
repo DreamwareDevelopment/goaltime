@@ -100,7 +100,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onMouseDown={saveEdit} // prevent blur cancelling the edit
+                    onMouseDown={saveEdit} // prevent blur cancelling the edit with onMouseDown
                     className="flex-shrink-0"
                   >
                     <Check className="h-4 w-4" />
