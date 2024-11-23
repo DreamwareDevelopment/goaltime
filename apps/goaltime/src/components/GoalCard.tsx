@@ -7,22 +7,14 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
 
-import { Milestone, MilestonesCard, MilestoneView } from "./MilestonesCard";
+import { MilestonesCard, MilestoneView } from "./MilestonesCard";
+import { Goal } from "./GoalSetupCard";
 
-export interface Goal {
-  id: number;
-  name: string;
-  committed: number;
-  completed: number;
-  color: string;
-  milestones: Milestone[];
-}
-
-export interface GoalProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface GoalCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal: Goal;
 }
 
-export function GoalCard({ goal, className }: GoalProps) {
+export function GoalCard({ goal, className }: GoalCardProps) {
   return (
     <ScrollArea className={cn(className)} key={goal.id}>
       <Accordion type="single" collapsible className="w-full h-full">

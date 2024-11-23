@@ -8,7 +8,7 @@ import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Input } from "@/ui-components/input";
 import { PlusIcon, Trash2, Check, X } from "lucide-react";
 
-import { Goal } from "./GoalCard";
+import { Goal } from "./GoalSetupCard";
 import { useState } from "react";
 
 export interface Milestone {
@@ -139,6 +139,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
           ))}
           <li className="flex items-center space-x-4 pt-4 pr-3">
             <FloatingLabelInput
+              id={`new-milestone-${goal.id}`}
               className="flex-grow"
               type="text"
               label="Add a new milestone..."

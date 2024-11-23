@@ -9,9 +9,10 @@ import { GoalProgressCard } from '../components/GoalProgressCard'
 import { GoalScheduleCard } from '../components/GoalScheduleCard'
 import { ActionsCard } from '../components/ActionsCard'
 import { GoalyticsCard } from '../components/GoalyticsCard'
-import { Goal } from '../components/GoalCard'
+import GoalSetupCard, { Goal } from '../components/GoalSetupCard'
 import { Milestone, MilestoneView } from '../components/MilestonesCard'
 import { PlusIcon } from 'lucide-react'
+import { GoalRecommendationsCard } from '../components/GoalRecommendationsCard'
 
 export default function Dashboard() {
   const milestones: Milestone[] = [
@@ -20,12 +21,12 @@ export default function Dashboard() {
     { id: 3, text: "Update progress report", completed: false, view: MilestoneView.Daily },
   ];
   const goals: Goal[] = [
-    { id: 1, name: "Startup Work", committed: 20, completed: 18, color: "#8884d8", milestones },
-    { id: 2, name: "Exercise", committed: 5, completed: 4, color: "#82ca9d", milestones },
-    { id: 3, name: "Learning Spanish", committed: 3, completed: 2, color: "#ffc658", milestones },
-    { id: 4, name: "Reading", committed: 10, completed: 7, color: "#ff7f50", milestones },
-    { id: 5, name: "Meditation", committed: 7, completed: 5, color: "#6a5acd", milestones },
-    { id: 6, name: "Cooking", committed: 8, completed: 6, color: "#48d1cc", milestones }
+    { id: 1, title: "Startup Work", commitment: 20, completed: 18, color: "#8884d8", milestones, priority: 'High', preferredTimes: [] },
+    { id: 2, title: "Exercise", commitment: 5, completed: 4, color: "#82ca9d", milestones, priority: 'High', preferredTimes: [] },
+    { id: 3, title: "Learning Spanish", commitment: 3, completed: 2, color: "#ffc658", milestones, priority: 'Medium', preferredTimes: [] },
+    { id: 4, title: "Reading", commitment: 10, completed: 7, color: "#ff7f50", milestones, priority: 'Low', preferredTimes: [] },
+    { id: 5, title: "Meditation", commitment: 7, completed: 5, color: "#6a5acd", milestones, priority: 'Medium', preferredTimes: [] },
+    { id: 6, title: "Cooking", commitment: 8, completed: 6, color: "#48d1cc", milestones, priority: 'High', preferredTimes: [] }
   ]
 
   const schedule = [
@@ -56,6 +57,11 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         <ActionsCard />
         <GoalyticsCard goals={goals} className="md:col-span-2" />
+      </div>
+
+      <div className="grid grid-cols-1">
+        <GoalSetupCard />
+        <GoalRecommendationsCard />
       </div>
     </div>
   )

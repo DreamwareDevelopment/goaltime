@@ -4,7 +4,8 @@ import { cn } from "@/libs/ui-components/src/utils"
 import { Card } from "@/libs/ui-components/src/components/ui/card"
 import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer } from "@/libs/ui-components/src/components/ui/carousel"
 
-import { Goal, GoalCard } from "./GoalCard"
+import { GoalCard } from "./GoalCard"
+import { Goal } from "./GoalSetupCard";
 
 export interface GoalCarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]
@@ -35,7 +36,7 @@ export function GoalCarousel({ goals, className }: GoalCarouselProps) {
               className="rounded-md bg-transparent"
             >
               <span className="border border-muted flex items-center justify-center h-full w-full rounded-md cursor-pointer bg-background">
-                {goal.name}
+                {goal.title}
               </span>
             </SliderThumbItem>
           ))}

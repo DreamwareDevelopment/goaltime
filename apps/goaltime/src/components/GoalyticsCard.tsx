@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/libs/ui-
 import { MultiSelect, Option } from "@/ui-components/multi-select"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/libs/ui-components/src/components/ui/select"
 
-import { Goal } from "./GoalCard"
+import { Goal } from "./GoalSetupCard"
 
 export interface GoalyticsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]
@@ -50,8 +50,8 @@ export function GoalyticsCard({ goals, className }: GoalyticsCardProps) {
   const [timeRange, setTimeRange] = useState<keyof typeof chartData>('week')
   const [selectedGoals, setSelectedGoals] = useState<Option[]>([])
 
-  const allGoals: Option[] = goals.map((goal) => ({ value: goal.name, label: goal.name, color: goal.color }))
-  const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.name) > -1) : goals
+  const allGoals: Option[] = goals.map((goal) => ({ value: goal.title, label: goal.title, color: goal.color }))
+  const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.title) > -1) : goals
   return (
     <Card className={cn(className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2">
@@ -75,7 +75,7 @@ export function GoalyticsCard({ goals, className }: GoalyticsCardProps) {
             <YAxis />
             <Tooltip />
             {filteredGoals.map((goal) => (
-              <Bar key={goal.id} dataKey={goal.name} fill={goal.color} />
+              <Bar key={goal.id} dataKey={goal.title} fill={goal.color} />
             ))}
           </BarChart>
         </ResponsiveContainer>
