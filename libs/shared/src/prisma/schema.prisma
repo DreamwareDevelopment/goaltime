@@ -1,3 +1,6 @@
+// Baselined - see https://www.prisma.io/docs/orm/prisma-migrate/workflows/baselining
+// And https://medium.com/@ngoctranfire/using-prisma-with-supabase-row-level-security-and-multi-schema-7c53418adba3
+
 generator client {
   provider        = "prisma-client-js"
   output          = "../../type_gen/.prisma/client"

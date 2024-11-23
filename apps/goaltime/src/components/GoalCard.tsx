@@ -60,7 +60,7 @@ export function GoalCard({ goal, className }: GoalProps) {
           <Separator />
         </div>
         <AccordionItem value="settings" className="border-none">
-          <AccordionTrigger className="text-xl font-bold px-8">Settings</AccordionTrigger>
+          <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             TODO: Add settings
           </AccordionContent>

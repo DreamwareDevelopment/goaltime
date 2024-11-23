@@ -22,15 +22,15 @@ export interface GoalScheduleCardProps extends React.HTMLAttributes<HTMLDivEleme
 export function GoalScheduleCard({ schedule, className }: GoalScheduleCardProps) {
   return (
     <Card className={cn(className)}>
-      <CardHeader>
+      <CardHeader className="pb-5">
         <CardTitle>Today&apos;s Schedule</CardTitle>
         <CardDescription>Your protected time blocks</CardDescription>
       </CardHeader>
       <CardContent>
         {schedule.map((item) => (
-          <div key={item.id} className="flex justify-between items-center mb-4">
+          <div key={item.id} className="flex justify-between items-center mb-[13px]">
             <div>
-              <p className="font-medium">{item.name}</p>
+              <p className="font-medium mb-[5.5px]">{item.name}</p>
               <p className="text-sm text-muted-foreground">{item.time}</p>
             </div>
             <div>

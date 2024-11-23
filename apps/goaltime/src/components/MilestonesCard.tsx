@@ -1,12 +1,11 @@
 'use client';
 
 import { cn } from "@/libs/ui-components/src/utils";
-import { Card } from "@/libs/ui-components/src/components/ui/card";
-import { CardContent, CardFooter } from "@/libs/ui-components/src/components/ui/card";
-import { Button } from "@/libs/ui-components/src/components/ui/button";
-import { Checkbox } from "@/libs/ui-components/src/components/ui/checkbox";
-import { FloatingLabelInput } from "@/libs/ui-components/src/components/ui/floating-input";
-import { Trash2 } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/ui-components/card";
+import { Button } from "@/ui-components/button-shiny";
+import { Checkbox } from "@/ui-components/checkbox";
+import { FloatingLabelInput } from "@/ui-components/floating-input";
+import { PlusIcon, Trash2 } from "lucide-react";
 
 import { Goal } from "./GoalCard";
 import { useState } from "react";
@@ -88,7 +87,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
               onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
             />
-            <Button onClick={addMilestone}>Add</Button>
+            <Button variant="expandIcon" Icon={PlusIcon} iconPlacement="right" onClick={addMilestone}>Add</Button>
           </li>
         </ul>
       </CardContent>

@@ -2,15 +2,16 @@
 
 import React from 'react'
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
-
+import { UserAvatar } from "@/ui-components/avatar-user"
+import { Button } from "@/ui-components/button-shiny"
 import { GoalCarousel } from '../components/GoalCarousel'
 import { GoalProgressCard } from '../components/GoalProgressCard'
 import { GoalScheduleCard } from '../components/GoalScheduleCard'
-import { QuickActionsCard } from '../components/QuickActionsCard'
+import { ActionsCard } from '../components/ActionsCard'
 import { GoalyticsCard } from '../components/GoalyticsCard'
 import { Goal } from '../components/GoalCard'
 import { Milestone, MilestoneView } from '../components/MilestonesCard'
+import { PlusIcon } from 'lucide-react'
 
 export default function Dashboard() {
   const milestones: Milestone[] = [
@@ -37,13 +38,13 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Goal Time</h1>
-        <Avatar>
-          <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
+        <Button variant="expandIcon" Icon={PlusIcon} iconPlacement="right">
+          New Goal
+        </Button>
+        <UserAvatar image="https://github.com/shadcn.png" name="John Doe" email="john.doe@example.com" />
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -53,7 +54,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <QuickActionsCard />
+        <ActionsCard />
         <GoalyticsCard goals={goals} className="md:col-span-2" />
       </div>
     </div>

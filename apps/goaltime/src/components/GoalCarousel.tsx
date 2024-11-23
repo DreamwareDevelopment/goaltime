@@ -39,18 +39,6 @@ export function GoalCarousel({ goals, className }: GoalCarouselProps) {
               </span>
             </SliderThumbItem>
           ))}
-          <SliderThumbItem
-            key="new-goal"
-            index={goals.length}
-            className="rounded-md bg-accent"
-            onButtonClick={() => {
-              console.log("new goal")
-            }}
-          >
-            <span className="border border-muted flex items-center justify-center h-full w-full rounded-md cursor-pointer bg-background">
-              New Goal
-            </span>
-          </SliderThumbItem>
         </CarouselThumbsContainer>
       </Carousel>
     </Card>

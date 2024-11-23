@@ -2,10 +2,10 @@
 
 import { cn } from "@/libs/ui-components/src/utils"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/libs/ui-components/src/components/ui/card"
-import { Progress } from "@/libs/ui-components/src/components/ui/progress"
-import { Button } from "@/libs/ui-components/src/components/ui/button"
-import { Plus } from "lucide-react"
+import { Progress } from "@/ui-components/progress"
+import { Button } from "@/ui-components/button-shiny"
 import { Goal } from "./GoalCard"
+import { PlusIcon } from "lucide-react";
 
 export interface GoalProgressCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]
@@ -31,8 +31,10 @@ export function GoalProgressCard({ goals, className }: GoalProgressCardProps) {
           </div>
         ))}
       </CardContent>
-      <CardFooter>
-        <Button className="w-full"><Plus className="mr-2 h-4 w-4" /> Add New Goal</Button>
+      <CardFooter className="flex justify-center">
+        <Button variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className="w-[67%]">
+          New Goal
+        </Button>
       </CardFooter>
     </Card>
   )
