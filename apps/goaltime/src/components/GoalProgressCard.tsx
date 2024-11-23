@@ -1,11 +1,11 @@
 'use client';
 
 import { cn } from "@/libs/ui-components/src/utils"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/libs/ui-components/src/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"
-import { Button } from "@/ui-components/button-shiny"
+
 import { Goal } from "./GoalSetupCard"
-import { PlusIcon } from "lucide-react";
+import { GoalCreationButton } from "./GoalCreationButton";
 
 export interface GoalProgressCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]
@@ -32,9 +32,7 @@ export function GoalProgressCard({ goals, className }: GoalProgressCardProps) {
         ))}
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Button variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className="w-[67%]">
-          New Goal
-        </Button>
+        <GoalCreationButton className="w-[67%]" />
       </CardFooter>
     </Card>
   )

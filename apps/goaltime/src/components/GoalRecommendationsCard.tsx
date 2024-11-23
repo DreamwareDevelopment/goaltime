@@ -29,7 +29,7 @@ export function GoalRecommendationsCard({ className }: React.HTMLAttributes<HTML
   const displayedRecommendations = expanded ? recommendations : recommendations.slice(0, 1)
 
   return (
-    <Card className="mt-8">
+    <Card className="mt-0">
       <CardHeader>
         <CardTitle className="text-2xl font-bold flex items-center">
           <Lightbulb className="mr-2 h-5 w-5" />
