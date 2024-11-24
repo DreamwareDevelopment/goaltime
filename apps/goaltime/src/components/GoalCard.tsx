@@ -17,7 +17,7 @@ export interface GoalCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function GoalCard({ goal, className }: GoalCardProps) {
   return (
     <ScrollArea className={cn(className)} key={goal.id}>
-      <Accordion type="single" collapsible className="w-full h-full">
+      <Accordion type="single" collapsible defaultValue="milestones" className="w-full h-full">
         <AccordionItem value="milestones" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
           <AccordionContent className="w-full h-full">

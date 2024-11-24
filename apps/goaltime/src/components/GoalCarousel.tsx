@@ -42,7 +42,7 @@ export function GoalCarousel({ goals, className }: GoalCarouselProps) {
             {goals.map((goal) => (
               <SliderMainItem
                 key={goal.id}
-                className="border border-muted flex items-center justify-center h-52 rounded-md"
+                className="border border-muted flex items-center justify-center h-full rounded-md"
               >
                 <GoalCard goal={goal} className="h-full w-full" />
               </SliderMainItem>
