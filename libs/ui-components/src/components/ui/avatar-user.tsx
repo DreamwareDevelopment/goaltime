@@ -74,7 +74,7 @@ export function UserAvatar({ image, name, email }: UserAvatarProps) {
               Are you sure you want to log out?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-wrap items-center justify-end gap-3">
             <Button variant="outline" onClick={() => setIsLogoutDialogOpen(false)}>
               Cancel
             </Button>
