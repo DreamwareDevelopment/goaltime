@@ -35,8 +35,8 @@ export function GoalCarousel({ goals, className }: GoalCarouselProps) {
         orientation={orientation}
         className="w-full h-full flex flex-col lg:flex-row items-center gap-2"
       >
-        <CarouselNext />
-        <CarouselPrevious />
+        <CarouselNext className="lg:hidden" />
+        <CarouselPrevious className="lg:hidden" />
         <div className="flex-grow w-full">
           <CarouselMainContainer className="h-[793px]">
             {goals.map((goal) => (
