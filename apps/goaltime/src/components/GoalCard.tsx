@@ -24,7 +24,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
             <Tabs defaultValue="daily" className="w-full">
               <div className="w-full pl-6 pr-8">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="daily">Today</TabsTrigger>
                   <TabsTrigger value="lifetime">Lifetime</TabsTrigger>
                 </TabsList>
               </div>
