@@ -34,6 +34,8 @@ interface ScheduleCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
   const [date, setDate] = useState(new Date());
+  const now = new Date();
+  const isToday = now.toDateString() === date.toDateString();
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -71,8 +73,6 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
   };
 
   useEffect(() => {
-    const now = new Date();
-    const isToday = now.toDateString() === date.toDateString();
     const currentTime = now.getHours() * 60 + now.getMinutes();
 
     const upcomingEvent = schedule
@@ -111,6 +111,7 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
         behavior: "auto"
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schedule, date, is24Hour, view]);
 
   const allDayEvents = schedule.filter(event => event.isAllDay);
@@ -279,6 +280,9 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
       </Button>
       <Button
         variant="outline"
+        style={{
+          backgroundColor: isToday ? "hsl(var(--accent))" : "hsl(var(--background))",
+        }}
         onClick={() => setDate(new Date())}
       >
         Today
