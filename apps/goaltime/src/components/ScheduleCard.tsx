@@ -13,6 +13,7 @@ import { Separator } from "@/ui-components/separator";
 import { cn } from "@/libs/ui-components/src/utils";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/libs/ui-components/src/components/ui/card";
+import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/libs/ui-components/src/components/ui/accordion";
 
 interface Schedule {
   id: number;
@@ -122,29 +123,31 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
   const allDayEvents = schedule.filter(event => event.isAllDay);
   const TimelineView = () => (
     <div className="h-full w-full">
-      {/* All-day events section remains the same */}
-      <div className="mb-4">
-        {allDayEvents.length > 0 && (
-          <h3 className="font-medium mt-2 mb-1 ml-2">All-Day Events</h3>
-        )}
-        {allDayEvents.map(event => (
-          <div
-            key={event.id}
-            className={cn(
-              "px-2 mb-2 rounded-md",
-              event.color,
-              "text-primary"
-            )}
-          >
-            <div className="font-medium">{event.title}</div>
-            {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
-            {event.description && <div className="text-sm">{event.description}</div>}
-          </div>
-        ))}
-        {allDayEvents.length > 0 && (
-          <Separator className="mt-3" />
-        )}
-      </div>
+      {allDayEvents.length > 0 && (
+        <Accordion type="single" defaultValue="allDayEvents" collapsible className="pb-3">
+          <AccordionItem value="allDayEvents">
+            <AccordionTrigger>
+              <h3 className="font-medium mb-1 ml-2">All-Day Events</h3>
+            </AccordionTrigger>
+            <AccordionContent>
+              {allDayEvents.map(event => (
+                <div
+                  key={event.id}
+                  className={cn(
+                    "px-2 mb-2 rounded-md",
+                    event.color,
+                    "text-primary"
+                  )}
+                >
+                  <div className="font-medium">{event.title}</div>
+                  {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
+                  {event.description && <div className="text-sm">{event.description}</div>}
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
 
       {/* Scrollable Timeline */}
       <ScrollArea className="h-[500px]">
