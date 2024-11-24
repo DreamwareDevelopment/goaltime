@@ -16,6 +16,7 @@ import { cn } from "@/libs/ui-components/src/utils";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/libs/ui-components/src/components/ui/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/libs/ui-components/src/components/ui/accordion";
+import { binarySearchInsert } from "@/shared";
 
 export interface CalendarEvent {
   id: number;
@@ -26,6 +27,14 @@ export interface CalendarEvent {
   endTime: string | null;
   isAllDay: boolean;
   color: string;
+}
+
+export interface ViewEvent extends CalendarEvent {
+  top: number;
+  height: number;
+  left: number;
+  hours: number | null;
+  minutes: number | null;
 }
 
 interface ScheduleCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -71,60 +80,61 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
     const endInMinutes = (endHours * 60) + endMinutes;
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
-  const events = schedule
-      .filter(event => !event.isAllDay && event.startTime && event.endTime)
-      .map(event => ({
-        ...event,
-        top: getEventPosition(event.startTime || ''),
-        height: getEventHeight(event.startTime || '', event.endTime || '')
-      }));
 
-  // Sort events by start time
-  events.sort((a, b) => a.top - b.top);
+  const allDayEvents: CalendarEvent[] = [];
+  const events: ViewEvent[] = [];
+  for (const event of schedule) {
+    if (!event.isAllDay && event.startTime && event.endTime) {
+      const newEvent = {
+        ...event,
+        hours: event.startTime ? parseInt(event.startTime?.split(':')[0]) : null,
+        minutes: event.startTime ? parseInt(event.startTime?.split(':')[1]) : null,
+        top: getEventPosition(event.startTime || ''),
+        height: getEventHeight(event.startTime || '', event.endTime || ''),
+        left: 0
+      };
+      binarySearchInsert(events, newEvent, (a, b) => a.top - b.top);
+    } else if (event.isAllDay) {
+      allDayEvents.push(event);
+    }
+  }
 
   useEffect(() => {
     const currentTime = now.getHours() * 60 + now.getMinutes();
-
-    const upcomingEvent = schedule
-      .filter(event => !event.isAllDay && event.startTime)
-      .reduce((selectedEvent: CalendarEvent | null, currentEvent: CalendarEvent) => {
+  
+    let upcomingEvent = null;
+    if (isToday) {
+      for (let i = 0; i < events.length; i++) {
+        const currentEvent = events[i];
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const [currentStartHours, currentStartMinutes] = currentEvent.startTime!.split(':').map(Number);
-        const currentEventTime = currentStartHours * 60 + currentStartMinutes;
-
-        if (!selectedEvent) return currentEvent;
-        if (isToday) {
-          // Show the upcoming event if there are any left for today
-          if (currentEventTime >= currentTime) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const [selectedStartHours, selectedStartMinutes] = selectedEvent.startTime!.split(':').map(Number);
-            const selectedEventTime = selectedStartHours * 60 + selectedStartMinutes;
-            return currentEventTime >= selectedEventTime ? currentEvent : selectedEvent;
-          }
-        } else {
-          // Show the earliest event
+        const currentEventTime = currentEvent.hours! * 60 + currentEvent.minutes!;
+  
+        if (!upcomingEvent && currentEventTime >= currentTime) {
+          upcomingEvent = currentEvent;
+        } else if (upcomingEvent) {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const [selectedStartHours, selectedStartMinutes] = selectedEvent.startTime!.split(':').map(Number);
-          const selectedEventTime = selectedStartHours * 60 + selectedStartMinutes;
-          return currentEventTime < selectedEventTime ? currentEvent : selectedEvent;
+          const selectedEventTime = upcomingEvent.hours! * 60 + upcomingEvent.minutes!;
+          if (currentEventTime >= currentTime && currentEventTime < selectedEventTime) {
+            upcomingEvent = currentEvent;
+          }
         }
-        // If there are no upcoming events, show the last event
-        return selectedEvent;
-      }, null);
+      }
+    } else {
+      upcomingEvent = events[0];
+    }
   
-    const eventToScrollTo = upcomingEvent || schedule[schedule.length - 1];
+    const eventToScrollTo = upcomingEvent || events[events.length - 1];
   
+    console.log(eventToScrollTo);
     if (eventToScrollTo && scrollRef.current) {
-      const position = getEventPosition(eventToScrollTo.startTime || '');
       scrollRef.current.scrollTo({
-        top: position,
+        top: eventToScrollTo.top,
         behavior: "auto"
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schedule, date, is24Hour, view]);
+  }, [events, date, is24Hour, view]);
 
-  const allDayEvents = schedule.filter(event => event.isAllDay);
   const TimelineView = () => (
     <div className="h-full w-full">
       {allDayEvents.length > 0 && (
