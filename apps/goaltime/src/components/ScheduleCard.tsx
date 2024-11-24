@@ -13,7 +13,7 @@ import { Separator } from "@/ui-components/separator";
 import { cn } from "@/libs/ui-components/src/utils";
 import { ScrollArea } from "@/ui-components/scroll-area";
 
-export const DailyCalendar = () => {
+export const ScheduleCard = () => {
   const [date, setDate] = useState(new Date());
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
