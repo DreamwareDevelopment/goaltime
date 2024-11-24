@@ -12,46 +12,81 @@ import {
 import { Separator } from "@/ui-components/separator";
 import { cn } from "@/libs/ui-components/src/utils";
 import { ScrollArea } from "@/ui-components/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/libs/ui-components/src/components/ui/card";
 
-export const ScheduleCard = () => {
+interface Schedule {
+  id: number;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  startTime: string | null;
+  endTime: string | null;
+  isAllDay: boolean;
+  color: string;
+}
+
+const fakeData: Schedule[] = [
+  {
+    id: 1,
+    title: "Morning Jog",
+    subtitle: "Daily Exercise",
+    description: "Jogging in the park",
+    startTime: "06:00",
+    endTime: null,
+    isAllDay: true,
+    color: "bg-green-500"
+  },
+  {
+    id: 2,
+    title: "Team Meeting",
+    subtitle: "Project Discussion",
+    description: "Discuss project milestones",
+    startTime: "09:00",
+    endTime: "10:00",
+    isAllDay: false,
+    color: "bg-blue-500"
+  },
+  {
+    id: 3,
+    title: "Lunch Break",
+    subtitle: "Relax and Recharge",
+    description: "Lunch with colleagues",
+    startTime: "12:00",
+    endTime: "13:00",
+    isAllDay: false,
+    color: "bg-yellow-500"
+  },
+  {
+    id: 4,
+    title: "Client Call",
+    subtitle: "Monthly Update",
+    description: "Update client on project status",
+    startTime: "15:00",
+    endTime: "16:00",
+    isAllDay: false,
+    color: "bg-red-500"
+  },
+  {
+    id: 5,
+    title: "Evening Yoga",
+    subtitle: "Relaxation",
+    description: "Yoga session at home",
+    startTime: "18:00",
+    endTime: "19:00",
+    isAllDay: false,
+    color: "bg-purple-500"
+  }
+];
+
+interface ScheduleCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  schedule?: Schedule[];
+}
+
+export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardProps) => {
   const [date, setDate] = useState(new Date());
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  
-  const events = [
-    {
-      id: 1,
-      title: "Ads Campaign Nr2",
-      subtitle: "Day 2 of 5",
-      description: "AdSense + FB, Target Audience: SMB2-Delta3",
-      startTime: null,
-      endTime: null,
-      isAllDay: true,
-      color: "bg-amber-700"
-    },
-    {
-      id: 2,
-      title: "Meditation Session",
-      startTime: "02:00",
-      endTime: "03:30",
-      color: "bg-blue-600"
-    },
-    {
-      id: 3,
-      title: "Code Review",
-      startTime: "04:00",
-      endTime: "05:30",
-      color: "bg-green-700"
-    },
-    {
-      id: 4,
-      title: "Breakfast Break",
-      startTime: "06:30",
-      endTime: "07:30",
-      color: "bg-amber-700"
-    }
-  ];
 
   const navigateDay = (direction: number) => {
     const newDate = new Date(date);
@@ -84,12 +119,15 @@ export const ScheduleCard = () => {
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
 
+  const allDayEvents = schedule.filter(event => event.isAllDay);
   const TimelineView = () => (
     <div className="h-full w-full">
       {/* All-day events section remains the same */}
       <div className="mb-4">
-        <h3 className="text-sm font-medium mb-2">Full-Day Events</h3>
-        {events.filter(event => event.isAllDay).map(event => (
+        {allDayEvents.length > 0 && (
+          <h3 className="font-medium mt-2 mb-1 ml-2">All-Day Events</h3>
+        )}
+        {allDayEvents.map(event => (
           <div
             key={event.id}
             className={cn(
@@ -103,10 +141,13 @@ export const ScheduleCard = () => {
             {event.description && <div className="text-sm">{event.description}</div>}
           </div>
         ))}
+        {allDayEvents.length > 0 && (
+          <Separator className="mt-3" />
+        )}
       </div>
 
       {/* Scrollable Timeline */}
-      <ScrollArea className="h-[600px]">
+      <ScrollArea className="h-[500px]">
         <div className="relative w-[500px]" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
           {/* Hour markers and separators */}
           {Array.from({ length: 24 }, (_, i) => (
@@ -126,7 +167,7 @@ export const ScheduleCard = () => {
 
           {/* Events */}
           <div className="absolute left-[110px] right-2">
-            {events
+            {schedule
               .filter(event => !event.isAllDay && event.startTime && event.endTime)
               .map(event => (
                 <div
@@ -162,8 +203,8 @@ export const ScheduleCard = () => {
   );
 
   const ListView = () => (
-    <ScrollArea className="h-[600px] pr-4 w-full">
-      {events.map(event => (
+    <ScrollArea className="h-[576px] pt-3 w-full">
+      {schedule.map(event => (
         <div
           key={event.id}
           className={cn(
@@ -187,79 +228,88 @@ export const ScheduleCard = () => {
     </ScrollArea>
   );
 
-  return (
-    <div className="p-4 flex flex-col h-full w-full">
-      <div className="flex flex-col items-center justify-between gap-4 mb-4">
-        <div className="flex items-center space-x-4">
+  const DateToolbar = ({ className }: { className?: string }) => (
+    <div className={className}>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => navigateDay(-1)}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+        <PopoverTrigger asChild>
           <Button
             variant="outline"
-            size="icon"
-            onClick={() => navigateDay(-1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "justify-start text-left font-normal w-[240px]",
-                )}
-              >
-                {format(date, "EEE do MMMM")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(newDate) => {
-                  setDate(newDate || new Date());
-                  setCalendarOpen(false);
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigateDay(1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="w-full flex items-center justify-between space-x-2">
-          <Button
-            variant="outline"
-            className={ is24Hour ? "bg-background text-primary" : "bg-foreground text-primary-foreground" }
-            onClick={() => setIs24Hour(!is24Hour)}
-          >
-            {is24Hour ? "24h" : "12h"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setDate(new Date())}
-          >
-            Today
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setView(view === 'timeline' ? 'list' : 'timeline')}
-          >
-            {view === 'timeline' ? (
-              <LayoutList className="h-4 w-4" />
-            ) : (
-              <CalendarIcon className="h-4 w-4" />
+            className={cn(
+              "justify-start text-left font-normal w-[240px]",
             )}
+          >
+            {format(date, "EEE do MMMM")}
           </Button>
-        </div>
-      </div>
-
-      {view === 'timeline' ? <TimelineView /> : <ListView />}
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(newDate) => {
+              setDate(newDate || new Date());
+              setCalendarOpen(false);
+            }}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => navigateDay(1)}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
     </div>
+  )
+
+  const ViewToolbar = ({ className }: { className?: string }) => (
+    <div className={className}>
+      <Button
+        variant="outline"
+        onClick={() => setIs24Hour(!is24Hour)}
+      >
+        {is24Hour ? "24h" : "12h"}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => setDate(new Date())}
+      >
+        Today
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setView(view === 'timeline' ? 'list' : 'timeline')}
+      >
+        {view === 'timeline' ? (
+          <LayoutList className="h-4 w-4" />
+        ) : (
+          <CalendarIcon className="h-4 w-4" />
+        )}
+      </Button>
+    </div>
+  )
+
+  return (
+    <Card className={cn("h-full w-full", className)}>
+      <CardHeader className="flex flex-col items-center gap-2 pt-2 pb-1">
+        <CardTitle className="sr-only">Schedule</CardTitle>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <DateToolbar className="flex items-center justify-between space-x-2" />
+          <ViewToolbar className="flex items-center justify-between space-x-2" />
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center justify-between gap-4 pb-4">
+        {view === 'timeline' ? <TimelineView /> : <ListView />}
+      </CardContent>
+    </Card>
   );
 };
