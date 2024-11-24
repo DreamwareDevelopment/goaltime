@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Button } from "@/ui-components/button";
 import { Calendar } from "@/ui-components/calendar";
@@ -15,7 +15,7 @@ import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/libs/ui-components/src/components/ui/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/libs/ui-components/src/components/ui/accordion";
 
-interface Schedule {
+interface Event {
   id: number;
   title: string;
   subtitle?: string;
@@ -26,7 +26,7 @@ interface Schedule {
   color: string;
 }
 
-const fakeData: Schedule[] = [
+const fakeData: Event[] = [
   {
     id: 1,
     title: "Morning Jog",
@@ -62,8 +62,8 @@ const fakeData: Schedule[] = [
     title: "Client Call",
     subtitle: "Monthly Update",
     description: "Update client on project status",
-    startTime: "15:00",
-    endTime: "16:00",
+    startTime: "23:00",
+    endTime: "24:00",
     isAllDay: false,
     color: "bg-red-500"
   },
@@ -80,7 +80,7 @@ const fakeData: Schedule[] = [
 ];
 
 interface ScheduleCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  schedule?: Schedule[];
+  schedule?: Event[];
 }
 
 export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardProps) => {
@@ -88,6 +88,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const navigateDay = (direction: number) => {
     const newDate = new Date(date);
@@ -120,6 +121,48 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
 
+  useEffect(() => {
+    const now = new Date();
+    const isToday = now.toDateString() === date.toDateString();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    const upcomingEvent = schedule
+      .filter(event => !event.isAllDay && event.startTime && event.endTime)
+      .reduce((selectedEvent: Event | null, currentEvent: Event) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const [currentStartHours, currentStartMinutes] = currentEvent.startTime!.split(':').map(Number);
+        const currentEventTime = currentStartHours * 60 + currentStartMinutes;
+
+        if (isToday) {
+          if (currentEventTime >= currentTime) {
+            if (!selectedEvent) return currentEvent;
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const [selectedStartHours, selectedStartMinutes] = selectedEvent.startTime!.split(':').map(Number);
+            const selectedEventTime = selectedStartHours * 60 + selectedStartMinutes;
+            return currentEventTime < selectedEventTime ? currentEvent : selectedEvent;
+          }
+        } else {
+          if (!selectedEvent) return currentEvent;
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const [selectedStartHours, selectedStartMinutes] = selectedEvent.startTime!.split(':').map(Number);
+          const selectedEventTime = selectedStartHours * 60 + selectedStartMinutes;
+          return currentEventTime < selectedEventTime ? currentEvent : selectedEvent;
+        }
+
+        return selectedEvent;
+      }, null);
+  
+    const eventToScrollTo = upcomingEvent || schedule[schedule.length - 1];
+  
+    if (eventToScrollTo && scrollRef.current) {
+      const position = getEventPosition(eventToScrollTo.startTime || '');
+      scrollRef.current.scrollTo({
+        top: position,
+        behavior: "auto"
+      });
+    }
+  }, [schedule, date]);
+
   const allDayEvents = schedule.filter(event => event.isAllDay);
   const TimelineView = () => (
     <div className="h-full w-full">
@@ -150,7 +193,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
       )}
 
       {/* Scrollable Timeline */}
-      <ScrollArea className="h-[500px] pr-4">
+      <ScrollArea className="h-[500px] pr-4" scrollRef={scrollRef}>
         <div className="relative" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
           {/* Hour markers and separators */}
           {Array.from({ length: 24 }, (_, i) => (

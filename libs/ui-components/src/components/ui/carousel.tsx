@@ -70,7 +70,6 @@ const Carousel = forwardRef<
     },
     ref,
   ) => {
-    console.log(`Carousel rendered`);
     const [emblaMainRef, emblaMainApi] = useEmblaCarousel(
       {
         ...carouselOptions,
