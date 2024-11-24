@@ -98,6 +98,18 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
       allDayEvents.push(event);
     }
   }
+  const shiftOverlappingEvents = (events: ViewEvent[]) => {
+    for (let i = 0; i < events.length; i++) {
+      for (let j = i + 1; j < events.length; j++) {
+        if (events[j].top >= events[i].top + events[i].height) {
+          // No more overlaps possible, break out of the loop
+          break;
+        }
+        events[j].left = (events[i].left || 0) + 42;
+      }
+    }
+  };
+  shiftOverlappingEvents(events);
 
   useEffect(() => {
     const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -125,7 +137,6 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
   
     const eventToScrollTo = upcomingEvent || events[events.length - 1];
   
-    console.log(eventToScrollTo);
     if (eventToScrollTo && scrollRef.current) {
       scrollRef.current.scrollTo({
         top: eventToScrollTo.top,
@@ -187,10 +198,6 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
           {/* Events */}
           <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
             {events.map((event, index) => {
-              // Check for overlap with previous event
-              const isOverlapping = index > 0 && events[index - 1].top + events[index - 1].height > event.top;
-              const leftOffset = isOverlapping ? '10%' : '0';
-
               return (
                 <div
                   key={event.id}
@@ -203,7 +210,7 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
                     top: `${event.top}px`,
                     height: `${event.height}px`,
                     minHeight: '20px',
-                    left: leftOffset
+                    left: event.left
                   }}
                 >
                   <div className="text-sm">
