@@ -150,8 +150,8 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
       )}
 
       {/* Scrollable Timeline */}
-      <ScrollArea className="h-[500px]">
-        <div className="relative w-[500px]" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
+      <ScrollArea className="h-[500px] pr-4">
+        <div className="relative" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
           {/* Hour markers and separators */}
           {Array.from({ length: 24 }, (_, i) => (
             <div 
@@ -159,7 +159,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
               className="absolute w-full"
               style={{ top: `${i * HOUR_HEIGHT}px` }}
             >
-              <div className="grid grid-cols-[84px_1fr] gap-2">
+              <div className="grid grid-cols-[72px_1fr] lg:grid-cols-[84px_1fr] gap-2">
                 <div className="text-sm text-muted-foreground text-nowrap sticky left-0">
                   {formatTime(`${String(i).padStart(2, '0')}:00`)}
                 </div>
@@ -169,7 +169,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
           ))}
 
           {/* Events */}
-          <div className="absolute left-[110px] right-2">
+          <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
             {schedule
               .filter(event => !event.isAllDay && event.startTime && event.endTime)
               .map(event => (
@@ -192,6 +192,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
                       <span>, {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}</span>
                     )}
                   </div>
+                  {/* Show time on second row only if event is more than 45px */}
                   {getEventHeight(event.startTime || '', event.endTime || '') >= 45 && (
                     <div className="text-sm">
                       {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}
@@ -206,7 +207,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
   );
 
   const ListView = () => (
-    <ScrollArea className="h-[576px] pt-3 w-full">
+    <ScrollArea className="h-[576px] pt-4 pr-4 w-full">
       {schedule.map(event => (
         <div
           key={event.id}
@@ -303,14 +304,14 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
 
   return (
     <Card className={cn("h-full w-full", className)}>
-      <CardHeader className="flex flex-col items-center gap-2 pt-2 pb-1">
+      <CardHeader className="flex flex-col items-center gap-2 pt-2 pb-0">
         <CardTitle className="sr-only">Schedule</CardTitle>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <DateToolbar className="flex items-center justify-between space-x-2" />
           <ViewToolbar className="flex items-center justify-between space-x-2" />
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-between gap-4 pb-4">
+      <CardContent className="flex flex-col items-center justify-between gap-4 pb-4 px-2 lg:px-4">
         {view === 'timeline' ? <TimelineView /> : <ListView />}
       </CardContent>
     </Card>
