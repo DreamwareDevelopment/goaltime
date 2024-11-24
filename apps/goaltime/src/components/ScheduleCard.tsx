@@ -241,7 +241,7 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
           <Button
             variant="outline"
             className={cn(
-              "justify-start text-left font-normal w-[240px]",
+              "justify-start text-left font-normal",
             )}
           >
             {format(date, "EEE do MMMM")}
