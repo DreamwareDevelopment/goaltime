@@ -97,8 +97,8 @@ export default function Dashboard() {
         <UserAvatar image="https://github.com/shadcn.png" name="John Doe" email="john.doe@example.com" />
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <GoalCarousel goals={goals} className="md:col-span-2 overflow-hidden" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GoalCarousel goals={goals} className="lg:col-span-2 overflow-hidden" />
         <GoalProgressCard goals={goals} />
         <ScheduleCard schedule={schedule} />
       </div>
