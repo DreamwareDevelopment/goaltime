@@ -71,6 +71,16 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
     const endInMinutes = (endHours * 60) + endMinutes;
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
+  const events = schedule
+      .filter(event => !event.isAllDay && event.startTime && event.endTime)
+      .map(event => ({
+        ...event,
+        top: getEventPosition(event.startTime || ''),
+        height: getEventHeight(event.startTime || '', event.endTime || '')
+      }));
+
+  // Sort events by start time
+  events.sort((a, b) => a.top - b.top);
 
   useEffect(() => {
     const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -129,7 +139,7 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
                   key={event.id}
                   className={cn(
                     "px-2 mb-2 rounded-md",
-                    "text-primary"
+                    "text-white"
                   )}
                   style={{
                     backgroundColor: event.color
@@ -166,36 +176,41 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
 
           {/* Events */}
           <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
-            {schedule
-              .filter(event => !event.isAllDay && event.startTime && event.endTime)
-              .map(event => (
+            {events.map((event, index) => {
+              // Check for overlap with previous event
+              const isOverlapping = index > 0 && events[index - 1].top + events[index - 1].height > event.top;
+              const leftOffset = isOverlapping ? '10%' : '0';
+
+              return (
                 <div
                   key={event.id}
                   className={cn(
                     "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                    "text-primary"
+                    "text-white"
                   )}
                   style={{
                     backgroundColor: event.color,
-                    top: `${getEventPosition(event.startTime || '')}px`,
-                    height: `${getEventHeight(event.startTime || '', event.endTime || '')}px`,
-                    minHeight: '20px'
+                    top: `${event.top}px`,
+                    height: `${event.height}px`,
+                    minHeight: '20px',
+                    left: leftOffset
                   }}
                 >
                   <div className="text-sm">
                     {event.title}
-                    {getEventHeight(event.startTime || '', event.endTime || '') < 45 && (
+                    {event.height < 45 && (
                       <span>, {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}</span>
                     )}
                   </div>
                   {/* Show time on second row only if event is more than 45px */}
-                  {getEventHeight(event.startTime || '', event.endTime || '') >= 45 && (
+                  {event.height >= 45 && (
                     <div className="text-sm">
                       {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}
                     </div>
                   )}
                 </div>
-              ))}
+              );
+            })}
           </div>
         </div>
       </ScrollArea>
@@ -210,9 +225,11 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
           className={cn(
             "flex-shrink-0",
             "p-3 mb-2 rounded-md",
-            event.color,
-            "text-primary"
+            "text-white"
           )}
+          style={{
+            backgroundColor: event.color
+          }}
         >
           <div className="font-medium">{event.title}</div>
           {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
