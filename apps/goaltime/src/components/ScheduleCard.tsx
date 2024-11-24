@@ -1,3 +1,5 @@
+'use client'
+
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
 import React, { useEffect, useRef, useState } from 'react';
@@ -15,7 +17,7 @@ import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/libs/ui-components/src/components/ui/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/libs/ui-components/src/components/ui/accordion";
 
-interface Event {
+export interface CalendarEvent {
   id: number;
   title: string;
   subtitle?: string;
@@ -26,64 +28,11 @@ interface Event {
   color: string;
 }
 
-const fakeData: Event[] = [
-  {
-    id: 1,
-    title: "Morning Jog",
-    subtitle: "Daily Exercise",
-    description: "Jogging in the park",
-    startTime: "06:00",
-    endTime: null,
-    isAllDay: true,
-    color: "bg-green-500"
-  },
-  {
-    id: 2,
-    title: "Team Meeting",
-    subtitle: "Project Discussion",
-    description: "Discuss project milestones",
-    startTime: "09:00",
-    endTime: "10:00",
-    isAllDay: false,
-    color: "bg-blue-500"
-  },
-  {
-    id: 3,
-    title: "Lunch Break",
-    subtitle: "Relax and Recharge",
-    description: "Lunch with colleagues",
-    startTime: "12:00",
-    endTime: "13:00",
-    isAllDay: false,
-    color: "bg-yellow-500"
-  },
-  {
-    id: 4,
-    title: "Client Call",
-    subtitle: "Monthly Update",
-    description: "Update client on project status",
-    startTime: "23:00",
-    endTime: "24:00",
-    isAllDay: false,
-    color: "bg-red-500"
-  },
-  {
-    id: 5,
-    title: "Evening Yoga",
-    subtitle: "Relaxation",
-    description: "Yoga session at home",
-    startTime: "18:00",
-    endTime: "19:00",
-    isAllDay: false,
-    color: "bg-purple-500"
-  }
-];
-
 interface ScheduleCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  schedule?: Event[];
+  schedule: CalendarEvent[];
 }
 
-export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardProps) => {
+export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
   const [date, setDate] = useState(new Date());
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
@@ -127,28 +76,29 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
     const currentTime = now.getHours() * 60 + now.getMinutes();
 
     const upcomingEvent = schedule
-      .filter(event => !event.isAllDay && event.startTime && event.endTime)
-      .reduce((selectedEvent: Event | null, currentEvent: Event) => {
+      .filter(event => !event.isAllDay && event.startTime)
+      .reduce((selectedEvent: CalendarEvent | null, currentEvent: CalendarEvent) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const [currentStartHours, currentStartMinutes] = currentEvent.startTime!.split(':').map(Number);
         const currentEventTime = currentStartHours * 60 + currentStartMinutes;
 
+        if (!selectedEvent) return currentEvent;
         if (isToday) {
+          // Show the upcoming event if there are any left for today
           if (currentEventTime >= currentTime) {
-            if (!selectedEvent) return currentEvent;
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const [selectedStartHours, selectedStartMinutes] = selectedEvent.startTime!.split(':').map(Number);
             const selectedEventTime = selectedStartHours * 60 + selectedStartMinutes;
-            return currentEventTime < selectedEventTime ? currentEvent : selectedEvent;
+            return currentEventTime >= selectedEventTime ? currentEvent : selectedEvent;
           }
         } else {
-          if (!selectedEvent) return currentEvent;
+          // Show the earliest event
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const [selectedStartHours, selectedStartMinutes] = selectedEvent.startTime!.split(':').map(Number);
           const selectedEventTime = selectedStartHours * 60 + selectedStartMinutes;
           return currentEventTime < selectedEventTime ? currentEvent : selectedEvent;
         }
-
+        // If there are no upcoming events, show the last event
         return selectedEvent;
       }, null);
   
@@ -161,7 +111,7 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
         behavior: "auto"
       });
     }
-  }, [schedule, date]);
+  }, [schedule, date, is24Hour, view]);
 
   const allDayEvents = schedule.filter(event => event.isAllDay);
   const TimelineView = () => (
@@ -178,9 +128,11 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
                   key={event.id}
                   className={cn(
                     "px-2 mb-2 rounded-md",
-                    event.color,
                     "text-primary"
                   )}
+                  style={{
+                    backgroundColor: event.color
+                  }}
                 >
                   <div className="font-medium">{event.title}</div>
                   {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
@@ -220,10 +172,10 @@ export const ScheduleCard = ({ schedule = fakeData, className }: ScheduleCardPro
                   key={event.id}
                   className={cn(
                     "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                    event.color,
                     "text-primary"
                   )}
                   style={{
+                    backgroundColor: event.color,
                     top: `${getEventPosition(event.startTime || '')}px`,
                     height: `${getEventHeight(event.startTime || '', event.endTime || '')}px`,
                     minHeight: '20px'

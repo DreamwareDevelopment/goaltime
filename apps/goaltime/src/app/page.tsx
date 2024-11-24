@@ -5,12 +5,12 @@ import React from 'react'
 import { UserAvatar } from "@/ui-components/avatar-user"
 import { GoalCarousel } from '../components/GoalCarousel'
 import { GoalProgressCard } from '../components/GoalProgressCard'
-import { GoalScheduleCard } from '../components/GoalScheduleCard'
 import { ActionsCard } from '../components/ActionsCard'
 import { GoalyticsCard } from '../components/GoalyticsCard'
 import { GoalCreationButton } from '../components/GoalCreationButton'
 import { Goal } from '../components/GoalSetupCard'
 import { Milestone, MilestoneView } from '../components/MilestonesCard'
+import { CalendarEvent, ScheduleCard } from '../components/ScheduleCard'
 
 export default function Dashboard() {
   const milestones: Milestone[] = [
@@ -26,15 +26,68 @@ export default function Dashboard() {
     { id: 5, title: "Meditation", commitment: 7, completed: 5, color: "#6a5acd", milestones, priority: 'Medium', preferredTimes: [] },
     { id: 6, title: "Cooking", commitment: 8, completed: 6, color: "#48d1cc", milestones, priority: 'High', preferredTimes: [] }
   ]
-
-  const schedule = [
-    { id: 1, name: "Startup Work", time: "10:00 AM - 12:00 PM", callEnabled: true, messageEnabled: false, pushEnabled: false },
-    { id: 2, name: "Exercise", time: "1:00 PM - 2:00 PM", callEnabled: false, messageEnabled: true, pushEnabled: false },
-    { id: 3, name: "Learning Spanish", time: "7:00 PM - 8:00 PM", callEnabled: true, messageEnabled: true, pushEnabled: true },
-    { id: 4, name: "Reading", time: "3:00 PM - 4:00 PM", callEnabled: false, messageEnabled: false, pushEnabled: true },
-    { id: 5, name: "Meditation", time: "6:00 AM - 6:30 AM", callEnabled: false, messageEnabled: false, pushEnabled: false },
-    { id: 6, name: "Cooking", time: "5:00 PM - 6:00 PM", callEnabled: true, messageEnabled: false, pushEnabled: false },
-  ]
+  const schedule: CalendarEvent[] = [
+    {
+      id: 1,
+      title: "Startup Work",
+      subtitle: "Milestone: Review project proposal",
+      description: "Complete 20 hours of Startup Work",
+      startTime: "9:00",
+      endTime: "10:00",
+      isAllDay: false,
+      color: "#8884d8",
+    },
+    {
+      id: 2,
+      title: "Exercise",
+      subtitle: "Milestone: Review project proposal",
+      description: "Complete 5 hours of Exercise",
+      startTime: "14:00",
+      endTime: "15:00",
+      isAllDay: false,
+      color: "#82ca9d",
+    },
+    {
+      id: 3,
+      title: "Learning Spanish",
+      subtitle: "Milestone: Review project proposal",
+      description: "Complete 3 hours of Learning Spanish",
+      startTime: "17:00",
+      endTime: "18:00",
+      isAllDay: false,
+      color: "#ffc658",
+    },
+    {
+      id: 4,
+      title: "Reading",
+      subtitle: "Milestone: Review project proposal",
+      description: "Complete 10 hours of Reading",
+      startTime: "18:30",
+      endTime: "19:00",
+      isAllDay: false,
+      color: "#ff7f50",
+    },
+    {
+      id: 5,
+      title: "Meditation",
+      subtitle: "Milestone: Review project proposal",
+      description: "Complete 7 hours of Meditation",
+      startTime: null,
+      endTime: null,
+      isAllDay: true,
+      color: "#6a5acd",
+    },
+    {
+      id: 6,
+      title: "Cooking",
+      subtitle: "Milestone: Review project proposal",
+      description: "Complete 8 hours of Cooking",
+      startTime: "22:00",
+      endTime: "23:00",
+      isAllDay: false,
+      color: "#48d1cc",
+    }
+  ];
 
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
@@ -47,7 +100,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <GoalCarousel goals={goals} className="md:col-span-2 overflow-hidden" />
         <GoalProgressCard goals={goals} />
-        <GoalScheduleCard schedule={schedule} />
+        <ScheduleCard schedule={schedule} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
