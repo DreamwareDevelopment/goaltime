@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs';
 import { Input } from '@/ui-components/input';
 import { Label } from '@/ui-components/label';
 
-import { Goal } from './GoalSetupCard';
+import { Goal } from '../GoalSetupCard';
 import { Checkbox } from '@/libs/ui-components/src/components/ui/checkbox';
 
 export interface NotificationSettingsObject {

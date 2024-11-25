@@ -11,6 +11,7 @@ import { GoalCreationButton } from '../components/GoalCreationButton'
 import { Goal } from '../components/GoalSetupCard'
 import { Milestone, MilestoneView } from '../components/MilestonesCard'
 import { CalendarEvent, ScheduleCard } from '../components/ScheduleCard'
+import { defaultNotificationSettings } from '../components/Settings/Notifications'
 
 export default function Dashboard() {
   const milestones: Milestone[] = [
@@ -19,12 +20,12 @@ export default function Dashboard() {
     { id: 3, text: "Update progress report", completed: false, view: MilestoneView.Daily },
   ];
   const goals: Goal[] = [
-    { id: 1, title: "Startup Work", commitment: 20, completed: 18, color: "#8884d8", milestones, priority: 'High', preferredTimes: [] },
-    { id: 2, title: "Exercise", commitment: 5, completed: 4, color: "#82ca9d", milestones, priority: 'High', preferredTimes: [] },
-    { id: 3, title: "Learning Spanish", commitment: 3, completed: 2, color: "#ffc658", milestones, priority: 'Medium', preferredTimes: [] },
-    { id: 4, title: "Reading", commitment: 10, completed: 7, color: "#ff7f50", milestones, priority: 'Low', preferredTimes: [] },
-    { id: 5, title: "Meditation", commitment: 7, completed: 5, color: "#6a5acd", milestones, priority: 'Medium', preferredTimes: [] },
-    { id: 6, title: "Cooking", commitment: 8, completed: 6, color: "#48d1cc", milestones, priority: 'High', preferredTimes: [] }
+    { id: 1, title: "Startup Work", commitment: 20, completed: 18, color: "#8884d8", milestones, priority: 'High', preferredTimes: [], notifications: { ...defaultNotificationSettings } },
+    { id: 2, title: "Exercise", commitment: 5, completed: 4, color: "#82ca9d", milestones, priority: 'High', preferredTimes: [], notifications: { ...defaultNotificationSettings } },
+    { id: 3, title: "Learning Spanish", commitment: 3, completed: 2, color: "#ffc658", milestones, priority: 'Medium', preferredTimes: [], notifications: { ...defaultNotificationSettings } },
+    { id: 4, title: "Reading", commitment: 10, completed: 7, color: "#ff7f50", milestones, priority: 'Low', preferredTimes: [], notifications: { ...defaultNotificationSettings } },
+    { id: 5, title: "Meditation", commitment: 7, completed: 5, color: "#6a5acd", milestones, priority: 'Medium', preferredTimes: [], notifications: { ...defaultNotificationSettings } },
+    { id: 6, title: "Cooking", commitment: 8, completed: 6, color: "#48d1cc", milestones, priority: 'High', preferredTimes: [], notifications: { ...defaultNotificationSettings } }
   ]
   const schedule: CalendarEvent[] = [
     {

@@ -11,15 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { FloatingLabelInput } from '@/ui-components/floating-input'
 import { Label } from '@/ui-components/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui-components/select'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui-components/tooltip'
 import { Input } from '@/ui-components/input'
 import { AutosizeTextarea } from '@/ui-components/text-area'
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui-components/popover'
 
 import { Milestone } from './MilestonesCard'
-import { defaultNotificationSettings, NotificationSettings } from './GoalNotificationsSection'
+import { defaultNotificationSettings, NotificationSettings } from './Settings/Notifications'
+import { PreferredTimes, TimeSlot } from './Settings/PreferredTimes'
 
-export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
 export type Priority = 'High' | 'Medium' | 'Low'
 const priorities: { [key in Priority]: string } = {
   High: 'Never reschedule',
@@ -54,15 +53,6 @@ const defaultGoal = (color: string): Goal => ({
   notifications: defaultNotificationSettings,
 });
 
-const timeSlots: { [key in TimeSlot]: string } = {
-  'Early Morning': '5-8AM',
-  'Morning': '8-11AM',
-  'Midday': '11AM-2PM',
-  'Afternoon': '2-5PM',
-  'Evening': '5-8PM',
-  'Night': '8-11PM',
-}
-
 const colorPresets = [
   '#FF6900', '#FCB900', '#7BDCB5', '#00D084', '#8ED1FC', '#0693E3',
   '#ABB8C3', '#EB144C', '#F78DA7', '#9900EF'
@@ -78,15 +68,6 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setCurrentGoal(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleTimeSlotToggle = (slot: TimeSlot) => {
-    setCurrentGoal(prev => ({
-      ...prev,
-      preferredTimes: prev.preferredTimes.includes(slot)
-        ? prev.preferredTimes.filter(t => t !== slot)
-        : [...prev.preferredTimes, slot]
-    }))
   }
 
   const handleSave = () => {
@@ -182,29 +163,7 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
             </Popover>
           </div>
         </div>
-        <div className="space-y-2">
-          <Label className="ml-2">Preferred Time Slots</Label>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(timeSlots).map(([slot, time]) => (
-              <TooltipProvider key={slot}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={currentGoal.preferredTimes.includes(slot as TimeSlot) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleTimeSlotToggle(slot as TimeSlot)}
-                    >
-                      {slot}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{time}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-          </div>
-        </div>
+        <PreferredTimes goal={currentGoal} />
         <NotificationSettings goal={currentGoal} />
         <ShinyButton variant="gooeyLeft" className="w-full max-w-[707px] ml-[2px]" onClick={handleSave} style={{ backgroundColor: currentGoal.color }}>
           <Save className="mr-2 h-4 w-4" /> Save Goal
