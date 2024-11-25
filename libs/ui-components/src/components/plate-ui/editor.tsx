@@ -1,9 +1,8 @@
-'use client';
-
 import React from 'react';
 
 import type { PlateContentProps } from '@udecode/plate-common/react';
 import type { VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 
 import { cn } from '@udecode/cn';
 import {
@@ -11,7 +10,6 @@ import {
   useEditorContainerRef,
   useEditorRef,
 } from '@udecode/plate-common/react';
-import { cva } from 'class-variance-authority';
 
 const editorContainerVariants = cva(
   'relative w-full cursor-text overflow-y-auto caret-primary selection:bg-brand/25 [&_.slate-selection-area]:border [&_.slate-selection-area]:border-brand/25 [&_.slate-selection-area]:bg-brand/15',

@@ -1,4 +1,5 @@
-'use client';
+import { PlusIcon, Trash2, Check, X } from "lucide-react";
+import { useState } from "react";
 
 import { cn } from "@/libs/ui-components/src/utils";
 import { Card, CardContent, CardFooter } from "@/ui-components/card";
@@ -6,10 +7,8 @@ import { Button } from "@/ui-components/button-shiny";
 import { Checkbox } from "@/ui-components/checkbox";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Input } from "@/ui-components/input";
-import { PlusIcon, Trash2, Check, X } from "lucide-react";
 
 import { Goal } from "./GoalSettingsCard";
-import { useState } from "react";
 
 export interface Milestone {
   id: number;

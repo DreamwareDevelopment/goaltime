@@ -1,5 +1,3 @@
-'use client';
-
 import { withProps } from '@udecode/cn';
 import { BasicElementsPlugin } from '@udecode/plate-basic-elements/react';
 import {

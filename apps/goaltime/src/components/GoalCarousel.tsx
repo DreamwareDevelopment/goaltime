@@ -1,13 +1,11 @@
-'use client';
+import { useEffect, useState } from "react";
 
 import { cn } from "@/libs/ui-components/src/utils"
-import { Card } from "@/libs/ui-components/src/components/ui/card"
-import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer, CarouselNext, CarouselPrevious } from "@/libs/ui-components/src/components/ui/carousel"
+import { Card } from "@/ui-components/card"
+import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer, CarouselNext, CarouselPrevious } from "@/ui-components/carousel"
 
 import { GoalCard } from "./GoalCard"
 import { Goal } from "./GoalSettingsCard";
-import { useState } from "react";
-import { useEffect } from "react";
 
 export interface GoalCarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]

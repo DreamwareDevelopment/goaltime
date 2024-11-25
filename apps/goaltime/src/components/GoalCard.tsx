@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from "@/libs/ui-components/src/utils"
 import { PlateEditor } from "@/plate-ui/plate-editor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";

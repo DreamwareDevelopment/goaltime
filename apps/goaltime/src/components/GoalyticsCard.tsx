@@ -1,12 +1,10 @@
-'use client';
-
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { useState } from "react"
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 import { cn } from "@/libs/ui-components/src/utils"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/libs/ui-components/src/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/ui-components/card"
 import { MultiSelect, Option } from "@/ui-components/multi-select"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/libs/ui-components/src/components/ui/select"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/ui-components/select"
 
 import { Goal } from "./GoalSettingsCard"
 

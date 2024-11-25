@@ -1,11 +1,10 @@
-'use client';
-
 import { Target, Settings, ArrowUpRightIcon, NotebookIcon } from "lucide-react"
+
+import { ChatBubbleIcon, StarFilledIcon } from "@radix-ui/react-icons";
 
 import { cn } from "@/libs/ui-components/src/utils"
 import { Card, CardHeader, CardTitle, CardContent } from "@/ui-components/card"
 import { Button } from "@/ui-components/button-shiny"
-import { ChatBubbleIcon, StarFilledIcon } from "@radix-ui/react-icons";
 
 export function ActionsCard({ className }: React.HTMLAttributes<HTMLDivElement>) {
   return (

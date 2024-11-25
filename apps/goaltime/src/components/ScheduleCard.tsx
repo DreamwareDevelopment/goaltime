@@ -1,9 +1,8 @@
-'use client'
-
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
 import React, { useEffect, useRef, useState } from 'react';
 
+import { cn } from "@/libs/ui-components/src/utils";
 import { Button } from "@/ui-components/button";
 import { Calendar } from "@/ui-components/calendar";
 import {
@@ -12,10 +11,9 @@ import {
   PopoverTrigger,
 } from "@/ui-components/popover";
 import { Separator } from "@/ui-components/separator";
-import { cn } from "@/libs/ui-components/src/utils";
 import { ScrollArea } from "@/ui-components/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/libs/ui-components/src/components/ui/card";
-import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/libs/ui-components/src/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
+import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
 import { binarySearchInsert } from "@/shared";
 
 export interface CalendarEvent {

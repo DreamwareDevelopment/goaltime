@@ -1,7 +1,6 @@
-'use client';
+import { useAtomCallback } from 'jotai/utils';
 
 import { Plate } from '@udecode/plate-common/react';
-import { useAtomCallback } from 'jotai/utils';
 
 import { useCreateEditor } from './use-create-editor';
 import { Editor, EditorContainer } from './editor';
