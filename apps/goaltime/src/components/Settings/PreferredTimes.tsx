@@ -1,8 +1,12 @@
+'use client'
+
+import { useState } from "react";
+
 import { Label } from "@/ui-components/label";
 import { Button } from "@/ui-components/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui-components/tooltip'
-import { Goal } from "../GoalSetupCard";
-import { useState } from "react";
+
+import { Goal } from "../GoalSettingsCard";
 
 export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
 
@@ -20,6 +24,7 @@ interface PreferredTimesProps {
 }
 
 export const PreferredTimes = ({ goal }: PreferredTimesProps) => {
+  // TODO: Proper state management
   const [preferredTimes, setPreferredTimes] = useState(goal.preferredTimes);
   const handleTimeSlotToggle = (slot: TimeSlot) => {
     setPreferredTimes(prev => prev.includes(slot) ? prev.filter(t => t !== slot) : [...prev, slot])

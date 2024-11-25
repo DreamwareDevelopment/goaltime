@@ -4,7 +4,7 @@ import { Button } from '@/ui-components/button'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Badge } from '@/ui-components/badge'
 import { Lightbulb, Plus } from 'lucide-react'
-import { Priority } from './GoalSetupCard'
+import { Priority } from './GoalSettingsCard'
 
 export interface GoalRecommendation {
   title: string;

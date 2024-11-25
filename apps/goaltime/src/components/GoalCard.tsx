@@ -8,9 +8,7 @@ import { ScrollArea } from "@/ui-components/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
 
 import { MilestonesCard, MilestoneView } from "./MilestonesCard";
-import { Goal } from "./GoalSetupCard";
-import { NotificationSettings } from "./Settings/Notifications";
-import { PreferredTimes } from "./Settings/PreferredTimes";
+import { Goal, GoalSettingsCard } from "./GoalSettingsCard";
 
 export interface GoalCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal: Goal;
@@ -56,8 +54,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         <AccordionItem value="settings" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
-            <PreferredTimes goal={goal} />
-            <NotificationSettings goal={goal} />
+            <GoalSettingsCard goal={goal} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

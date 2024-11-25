@@ -4,7 +4,7 @@ import { cn } from "@/libs/ui-components/src/utils"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"
 
-import { Goal } from "./GoalSetupCard"
+import { Goal } from "./GoalSettingsCard"
 import { GoalCreationButton } from "./GoalCreationButton";
 
 export interface GoalProgressCardProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -8,7 +8,7 @@ import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Input } from "@/ui-components/input";
 import { PlusIcon, Trash2, Check, X } from "lucide-react";
 
-import { Goal } from "./GoalSetupCard";
+import { Goal } from "./GoalSettingsCard";
 import { useState } from "react";
 
 export interface Milestone {

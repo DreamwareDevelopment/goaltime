@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/libs/ui-
 import { MultiSelect, Option } from "@/ui-components/multi-select"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/libs/ui-components/src/components/ui/select"
 
-import { Goal } from "./GoalSetupCard"
+import { Goal } from "./GoalSettingsCard"
 
 export interface GoalyticsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[]

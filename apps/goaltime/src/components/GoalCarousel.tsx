@@ -5,7 +5,7 @@ import { Card } from "@/libs/ui-components/src/components/ui/card"
 import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer, CarouselNext, CarouselPrevious } from "@/libs/ui-components/src/components/ui/carousel"
 
 import { GoalCard } from "./GoalCard"
-import { Goal } from "./GoalSetupCard";
+import { Goal } from "./GoalSettingsCard";
 import { useState } from "react";
 import { useEffect } from "react";
 

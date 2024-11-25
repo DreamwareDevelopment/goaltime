@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs';
 import { Input } from '@/ui-components/input';
 import { Label } from '@/ui-components/label';
 
-import { Goal } from '../GoalSetupCard';
+import { Goal } from '../GoalSettingsCard';
 import { Checkbox } from '@/libs/ui-components/src/components/ui/checkbox';
 
 export interface NotificationSettingsObject {
@@ -49,6 +49,7 @@ interface NotificationSettingsProps {
 }
 
 export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal }) => {
+  // TODO: Proper state management
   const [settings, setSettings] = useState(goal.notifications);
   const handleInputChange = (type: keyof NotificationSettings, field: keyof NotificationSettingsObject, value: number | boolean) => {
     const updatedSettings = {

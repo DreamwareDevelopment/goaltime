@@ -4,7 +4,7 @@ import { Button } from "@/ui-components/button-shiny";
 import { ResponsiveModal, ResponsiveModalContent, ResponsiveModalDescription, ResponsiveModalTitle, ResponsiveModalTrigger } from "@/ui-components/modal";
 
 import { GoalRecommendationsCard } from "./GoalRecommendationsCard";
-import GoalSetupCard from "./GoalSetupCard";
+import { GoalSettingsCard } from "./GoalSettingsCard";
 
 export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivElement>) {
   return (
@@ -17,7 +17,7 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
       <ResponsiveModalContent>
         <ResponsiveModalTitle className="sr-only">Set Your Goal</ResponsiveModalTitle>
         <ResponsiveModalDescription className="sr-only">This modal allows you to set a new goal and view new goal recommendations.</ResponsiveModalDescription>
-        <GoalSetupCard />
+        <GoalSettingsCard showTitle />
         <GoalRecommendationsCard />
       </ResponsiveModalContent>
     </ResponsiveModal>
