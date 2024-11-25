@@ -17,6 +17,7 @@ import { AutosizeTextarea } from '@/ui-components/text-area'
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui-components/popover'
 
 import { Milestone } from './MilestonesCard'
+import { defaultNotificationSettings, NotificationSettings } from './GoalNotificationsSection'
 
 export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
 export type Priority = 'High' | 'Medium' | 'Low'
@@ -37,6 +38,7 @@ export interface Goal {
   preferredTimes: TimeSlot[];
   color: string;
   milestones: Milestone[];
+  notifications: NotificationSettings;
 }
 
 const defaultGoal = (color: string): Goal => ({
@@ -49,6 +51,7 @@ const defaultGoal = (color: string): Goal => ({
   preferredTimes: [],
   color,
   milestones: [],
+  notifications: defaultNotificationSettings,
 });
 
 const timeSlots: { [key in TimeSlot]: string } = {
@@ -202,6 +205,7 @@ export default function GoalSetupCard({ color, className }: GoalSetupCardProps) 
             ))}
           </div>
         </div>
+        <NotificationSettings goal={currentGoal} />
         <ShinyButton variant="gooeyLeft" className="w-full max-w-[707px] ml-[2px]" onClick={handleSave} style={{ backgroundColor: currentGoal.color }}>
           <Save className="mr-2 h-4 w-4" /> Save Goal
         </ShinyButton>
