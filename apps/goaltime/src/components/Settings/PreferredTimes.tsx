@@ -1,7 +1,3 @@
-'use client'
-
-import { useState } from "react";
-
 import { Label } from "@/ui-components/label";
 import { Button } from "@/ui-components/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui-components/tooltip'
@@ -21,13 +17,13 @@ const timeSlots: { [key in TimeSlot]: string } = {
 
 interface PreferredTimesProps {
   goal: Goal;
+  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
 }
 
-export const PreferredTimes = ({ goal }: PreferredTimesProps) => {
-  // TODO: Proper state management
-  const [preferredTimes, setPreferredTimes] = useState(goal.preferredTimes);
+export const PreferredTimes = ({ goal, onChange }: PreferredTimesProps) => {
   const handleTimeSlotToggle = (slot: TimeSlot) => {
-    setPreferredTimes(prev => prev.includes(slot) ? prev.filter(t => t !== slot) : [...prev, slot])
+    const newPreferredTimes = goal.preferredTimes.includes(slot) ? goal.preferredTimes.filter(t => t !== slot) : [...goal.preferredTimes, slot];
+    onChange('preferredTimes', newPreferredTimes);
   }
   return (
     <div className="space-y-2">
@@ -38,7 +34,7 @@ export const PreferredTimes = ({ goal }: PreferredTimesProps) => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={preferredTimes.includes(slot as TimeSlot) ? "default" : "outline"}
+                  variant={goal.preferredTimes.includes(slot as TimeSlot) ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleTimeSlotToggle(slot as TimeSlot)}
                 >

@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs';
 import { Input } from '@/ui-components/input';
@@ -46,31 +44,30 @@ export const defaultNotificationSettings: NotificationSettings = {
 
 interface NotificationSettingsProps {
   goal: Goal;
+  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
 }
 
-export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal }) => {
-  // TODO: Proper state management
-  const [settings, setSettings] = useState(goal.notifications);
+export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal, onChange }) => {
   const handleInputChange = (type: keyof NotificationSettings, field: keyof NotificationSettingsObject, value: number | boolean) => {
-    const updatedSettings = {
-      ...settings,
-      [type]: { ...settings[type], [field]: value },
+    const updatedNotifications = {
+      ...goal.notifications,
+      [type]: { ...goal.notifications[type], [field]: value },
     };
-    setSettings(updatedSettings);
+    onChange('notifications', updatedNotifications);
   };
   const handleCheckboxClick = (type: keyof NotificationSettings, field: keyof NotificationSettingsObject) => {
-    const updatedSettings = {
-      ...settings,
-      [type]: { ...settings[type], [field]: !settings[type][field] },
+    const updatedNotifications = {
+      ...goal.notifications,
+      [type]: { ...goal.notifications[type], [field]: !goal.notifications[type][field] },
     };
-    setSettings(updatedSettings);
+    onChange('notifications', updatedNotifications);
   };
   const handleInputCheckboxClick = (type: keyof NotificationSettings, field: keyof NotificationSettingsObject, value: number | null) => {
-    const updatedSettings = {
-      ...settings,
-      [type]: { ...settings[type], [field]: value },
+    const updatedNotifications = {
+      ...goal.notifications,
+      [type]: { ...goal.notifications[type], [field]: value },
     };
-    setSettings(updatedSettings);
+    onChange('notifications', updatedNotifications);
   };
 
   return (
@@ -90,16 +87,16 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal
                 <Checkbox
                   id={`${type}-before`}
                   className="mx-4"
-                  checked={settings[type as keyof NotificationSettings].before !== null}
+                  checked={goal.notifications[type as keyof NotificationSettings].before !== null}
                   onCheckedChange={(e) => handleInputCheckboxClick(type as keyof NotificationSettings, 'before', e ? 0 : null)}
                 />
-                {settings[type as keyof NotificationSettings].before !== null ? (
+                {goal.notifications[type as keyof NotificationSettings].before !== null ? (
                   <>
                     <Input
                       id={`${type}-before`}
                       type="number"
                       className="w-14"
-                      value={settings[type as keyof NotificationSettings].before ?? 0}
+                      value={goal.notifications[type as keyof NotificationSettings].before ?? 0}
                       onChange={(e) => handleInputChange(type as keyof NotificationSettings, 'before', Number(e.target.value))}
                       min={0}
                     />
@@ -112,16 +109,16 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal
                 <Checkbox
                   id={`${type}-after`}
                   className="mx-4"
-                  checked={settings[type as keyof NotificationSettings].after !== null}
+                  checked={goal.notifications[type as keyof NotificationSettings].after !== null}
                   onCheckedChange={(e) => handleInputCheckboxClick(type as keyof NotificationSettings, 'after', e ? 0 : null)}
                 />
-                {settings[type as keyof NotificationSettings].after !== null ? (
+                {goal.notifications[type as keyof NotificationSettings].after !== null ? (
                   <>
                     <Input
                       id={`${type}-after`}
                       type="number"
                       className="w-14"
-                      value={settings[type as keyof NotificationSettings].after ?? 0}
+                      value={goal.notifications[type as keyof NotificationSettings].after ?? 0}
                       onChange={(e) => handleInputChange(type as keyof NotificationSettings, 'after', Number(e.target.value))}
                       min={0}
                     />
@@ -134,7 +131,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal
                   <Label htmlFor={`${type}-checkIn`}>{`Want us to check-in during the event?`}</Label>
                   <Checkbox
                     id={`${type}-checkIn`}
-                    checked={settings[type as keyof NotificationSettings].checkIn ?? false}
+                    checked={goal.notifications[type as keyof NotificationSettings].checkIn ?? false}
                     onClick={() => handleCheckboxClick(type as keyof NotificationSettings, 'checkIn')}
                   />
                 </div>

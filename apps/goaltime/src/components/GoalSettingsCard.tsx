@@ -50,6 +50,9 @@ export function GoalSettingsCard({ goal, showTitle = false, className }: GoalSet
   const unusedColor = 'red';
   // TODO: Proper state management
   const [currentGoal, setCurrentGoal] = useState<Goal>(goal ?? defaultGoal(unusedColor))
+  const handleChange = <T extends keyof Goal>(field: T, value: Goal[T]) => {
+    setCurrentGoal((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSave = () => {
     if (currentGoal.title && currentGoal.commitment > 0) {
@@ -64,15 +67,15 @@ export function GoalSettingsCard({ goal, showTitle = false, className }: GoalSet
         <CardTitle className="text-2xl font-bold">Set Your Goal</CardTitle>
       </CardHeader> }
       <CardContent className="space-y-6">
-        <TitleInput goal={currentGoal} />
-        <DescriptionInput goal={currentGoal} />
+        <TitleInput goal={currentGoal} onChange={handleChange} />
+        <DescriptionInput goal={currentGoal} onChange={handleChange} />
         <div className="flex flex-row flex-wrap w-full gap-5">
-          <CommitmentInput goal={currentGoal} />
-          <PrioritySelector goal={currentGoal} />
-          <ColorPicker goal={currentGoal} />
+          <CommitmentInput goal={currentGoal} onChange={handleChange} />
+          <PrioritySelector goal={currentGoal} onChange={handleChange} />
+          <ColorPicker goal={currentGoal} onChange={handleChange} />
         </div>
-        <PreferredTimes goal={currentGoal} />
-        <NotificationSettings goal={currentGoal} />
+        <PreferredTimes goal={currentGoal} onChange={handleChange} />
+        <NotificationSettings goal={currentGoal} onChange={handleChange} />
         <ShinyButton variant="gooeyLeft" className="w-full max-w-[707px] ml-[2px] text-white" onClick={handleSave} style={{ backgroundColor: currentGoal.color }}>
           <Save className="mr-2 h-4 w-4" /> Save Goal
         </ShinyButton>

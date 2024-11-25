@@ -1,7 +1,3 @@
-'use client'
-
-import { useState } from "react";
-
 import { Label } from "@/ui-components/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select";
 
@@ -16,17 +12,16 @@ const PRIORITIES: { [key in Priority]: string } = {
 
 export interface PrioritySelectorProps {
   goal: Goal;
+  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
 }
 
-export const PrioritySelector: React.FC<PrioritySelectorProps> = ({ goal }) => {
-  // TODO: Proper state management
-  const [priority, setPriority] = useState(goal.priority);
+export const PrioritySelector: React.FC<PrioritySelectorProps> = ({ goal, onChange }) => {
   return (
     <div className="space-y-2">
       <Label className="ml-2" htmlFor="priority">Priority Level</Label>
       <Select
-        value={priority}
-        onValueChange={(value: string) => setPriority(value as Priority)}
+        value={goal.priority}
+        onValueChange={(value: string) => onChange('priority', value as Priority)}
       >
         <SelectTrigger id="priority">
           <SelectValue placeholder="Select priority" />

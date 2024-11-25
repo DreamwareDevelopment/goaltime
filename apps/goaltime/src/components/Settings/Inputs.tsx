@@ -1,66 +1,62 @@
 import { AutosizeTextarea } from "@/libs/ui-components/src/components/ui/text-area";
 
 import { Goal } from "../GoalSettingsCard";
-import { useState } from "react";
 import { FloatingLabelInput } from "@/libs/ui-components/src/components/ui/floating-input";
 import { Input } from "@/libs/ui-components/src/components/ui/input";
 import { Label } from "@/libs/ui-components/src/components/ui/label";
 
-export interface DescriptionInputProps {
-  goal: Goal;
-}
-
-export const DescriptionInput: React.FC<DescriptionInputProps> = ({ goal }) => {
-  const [description, setDescription] = useState(goal.description || '');
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(e.target.value);
-  }
-
-  return (
-    <AutosizeTextarea
-      id="description"
-      name="description"
-      value={description}
-      onChange={handleInputChange}
-      placeholder="Description (optional)"
-    />
-  )
-}
-
 export interface TitleInputProps {
   goal: Goal;
+  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
 }
 
-export const TitleInput: React.FC<TitleInputProps> = ({ goal }) => {
-  const [title, setTitle] = useState(goal.title);
-
+export const TitleInput: React.FC<TitleInputProps> = ({ goal, onChange }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
+    onChange('title', e.target.value);
   }
 
   return (
     <FloatingLabelInput
       id="title"
       name="title"
-      value={title}
+      value={goal.title}
       onChange={handleInputChange}
       label="Title"
     />
   )
 }
 
-export interface CommitmentInputProps {
+export interface DescriptionInputProps {
   goal: Goal;
+  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
 }
 
-export const CommitmentInput: React.FC<CommitmentInputProps> = ({ goal }) => {
-  const [commitment, setCommitment] = useState(goal.commitment);
+export const DescriptionInput: React.FC<DescriptionInputProps> = ({ goal, onChange }) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange('description', e.target.value);
+  }
 
+  return (
+    <AutosizeTextarea
+      id="description"
+      name="description"
+      value={goal.description}
+      onChange={handleInputChange}
+      placeholder="Description (optional)"
+    />
+  )
+}
+
+export interface CommitmentInputProps {
+  goal: Goal;
+  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
+}
+
+export const CommitmentInput: React.FC<CommitmentInputProps> = ({ goal, onChange }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target
     if (isNaN(Number(value))) throw new Error('Invalid input');
-    setCommitment(Number(value))
+    onChange('commitment', Number(value));
   }
 
   return (
@@ -71,7 +67,7 @@ export const CommitmentInput: React.FC<CommitmentInputProps> = ({ goal }) => {
           id="commitment"
           name="commitment"
           type="number"
-          value={commitment}
+          value={goal.commitment}
           onChange={handleInputChange}
           min={0}
           placeholder="Enter..."
