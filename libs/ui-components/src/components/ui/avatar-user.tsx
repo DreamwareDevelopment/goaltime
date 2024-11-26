@@ -31,7 +31,7 @@ export function UserAvatar({ image, name, email }: UserAvatarProps) {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
 
   const handleLogout = () => {
-    // Implement your logout logic here
+    // TODO: Logout and redirect to login page
     console.log("User logged out")
     setIsLogoutDialogOpen(false)
   }

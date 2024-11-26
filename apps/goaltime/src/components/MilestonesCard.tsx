@@ -3,7 +3,8 @@ import { useState } from "react";
 
 import { cn } from "@/libs/ui-components/src/utils";
 import { Card, CardContent, CardFooter } from "@/ui-components/card";
-import { Button } from "@/ui-components/button-shiny";
+import { Button as ShinyButton } from "@/ui-components/button-shiny";
+import { Button } from "@/ui-components/button";
 import { Checkbox } from "@/ui-components/checkbox";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Input } from "@/ui-components/input";
@@ -146,7 +147,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMilestone(e.target.value)}
               onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addMilestone()}
             />
-            <Button variant="expandIcon" Icon={PlusIcon} iconPlacement="right" onClick={addMilestone} className="h-[51px]">Add</Button>
+            <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" onClick={addMilestone} className="h-[51px]">Add</ShinyButton>
           </li>
         </ul>
       </CardContent>

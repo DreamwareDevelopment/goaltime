@@ -1,1 +1,2 @@
-export * from './lib/supabase';
+export * from './lib/supabase/client'
+export * from './lib/supabase/middleware'

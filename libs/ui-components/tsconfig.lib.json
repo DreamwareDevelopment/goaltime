@@ -7,7 +7,8 @@
     "types": ["node"],
     "paths": {
       "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
-      "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"]
+      "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"],
+      "@/shared": ["libs/shared/src/index.ts"]
     }
   },
   "files": [

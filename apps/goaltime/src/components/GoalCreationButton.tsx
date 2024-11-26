@@ -1,6 +1,6 @@
 import { PlusIcon } from "lucide-react";
 
-import { Button } from "@/ui-components/button-shiny";
+import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { ResponsiveModal, ResponsiveModalContent, ResponsiveModalDescription, ResponsiveModalTitle, ResponsiveModalTrigger } from "@/ui-components/modal";
 
 import { GoalRecommendationsCard } from "./GoalRecommendationsCard";
@@ -10,9 +10,9 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
   return (
     <ResponsiveModal>
       <ResponsiveModalTrigger asChild>
-        <Button variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
+        <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
           New Goal
-        </Button>
+        </ShinyButton>
       </ResponsiveModalTrigger>
       <ResponsiveModalContent>
         <ResponsiveModalTitle className="sr-only">Set Your Goal</ResponsiveModalTitle>
