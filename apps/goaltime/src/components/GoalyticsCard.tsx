@@ -51,8 +51,8 @@ export function GoalyticsCard({ goals, className }: GoalyticsCardProps) {
   const allGoals: Option[] = goals.map((goal) => ({ value: goal.title, label: goal.title, color: goal.color }))
   const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.title) > -1) : goals
   return (
-    <Card className={cn(className)}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2">
+    <Card className={cn(className, "p-4")}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
         <CardTitle>Goal Progress</CardTitle>
         <Select value={timeRange} onValueChange={(value) => setTimeRange(value as keyof typeof chartData)}>
           <SelectTrigger className="w-[180px]">
@@ -65,9 +65,9 @@ export function GoalyticsCard({ goals, className }: GoalyticsCardProps) {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={350} className="pr-8">
-          <BarChart data={chartData[timeRange]}>
+      <CardContent className="p-0 mt-4">
+        <ResponsiveContainer width="100%" height={350} className="p-0">
+          <BarChart data={chartData[timeRange]} margin={{ left: -37 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
@@ -77,9 +77,9 @@ export function GoalyticsCard({ goals, className }: GoalyticsCardProps) {
             ))}
           </BarChart>
         </ResponsiveContainer>
-        <CardFooter>
+        <CardFooter className="p-0 mt-4">
           <MultiSelect
-            className="w-full mt-4"
+            className="w-full"
             defaultOptions={allGoals}
             placeholder="Select goals to track"
             hidePlaceholderWhenSelected

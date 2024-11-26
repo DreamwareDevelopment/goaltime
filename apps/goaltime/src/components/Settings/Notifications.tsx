@@ -73,9 +73,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ goal
   return (
     <Tabs defaultValue="push">
       <TabsList className="w-full">
-        <TabsTrigger className="w-full" value="push">Push Notifications</TabsTrigger>
-        <TabsTrigger className="w-full" value="text">Text Notifications</TabsTrigger>
-        <TabsTrigger className="w-full" value="phone">Phone Notifications</TabsTrigger>
+        <TabsTrigger className="w-full" value="push">Push</TabsTrigger>
+        <TabsTrigger className="w-full" value="text">Text</TabsTrigger>
+        <TabsTrigger className="w-full" value="phone">Phone</TabsTrigger>
       </TabsList>
 
       {['push', 'text', 'phone'].map((type) => (
