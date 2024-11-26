@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { UserAuthForm } from '@/ui-components/user-auth-form'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
+import { Suspense } from 'react'
+import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 
 interface LoginCardProps extends React.HTMLAttributes<HTMLDivElement> {
   login: (formData: FormData) => Promise<void>
@@ -27,7 +29,9 @@ export default function LoginCard({ login, signup }: LoginCardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <UserAuthForm login={login} />
+            <Suspense fallback={<LoadingSpinner />}>
+              <UserAuthForm login={login} />
+            </Suspense>
           </CardContent>
           <CardFooter className="px-8 text-center text-sm text-muted-foreground">
             <p>
@@ -61,7 +65,9 @@ export default function LoginCard({ login, signup }: LoginCardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <UserAuthForm signup={signup} />
+            <Suspense fallback={<LoadingSpinner />}>
+              <UserAuthForm signup={signup} />
+            </Suspense>
           </CardContent>
           <CardFooter className="px-8 text-center text-sm text-muted-foreground">
             <p>
