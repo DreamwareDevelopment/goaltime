@@ -3,6 +3,7 @@
 import { ArrowRightIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import * as React from 'react'
+import { Suspense } from 'react'
 
 import { validateEmail } from '@/shared'
 
@@ -52,81 +53,83 @@ export function UserAuthForm({ className, login, signup, ...props }: UserAuthFor
   }
 
   return (
-    <div className={cn('grid gap-6', className)} {...props}>
-      <form action={onSubmit}>
-        <div className="grid gap-2">
-          <div className="grid gap-1">
-            <Label className="sr-only" htmlFor="email">
-              Email
-            </Label>
-            <Input
-              id="email"
-              placeholder="name@example.com"
-              type="email"
-              autoCapitalize="none"
-              autoComplete="email"
-              autoCorrect="off"
-              disabled={isLoading}
-              name="email"
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label className="sr-only" htmlFor="password">
-              Password
-            </Label>
-            <Input
-              id="password"
-              placeholder="Password"
-              type="password"
-              autoCapitalize="none"
-              autoComplete="current-password"
-              autoCorrect="off"
-              disabled={isLoading}
-              name="password"
-            />
-          </div>
-          { isSignup && (
+    <Suspense fallback={<LoadingSpinner />}>
+      <div className={cn('grid gap-6', className)} {...props}>
+        <form action={onSubmit}>
+          <div className="grid gap-2">
             <div className="grid gap-1">
-              <Label className="sr-only" htmlFor="password-confirm">
-                Confirm Password
+              <Label className="sr-only" htmlFor="email">
+                Email
               </Label>
               <Input
-                id="password-confirm"
-                placeholder="Confirm Password"
+                id="email"
+                placeholder="name@example.com"
+                type="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                disabled={isLoading}
+                name="email"
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label className="sr-only" htmlFor="password">
+                Password
+              </Label>
+              <Input
+                id="password"
+                placeholder="Password"
                 type="password"
                 autoCapitalize="none"
                 autoComplete="current-password"
                 autoCorrect="off"
                 disabled={isLoading}
-                name="password-confirm"
+                name="password"
               />
             </div>
-          )}
-          <ShinyButton variant="expandIcon" Icon={ArrowRightIcon} iconPlacement="right" disabled={isLoading}>
-            {isLoading && (
-              <LoadingSpinner className="mr-2 h-4 w-4 animate-spin" />
+            { isSignup && (
+              <div className="grid gap-1">
+                <Label className="sr-only" htmlFor="password-confirm">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="password-confirm"
+                  placeholder="Confirm Password"
+                  type="password"
+                  autoCapitalize="none"
+                  autoComplete="current-password"
+                  autoCorrect="off"
+                  disabled={isLoading}
+                  name="password-confirm"
+                />
+              </div>
             )}
-            Sign In with Email
-          </ShinyButton>
+            <ShinyButton variant="expandIcon" Icon={ArrowRightIcon} iconPlacement="right" disabled={isLoading}>
+              {isLoading && (
+                <LoadingSpinner className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Sign In with Email
+            </ShinyButton>
+          </div>
+        </form>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
         </div>
-      </form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
+        <ShinyButton variant="expandIcon" Icon={ArrowRightIcon} iconPlacement="right" disabled={isLoading}>
+          GitHub
+        </ShinyButton>
+        {(searchParams?.get('error') || error) && (
+          <p className="text-sm text-red-500">{searchParams.get('error') || error}</p>
+        )}
       </div>
-      <ShinyButton variant="expandIcon" Icon={ArrowRightIcon} iconPlacement="right" disabled={isLoading}>
-        GitHub
-      </ShinyButton>
-      {(searchParams?.get('error') || error) && (
-        <p className="text-sm text-red-500">{searchParams.get('error') || error}</p>
-      )}
-    </div>
+    </Suspense>
   )
 }
 
