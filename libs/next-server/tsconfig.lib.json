@@ -8,7 +8,10 @@
       "@nx/react/typings/image.d.ts",
       "next",
       "@nx/next/typings/image.d.ts"
-    ]
+    ],
+    "paths": {
+      "@/shared/environment": ["libs/shared/src/lib/environment.ts"]
+    }
   },
   "exclude": [
     "jest.config.ts",
