@@ -58,10 +58,10 @@ export default function LoginCard({ login, signup }: LoginCardProps) {
       <Card className="mx-auto flex flex-col justify-center space-y-6  max-w-[375px] md:max-w-[400px] lg:max-w-[450px]">
           <CardHeader className="flex flex-col space-y-2 text-center">
             <CardTitle className="text-2xl font-semibold tracking-tight">
-              Login to your account
+              Sign up for an account
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Enter your email and password below to login to your account
+              Enter your email and password below to sign up for an account
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,5 +1,7 @@
 'use server'
 
+import '@/shared/environment'
+
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -23,7 +25,13 @@ export async function login(formData: FormData) {
   redirect('/dashboard')
 }
 
-export async function signup(formData: FormData) {
+export async function signup(formData: FormData, captchaToken: string) {
+  const host = process.env.NEXT_PUBLIC_HOST
+  if (!host) {
+    throw new Error('NEXT_PUBLIC_HOST is not set')
+  }
+
+  const redirectTo = new URL('/dashboard', host)
   const supabase = await createClient()
 
   // type-casting here for convenience
@@ -33,7 +41,14 @@ export async function signup(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const { error } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      captchaToken,
+      emailRedirectTo: redirectTo.toString(),
+    },
+  })
 
   if (error) {
     redirect('/error')
