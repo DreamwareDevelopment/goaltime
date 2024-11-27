@@ -1,6 +1,7 @@
 import React from 'react'
 
-import { UserAvatar } from "@/ui-components/avatar-user"
+import { getUser } from '@/next-server'
+import { UserAvatar } from '../../components/UserAvatar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
 import { ActionsCard } from '../../components/ActionsCard'
@@ -9,13 +10,14 @@ import { GoalCreationButton } from '../../components/GoalCreationButton'
 import { ScheduleCard } from '../../components/ScheduleCard'
 import { goals, schedule } from '../mocks/mocks'
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const user = await getUser()
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Goal Time</h1>
         <GoalCreationButton />
-        <UserAvatar image="https://github.com/shadcn.png" name="John Doe" email="john.doe@example.com" />
+        <UserAvatar user={user} />
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

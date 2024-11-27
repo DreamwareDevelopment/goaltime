@@ -1,8 +1,12 @@
-"use client"
+'use client'
 
+import Link from "next/link"
+import { redirect } from "next/navigation"
 import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar"
-import { Button } from "./button-shiny"
+import { User } from "@supabase/supabase-js"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
+import { Button } from "@/ui-components/button-shiny"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +14,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./dropdown-menu"
+} from "@/ui-components/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -18,20 +22,41 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./dialog"
-import Link from "next/link"
+} from "@/ui-components/dialog"
+import { createClient } from "@/ui-components/hooks/supabase"
 
 export type UserAvatarProps = {
-  image: string
-  name: string
-  email: string
+  user: User
 }
 
-export function UserAvatar({ image, name, email }: UserAvatarProps) {
-  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+// TODO: Use zod to validate the user metadata
+export type TemporaryUserMetadata = {
+  name: string
+  email: string
+  image: string
+}
 
-  const handleLogout = () => {
-    // TODO: Logout and redirect to login page
+export async function signOut() {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    redirect('/error')
+  }
+  redirect('/')
+}
+
+export function UserAvatar({ user }: UserAvatarProps) {
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  console.log(user)
+  const metadata: TemporaryUserMetadata = {
+    name: user?.user_metadata?.name ?? 'Mike Hawkburns',
+    email: user?.email ?? 'mike@hawkburns.com',
+    image: user?.user_metadata?.avatar_url ?? 'https://github.com/shadcn.png',
+  }
+  const { name, email, image } = metadata
+
+  const handleLogout = async () => {
+    await signOut()
     console.log("User logged out")
     setIsLogoutDialogOpen(false)
   }

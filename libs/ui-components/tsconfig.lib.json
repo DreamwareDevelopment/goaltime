@@ -8,6 +8,7 @@
     "paths": {
       "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
       "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"],
+      "@/ui-components/hooks/*": ["libs/ui-components/src/hooks/*"],
       "@/shared": ["libs/shared/src/index.ts"]
     }
   },
