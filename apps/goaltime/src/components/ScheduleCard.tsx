@@ -1,3 +1,5 @@
+"use client"
+
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
 import React, { useEffect, useRef, useState } from 'react';

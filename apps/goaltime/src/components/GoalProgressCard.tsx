@@ -1,3 +1,5 @@
+"use client"
+
 import { cn } from "@/libs/ui-components/src/utils"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"

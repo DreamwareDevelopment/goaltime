@@ -1,3 +1,5 @@
+"use client"
+
 import { PlusIcon, Trash2, Check, X } from "lucide-react";
 import { useState } from "react";
 

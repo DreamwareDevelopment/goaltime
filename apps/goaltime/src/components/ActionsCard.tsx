@@ -1,3 +1,5 @@
+"use client"
+
 import { Target, Settings, ArrowUpRightIcon, NotebookIcon } from "lucide-react"
 
 import { ChatBubbleIcon, StarFilledIcon } from "@radix-ui/react-icons";

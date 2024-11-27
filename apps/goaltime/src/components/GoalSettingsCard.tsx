@@ -1,3 +1,5 @@
+"use client"
+
 import { Save } from 'lucide-react'
 import React, { useState } from 'react'
 
