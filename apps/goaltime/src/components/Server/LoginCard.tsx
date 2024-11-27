@@ -1,17 +1,12 @@
 import Link from 'next/link'
 
-import { UserAuthForm } from '@/ui-components/user-auth-form'
+import { UserAuthForm, UserAuthFormProps } from '@/ui-components/user-auth-form'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { Suspense } from 'react'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 
-interface LoginCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  login: (formData: FormData) => Promise<void>
-  signup: (formData: FormData) => Promise<void>
-}
-
-export default function LoginCard({ login, signup }: LoginCardProps) {
+export default function LoginCard({ login, signup }: UserAuthFormProps) {
   return (
     <Tabs defaultValue="login" className='flex flex-col w-full h-full gap-4 items-center justify-start pt-16'>
       <TabsList>

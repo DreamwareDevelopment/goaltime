@@ -2,7 +2,7 @@
 
 import { ArrowRightIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 import { validateEmail } from '@/shared'
@@ -13,7 +13,7 @@ import { Input } from './input'
 import { Label } from './label'
 import { LoadingSpinner } from '../../svgs/spinner'
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   login?: (formData: FormData) => Promise<void>
   signup?: (
     formData: FormData,
@@ -41,9 +41,7 @@ export function UserAuthForm({ className, login, signup, ...props }: UserAuthFor
     if (!captchaToken) {
       throw new Error('Captcha token is required for client signup')
     }
-    console.log('onClientSignup pre signup')
     await signup(data, captchaToken)
-    console.log('onClientSignup post signup')
     if (!captcha.current) {
       console.warn('Captcha ref is not initialized')
     }
