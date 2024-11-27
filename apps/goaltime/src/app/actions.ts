@@ -1,6 +1,6 @@
 'use server'
 
-import '@/shared/environment'
+import '@/next-server/environment'
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -17,8 +17,10 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
+  console.log('data', data)
   const { error } = await supabase.auth.signInWithPassword(data)
   if (error) {
+    console.error('Login error', error)
     redirect('/login?error=Invalid email or password')
   }
 

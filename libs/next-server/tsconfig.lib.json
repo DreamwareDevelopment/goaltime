@@ -9,9 +9,7 @@
       "next",
       "@nx/next/typings/image.d.ts"
     ],
-    "paths": {
-      "@/shared/environment": ["libs/shared/src/lib/environment.ts"]
-    }
+    "paths": {}
   },
   "exclude": [
     "jest.config.ts",
