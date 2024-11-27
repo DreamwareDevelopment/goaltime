@@ -2,7 +2,7 @@
 
 import { ArrowRightIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 import { validateEmail } from '@/shared'
@@ -89,11 +89,11 @@ export function UserAuthForm({ className, login, signup, ...props }: UserAuthFor
         )}
         <div className="grid gap-2 mt-4">
           <div className="grid gap-1">
-            <Label className="sr-only" htmlFor="email">
+            <Label className="sr-only" htmlFor={isLogin ? 'email' : 'email-signup'}>
               Email
             </Label>
             <Input
-              id="email"
+              id={isLogin ? 'email' : 'email-signup'}
               placeholder="name@example.com"
               type="email"
               autoCapitalize="none"
@@ -104,11 +104,11 @@ export function UserAuthForm({ className, login, signup, ...props }: UserAuthFor
             />
           </div>
           <div className="grid gap-1">
-            <Label className="sr-only" htmlFor="password">
+            <Label className="sr-only" htmlFor={isLogin ? 'password' : 'password-signup'}>
               Password
             </Label>
             <Input
-              id="password"
+              id={isLogin ? 'password' : 'password-signup'}
               placeholder="Password"
               type="password"
               autoCapitalize="none"

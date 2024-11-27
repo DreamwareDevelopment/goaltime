@@ -17,7 +17,6 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  console.log('data', data)
   const { error } = await supabase.auth.signInWithPassword(data)
   if (error) {
     console.error('Login error', error)
@@ -28,12 +27,6 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData, captchaToken: string) {
-  const host = process.env.NEXT_PUBLIC_HOST
-  if (!host) {
-    throw new Error('NEXT_PUBLIC_HOST is not set')
-  }
-
-  const redirectTo = new URL('/dashboard', host)
   const supabase = await createClient()
 
   // type-casting here for convenience
@@ -48,11 +41,11 @@ export async function signup(formData: FormData, captchaToken: string) {
     password: data.password,
     options: {
       captchaToken,
-      emailRedirectTo: redirectTo.toString(),
     },
   })
 
   if (error) {
+    console.error('Signup error', error)
     redirect('/error')
   }
 

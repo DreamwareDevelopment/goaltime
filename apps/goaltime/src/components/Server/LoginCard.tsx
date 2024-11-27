@@ -1,19 +1,22 @@
+'use client'
+
 import Link from 'next/link'
 
 import { UserAuthForm, UserAuthFormProps } from '@/ui-components/user-auth-form'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 
 export default function LoginCard({ login, signup }: UserAuthFormProps) {
+  const [currentTab, setCurrentTab] = useState<string>('login')
   return (
-    <Tabs defaultValue="login" className='flex flex-col w-full h-full gap-4 items-center justify-start pt-16'>
+    <Tabs value={currentTab} onValueChange={setCurrentTab} className='flex flex-col w-full h-full gap-4 items-center justify-start pt-16'>
       <TabsList>
         <TabsTrigger value="login">Login</TabsTrigger>
         <TabsTrigger value="signup">Signup</TabsTrigger>
       </TabsList>
-      <TabsContent value="login">
+      <TabsContent forceMount value="login" hidden={currentTab !== 'login'}>
         <Card className="mx-auto flex flex-col justify-center space-y-6  max-w-[375px] md:max-w-[400px] lg:max-w-[450px]">
           <CardHeader className="flex flex-col space-y-2 text-center">
             <CardTitle className="text-2xl font-semibold tracking-tight">
@@ -49,8 +52,8 @@ export default function LoginCard({ login, signup }: UserAuthFormProps) {
           </CardFooter>
         </Card>
       </TabsContent>
-      <TabsContent value="signup">
-      <Card className="mx-auto flex flex-col justify-center space-y-6  max-w-[375px] md:max-w-[400px] lg:max-w-[450px]">
+      <TabsContent forceMount value="signup" hidden={currentTab !== 'signup'}>
+        <Card className="mx-auto flex flex-col justify-center space-y-6  max-w-[375px] md:max-w-[400px] lg:max-w-[450px]">
           <CardHeader className="flex flex-col space-y-2 text-center">
             <CardTitle className="text-2xl font-semibold tracking-tight">
               Sign up for an account
