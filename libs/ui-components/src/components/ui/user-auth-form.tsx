@@ -2,8 +2,7 @@
 
 import { ArrowRightIcon } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import React, { useRef, useState } from 'react'
-import HCaptcha from '@hcaptcha/react-hcaptcha';
+import React, { useState } from 'react'
 
 import { validateEmail } from '@/shared'
 
@@ -15,38 +14,15 @@ import { LoadingSpinner } from '../../svgs/spinner'
 
 export interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
   login?: (formData: FormData) => Promise<void>
-  signup?: (
-    formData: FormData,
-    captchaToken: string,
-  ) => Promise<void>
+  signup?: (formData: FormData) => Promise<void>
 }
 
 export function UserAuthForm({ className, login, signup, ...props }: UserAuthFormProps) {
   const isLogin = login !== undefined && signup === undefined
   const isSignup = signup !== undefined && login === undefined
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
-  const captcha = useRef<HCaptcha | null>(null)
-  const hCaptchaSiteKey = process.env.NEXT_PUBLIC_H_CAPTCHA_SITE_KEY
-  if (!hCaptchaSiteKey) {
-    throw new Error('NEXT_PUBLIC_H_CAPTCHA_SITE_KEY is not set')
-  }
-
-  async function onClientSignup(data: FormData) {
-    if (!signup) {
-      throw new Error('Client signup without server signup is impossible')
-    }
-    if (!captchaToken) {
-      throw new Error('Captcha token is required for client signup')
-    }
-    await signup(data, captchaToken)
-    if (!captcha.current) {
-      console.warn('Captcha ref is not initialized')
-    }
-    captcha.current?.resetCaptcha()
-  }
 
   async function onSubmit(data: FormData) {
     setIsLoading(true)
@@ -71,23 +47,14 @@ export function UserAuthForm({ className, login, signup, ...props }: UserAuthFor
         setIsLoading(false)
         return
       }
-      await onClientSignup(data).finally(() => setIsLoading(false))
+      await signup(data).finally(() => setIsLoading(false))
     }
   }
 
   return (
-    <div className={cn('grid gap-6', className)} {...props}>
+    <div className={cn('grid gap-4', className)} {...props}>
       <form action={onSubmit}>
-        {isSignup && (
-          <HCaptcha
-            ref={captcha}
-            sitekey={hCaptchaSiteKey}
-            onVerify={(token) => {
-              setCaptchaToken(token)
-            }}
-          />
-        )}
-        <div className="grid gap-2 mt-4">
+        <div className="grid gap-2 mt-2">
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor={isLogin ? 'email' : 'email-signup'}>
               Email

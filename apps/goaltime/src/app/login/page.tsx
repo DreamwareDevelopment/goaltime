@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 
-import { login, signup } from '../actions'
+import { loginAction, signupAction } from '../actions'
 import LoginCard from '../../components/Server/LoginCard'
 import Link from 'next/link'
 
@@ -20,7 +20,7 @@ export default function LoginPage() {
         </ShinyButton>
       </header>
       <div className="w-full h-full">
-        <LoginCard login={login} signup={signup} />
+        <LoginCard loginAction={loginAction} signupAction={signupAction} />
       </div>
     </div>
   )

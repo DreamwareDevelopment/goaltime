@@ -1,13 +1,11 @@
 'use server'
 
-import '@/next-server/environment'
-
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/next-server'
 
-export async function login(formData: FormData) {
+export async function loginAction(formData: FormData, captchaToken: string) {
   const supabase = await createClient()
 
   // type-casting here for convenience
@@ -17,7 +15,13 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { error } = await supabase.auth.signInWithPassword({
+    email: data.email,
+    password: data.password,
+    options: {
+      captchaToken,
+    },
+  })
   if (error) {
     console.error('Login error', error)
     redirect('/login?error=Invalid email or password')
@@ -26,7 +30,7 @@ export async function login(formData: FormData) {
   redirect('/dashboard')
 }
 
-export async function signup(formData: FormData, captchaToken: string) {
+export async function signupAction(formData: FormData, captchaToken: string) {
   const supabase = await createClient()
 
   // type-casting here for convenience
