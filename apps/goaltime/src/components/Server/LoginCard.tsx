@@ -2,17 +2,20 @@
 
 import Link from 'next/link'
 import { Suspense, useRef, useState } from 'react'
+import z from 'zod'
 
 import HCaptcha from '@hcaptcha/react-hcaptcha'
 
-import { UserAuthForm } from '@/ui-components/user-auth-form'
+import { LoginForm } from '../Auth/LoginForm'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { loginSchema, signUpSchema } from '@/libs/shared/src/lib/schemas'
+import { SignUpForm } from '../Auth/SignUpForm'
 
 export interface LoginCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  loginAction: (formData: FormData, captchaToken: string) => Promise<void>
-  signupAction: (formData: FormData, captchaToken: string) => Promise<void>
+  loginAction: (formData: z.infer<typeof loginSchema>, captchaToken: string) => Promise<void>
+  signupAction: (formData: z.infer<typeof signUpSchema>, captchaToken: string) => Promise<void>
 }
 
 export default function LoginCard({ loginAction, signupAction }: LoginCardProps) {
@@ -25,7 +28,7 @@ export default function LoginCard({ loginAction, signupAction }: LoginCardProps)
     throw new Error('NEXT_PUBLIC_H_CAPTCHA_SITE_KEY is not set')
   }
 
-  const handleSignup = async (formData: FormData) => {
+  const handleSignup = async (formData: z.infer<typeof signUpSchema>) => {
     if (!captchaToken) {
       throw new Error('Captcha token is required for client signup')
     }
@@ -35,7 +38,7 @@ export default function LoginCard({ loginAction, signupAction }: LoginCardProps)
     }
     captcha.current?.resetCaptcha()
   }
-  const handleLogin = async (formData: FormData) => {
+  const handleLogin = async (formData: z.infer<typeof loginSchema>) => {
     if (!captchaToken) {
       throw new Error('Captcha token is required for client signup')
     }
@@ -72,7 +75,7 @@ export default function LoginCard({ loginAction, signupAction }: LoginCardProps)
           </CardHeader>
           <CardContent>
             <Suspense fallback={<LoadingSpinner />}>
-              <UserAuthForm login={handleLogin} />
+              <LoginForm login={handleLogin} />
             </Suspense>
           </CardContent>
           <CardFooter className="px-8 text-center text-sm text-muted-foreground">
@@ -117,7 +120,7 @@ export default function LoginCard({ loginAction, signupAction }: LoginCardProps)
           </CardHeader>
           <CardContent>
             <Suspense fallback={<LoadingSpinner />}>
-              <UserAuthForm signup={handleSignup} />
+              <SignUpForm signup={handleSignup} />
             </Suspense>
           </CardContent>
           <CardFooter className="px-8 text-center text-sm text-muted-foreground">

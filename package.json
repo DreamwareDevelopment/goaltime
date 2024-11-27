@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^1.11.0",
+    "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-avatar": "^1.1.1",
@@ -45,6 +46,7 @@
     "react-colorful": "^5.6.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.3.1",
+    "react-hook-form": "^7.53.2",
     "recharts": "^2.13.3",
     "slate": "^0.110.2",
     "slate-dom": "^0.111.0",
@@ -53,7 +55,8 @@
     "slate-react": "^0.111.0",
     "tailwind-merge": "^2.5.4",
     "tailwind-scrollbar-hide": "^1.1.7",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
