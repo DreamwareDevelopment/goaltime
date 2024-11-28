@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { createClient } from '@/next-server'
+import { createClient } from '@/server-utils'
 import { LoginSchema, SignUpSchema } from '@/libs/shared/src/lib/schemas'
 import z from 'zod'
 

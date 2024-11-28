@@ -1,5 +1,5 @@
 export default {
-  displayName: 'next-server',
+  displayName: 'server-utils',
   preset: '../../jest.preset.js',
   transform: {
     '^.+\\.[tj]sx?$': [
@@ -13,5 +13,5 @@ export default {
     ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/next-server',
+  coverageDirectory: '../../coverage/libs/server-utils',
 };
