@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { loginSchema } from '@/shared'
+import { LoginSchema } from '@/shared'
 import { useToast } from '@/ui-components/hooks/use-toast'
 import { cn } from '@/libs/ui-components/src/utils'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/ui-components/input'
 
 export interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {
-  login: (formData: z.infer<typeof loginSchema>) => Promise<void>
+  login: (formData: z.infer<typeof LoginSchema>) => Promise<void>
 }
 
 export function LoginForm({ className, login, ...props }: LoginFormProps) {
@@ -28,15 +28,15 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
     })
   }
 
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<z.infer<typeof LoginSchema>>({
+    resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   })
 
-  async function onLogin(data: z.infer<typeof loginSchema>) {
+  async function onLogin(data: z.infer<typeof LoginSchema>) {
     if (!login) throw new Error('Login function is not defined')
     await login(data)
   }

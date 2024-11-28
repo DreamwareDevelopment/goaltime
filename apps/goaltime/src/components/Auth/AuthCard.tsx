@@ -10,12 +10,12 @@ import { LoginForm } from './LoginForm'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
-import { loginSchema, signUpSchema } from '@/libs/shared/src/lib/schemas'
+import { LoginSchema, SignUpSchema } from '@/libs/shared/src/lib/schemas'
 import { SignUpForm } from './SignUpForm'
 
 export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  loginAction: (formData: z.infer<typeof loginSchema>, captchaToken: string) => Promise<void>
-  signupAction: (formData: z.infer<typeof signUpSchema>, captchaToken: string) => Promise<void>
+  loginAction: (formData: z.infer<typeof LoginSchema>, captchaToken: string) => Promise<void>
+  signupAction: (formData: z.infer<typeof SignUpSchema>, captchaToken: string) => Promise<void>
 }
 
 export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
@@ -28,7 +28,7 @@ export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
     throw new Error('NEXT_PUBLIC_H_CAPTCHA_SITE_KEY is not set')
   }
 
-  const handleSignup = async (formData: z.infer<typeof signUpSchema>) => {
+  const handleSignup = async (formData: z.infer<typeof SignUpSchema>) => {
     if (!captchaToken) {
       throw new Error('Captcha token is required for client signup')
     }
@@ -38,7 +38,7 @@ export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
     }
     captcha.current?.resetCaptcha()
   }
-  const handleLogin = async (formData: z.infer<typeof loginSchema>) => {
+  const handleLogin = async (formData: z.infer<typeof LoginSchema>) => {
     if (!captchaToken) {
       throw new Error('Captcha token is required for client signup')
     }

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { signUpSchema } from '@/shared'
+import { SignUpSchema } from '@/shared'
 import { useToast } from '@/ui-components/hooks/use-toast'
 import { cn } from '@/libs/ui-components/src/utils'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/ui-components/input'
 
 export interface SignUpFormProps extends React.HTMLAttributes<HTMLDivElement> {
-  signup: (formData: z.infer<typeof signUpSchema>) => Promise<void>
+  signup: (formData: z.infer<typeof SignUpSchema>) => Promise<void>
 }
 
 export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
@@ -28,8 +28,8 @@ export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
     })
   }
 
-  const form = useForm<z.infer<typeof signUpSchema>>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<z.infer<typeof SignUpSchema>>({
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -37,7 +37,7 @@ export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
     },
   })
 
-  async function onSignup(data: z.infer<typeof signUpSchema>) {
+  async function onSignup(data: z.infer<typeof SignUpSchema>) {
     if (!signup) throw new Error('Signup function is not defined')
     await signup(data)
   }

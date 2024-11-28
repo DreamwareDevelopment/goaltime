@@ -4,10 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/next-server'
-import { loginSchema, signUpSchema } from '@/libs/shared/src/lib/schemas'
+import { LoginSchema, SignUpSchema } from '@/libs/shared/src/lib/schemas'
 import z from 'zod'
 
-export async function loginAction(formData: z.infer<typeof loginSchema>, captchaToken: string) {
+export async function loginAction(formData: z.infer<typeof LoginSchema>, captchaToken: string) {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -25,7 +25,7 @@ export async function loginAction(formData: z.infer<typeof loginSchema>, captcha
   redirect('/dashboard')
 }
 
-export async function signupAction(formData: z.infer<typeof signUpSchema>, captchaToken: string) {
+export async function signupAction(formData: z.infer<typeof SignUpSchema>, captchaToken: string) {
   const supabase = await createClient()
 
   const { error } = await supabase.auth.signUp({
