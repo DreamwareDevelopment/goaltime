@@ -7,9 +7,7 @@ import { ResendVerificationButton } from '../../../components/Auth/ResendVerific
 import { HomeButton } from '../../../components/ActionButtons/HomeButton'
 
 interface EmailVerificationSentProps {
-  searchParams: {
-    email: string
-  }
+  searchParams: Promise<{ email: string }>
 }
 
 export default async function EmailVerificationSent({ searchParams }: EmailVerificationSentProps) {
