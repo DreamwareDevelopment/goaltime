@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { getUser } from '@/server-utils/controllers/user'
+import { getUserAction } from '../actions/user'
 import { UserAvatar } from '../../components/UserAvatar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
@@ -11,7 +11,7 @@ import { ScheduleCard } from '../../components/ScheduleCard'
 import { goals, schedule } from '../mocks/mocks'
 
 export default async function Dashboard() {
-  const user = await getUser()
+  const user = await getUserAction()
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
