@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { getUserAction } from '../actions/user'
+import { getUserAndProfileAction } from '../actions/user'
 import { UserAvatar } from '../../components/UserAvatar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
@@ -11,13 +11,13 @@ import { ScheduleCard } from '../../components/ScheduleCard'
 import { goals, schedule } from '../mocks/mocks'
 
 export default async function Dashboard() {
-  const user = await getUserAction()
+  const { user, profile } = await getUserAndProfileAction()
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Goal Time</h1>
         <GoalCreationButton />
-        <UserAvatar user={user} />
+        <UserAvatar userAndProfile={{ user, profile }} />
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -31,3 +31,12 @@ export async function createUserProfileAction(client: SupabaseClient, user: User
     console.error(error)
   }
 }
+
+export async function getUserAndProfileAction() {
+  const user = await getUserAction()
+  const supabase = await createClient()
+  // TODO: Use prisma
+  const userProfile = await supabase.from('user_profiles').select('*').eq('user_id', user.id).single()
+  const profile = userProfile.data as UserProfile
+  return { user, profile }
+}

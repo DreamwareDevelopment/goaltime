@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { useState } from "react"
-import { User } from "@supabase/supabase-js"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { Button } from "@/ui-components/button-shiny"
@@ -24,19 +23,10 @@ import {
   DialogTitle,
 } from "@/ui-components/dialog"
 import { createClient } from "@/ui-components/hooks/supabase"
+import { UserAndProfile } from "@/shared/utils"
+import { LoadingSpinner } from "@/libs/ui-components/src/svgs/spinner"
 
-export type UserAvatarProps = {
-  user: User
-}
-
-// TODO: Use zod to validate the user metadata
-export type TemporaryUserMetadata = {
-  name: string
-  email: string
-  image: string
-}
-
-export async function signOut() {
+async function signOut() {
   const supabase = await createClient()
   const { error } = await supabase.auth.signOut()
   if (error) {
@@ -45,15 +35,14 @@ export async function signOut() {
   redirect('/')
 }
 
-export function UserAvatar({ user }: UserAvatarProps) {
+export type UserAvatarProps = {
+  userAndProfile: UserAndProfile
+}
+
+export function UserAvatar({ userAndProfile }: UserAvatarProps) {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
-  console.log(user)
-  const metadata: TemporaryUserMetadata = {
-    name: user?.user_metadata?.name ?? 'Mike Hawkburns',
-    email: user?.email ?? 'mike@hawkburns.com',
-    image: user?.user_metadata?.avatar_url ?? 'https://github.com/shadcn.png',
-  }
-  const { name, email, image } = metadata
+
+  const { user, profile } = userAndProfile
 
   const handleLogout = async () => {
     await signOut()
@@ -67,17 +56,17 @@ export function UserAvatar({ user }: UserAvatarProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-11 w-11">
-              <AvatarImage src={image} alt={name} />
-              <AvatarFallback>{name.split(' ').map(n => n[0].toUpperCase()).join('')}</AvatarFallback>
+              <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
+              <AvatarFallback>{!profile ? <LoadingSpinner /> : profile?.name.split(' ').map(n => n[0].toUpperCase()).join('')}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{name}</p>
+              <p className="text-sm font-medium leading-none">{profile?.name}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {email}
+                {user?.email}
               </p>
             </div>
           </DropdownMenuLabel>
