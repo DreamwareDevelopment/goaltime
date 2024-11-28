@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import z from 'zod'
 
 import { createClient } from '@/server-utils/supabase'
-import { LoginSchema, SignUpSchema } from '@/shared'
+import { LoginSchema, SignUpSchema } from '@/shared/zod'
 
 export async function loginAction(formData: z.infer<typeof LoginSchema>, captchaToken: string) {
   const supabase = await createClient()

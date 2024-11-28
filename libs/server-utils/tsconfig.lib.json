@@ -10,7 +10,8 @@
       "@nx/next/typings/image.d.ts"
     ],
     "paths": {
-      "@/shared": ["libs/shared/src/index.ts"],
+      "@/shared/utils": ["libs/shared/src/index.ts"],
+      "@/shared/zod": ["libs/shared/src/lib/schemas.ts"],
       "@/shared/models": ["libs/shared/type_gen/.prisma/client/index.d.ts"],
     }
   },

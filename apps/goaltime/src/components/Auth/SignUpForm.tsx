@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { SignUpSchema } from '@/shared'
+import { SignUpSchema } from '@/shared/zod'
 import { useToast } from '@/ui-components/hooks/use-toast'
 import { cn } from '@/libs/ui-components/src/utils'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'

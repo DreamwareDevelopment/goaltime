@@ -16,7 +16,7 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
-import { binarySearchInsert } from "@/shared";
+import { binarySearchInsert } from "@/shared/utils";
 
 export interface CalendarEvent {
   id: number;

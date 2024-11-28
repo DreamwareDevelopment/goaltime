@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '../supabase/client'
 import { SupabaseClient, User } from '@supabase/supabase-js'
-import { UserProfileSchema } from '@/shared'
+import { UserProfileSchema } from '@/shared/zod'
 import { UserProfile } from '@/shared/models'
 
 export async function getUser() {
