@@ -41,6 +41,12 @@ export async function signupAction(formData: z.infer<typeof signUpSchema>, captc
     redirect('/error')
   }
 
-  revalidatePath('/dashboard', 'layout')
-  redirect('/dashboard')
+  const verificationPage = '/auth/verify?email=' + encodeURIComponent(formData.email)
+  revalidatePath(verificationPage, 'layout')
+  redirect(verificationPage)
+}
+
+export async function resendVerificationAction(email: string) {
+  const supabase = await createClient()
+  await supabase.auth.resend({ email, type: 'signup' })
 }

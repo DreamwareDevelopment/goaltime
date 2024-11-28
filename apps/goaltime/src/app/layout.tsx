@@ -2,6 +2,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import './global.css';
 import { Providers } from './providers';
+import { Toaster } from '@/ui-components/toaster';
 
 export const metadata = {
   title: 'Welcome to goaltime',
@@ -17,7 +18,10 @@ export default function RootLayout({
     <html suppressHydrationWarning lang="en">
       <body>
         <SpeedInsights />
-        <Providers>{children}</Providers>
+        <Providers>
+          <main>{children}</main>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
