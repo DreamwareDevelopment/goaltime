@@ -10,7 +10,7 @@ import { LoginForm } from './LoginForm'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
-import { LoginSchema, SignUpSchema } from '@/libs/shared/src/lib/schemas'
+import { LoginSchema, SignUpSchema } from '@/shared'
 import { SignUpForm } from './SignUpForm'
 
 export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -9,7 +9,10 @@
       "next",
       "@nx/next/typings/image.d.ts"
     ],
-    "paths": {}
+    "paths": {
+      "@/shared": ["libs/shared/src/index.ts"],
+      "@/shared/models": ["libs/shared/type_gen/.prisma/client/index.d.ts"],
+    }
   },
   "exclude": [
     "jest.config.ts",
