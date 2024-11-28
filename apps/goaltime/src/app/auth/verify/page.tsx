@@ -2,8 +2,8 @@ import { MailCheck } from 'lucide-react'
 import React from 'react'
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
+import { resendVerificationAction } from '../../actions/auth'
 import { ResendVerificationButton } from '../../../components/Auth/ResendVerificationButton'
-import { resendVerificationAction } from '../../actions'
 import { HomeButton } from '../../../components/ActionButtons/HomeButton'
 
 interface EmailVerificationSentProps {

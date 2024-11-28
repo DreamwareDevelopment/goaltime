@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 
-import { loginAction, signupAction } from '../actions'
+import { loginAction, signupAction } from '../actions/auth'
 import { AuthCard } from '../../components/Auth/AuthCard'
 import Link from 'next/link'
 
