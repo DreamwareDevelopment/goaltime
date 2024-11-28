@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { getUser } from '@/server-utils'
+import { getUser } from '@/server-utils/controllers/user'
 import { UserAvatar } from '../../components/UserAvatar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { GoalProgressCard } from '../../components/GoalProgressCard'

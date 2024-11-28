@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { createClient } from './client'
+import { createClient } from '../supabase/client'
 import { SupabaseClient, User } from '@supabase/supabase-js'
 import { UserProfileSchema } from '@/shared'
 import { UserProfile } from '@/shared/models'
