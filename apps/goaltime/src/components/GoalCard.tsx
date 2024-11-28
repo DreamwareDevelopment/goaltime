@@ -1,4 +1,4 @@
-import { cn } from "@/libs/ui-components/src/utils"
+import { cn } from "@/ui-components/utils"
 import { PlateEditor } from "@/plate-ui/plate-editor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { Separator } from "@/ui-components/separator";

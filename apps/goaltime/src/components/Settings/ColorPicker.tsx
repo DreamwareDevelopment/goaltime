@@ -1,9 +1,9 @@
 import { Palette } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 
-import { Button } from "@/libs/ui-components/src/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/libs/ui-components/src/components/ui/popover";
-import { Label } from "@/libs/ui-components/src/components/ui/label";
+import { Button } from "@/ui-components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/ui-components/popover";
+import { Label } from "@/ui-components/label";
 
 import { Goal } from "../GoalSettingsCard";
 

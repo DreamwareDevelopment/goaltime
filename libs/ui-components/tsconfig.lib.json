@@ -6,9 +6,11 @@
     "outDir": "../../dist/out-tsc",
     "types": ["node"],
     "paths": {
-      "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
       "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"],
+      "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
       "@/ui-components/hooks/*": ["libs/ui-components/src/hooks/*"],
+      "@/ui-components/utils": ["libs/ui-components/src/utils.ts"],
+      "@/ui-components/svgs/*": ["libs/ui-components/src/svgs/*"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
     }
   },

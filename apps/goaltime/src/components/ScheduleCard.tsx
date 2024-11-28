@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
 import React, { useEffect, useRef, useState } from 'react';
 
-import { cn } from "@/libs/ui-components/src/utils";
+import { cn } from "@/ui-components/utils";
 import { Button } from "@/ui-components/button";
 import { Calendar } from "@/ui-components/calendar";
 import {

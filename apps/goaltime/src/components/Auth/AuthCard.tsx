@@ -9,7 +9,7 @@ import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { LoginForm } from './LoginForm'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
-import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
 import { SignUpForm } from './SignUpForm'
 

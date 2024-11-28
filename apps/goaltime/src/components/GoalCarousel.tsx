@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { cn } from "@/libs/ui-components/src/utils"
+import { cn } from "@/ui-components/utils"
 import { Card } from "@/ui-components/card"
 import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer, CarouselNext, CarouselPrevious } from "@/ui-components/carousel"
 

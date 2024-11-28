@@ -3,7 +3,7 @@
 import { PlusIcon, Trash2, Check, X } from "lucide-react";
 import { useState } from "react";
 
-import { cn } from "@/libs/ui-components/src/utils";
+import { cn } from "@/ui-components/utils";
 import { Card, CardContent, CardFooter } from "@/ui-components/card";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { Button } from "@/ui-components/button";

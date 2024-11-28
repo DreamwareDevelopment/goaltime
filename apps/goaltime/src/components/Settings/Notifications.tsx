@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs';
+import { Checkbox } from '@/ui-components/checkbox';
 import { Input } from '@/ui-components/input';
 import { Label } from '@/ui-components/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs';
 
 import { Goal } from '../GoalSettingsCard';
-import { Checkbox } from '@/libs/ui-components/src/components/ui/checkbox';
 
 export interface NotificationSettingsObject {
   before?: number | null;

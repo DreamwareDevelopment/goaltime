@@ -1,9 +1,9 @@
-import { AutosizeTextarea } from "@/libs/ui-components/src/components/ui/text-area";
+import { AutosizeTextarea } from "@/ui-components/text-area";
+import { FloatingLabelInput } from "@/ui-components/floating-input";
+import { Input } from "@/ui-components/input";
+import { Label } from "@/ui-components/label";
 
 import { Goal } from "../GoalSettingsCard";
-import { FloatingLabelInput } from "@/libs/ui-components/src/components/ui/floating-input";
-import { Input } from "@/libs/ui-components/src/components/ui/input";
-import { Label } from "@/libs/ui-components/src/components/ui/label";
 
 export interface TitleInputProps {
   goal: Goal;

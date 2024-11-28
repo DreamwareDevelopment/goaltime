@@ -7,8 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 
 import { LoginSchema } from '@/shared/zod'
 import { useToast } from '@/ui-components/hooks/use-toast'
-import { cn } from '@/libs/ui-components/src/utils'
-import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { cn } from '@/ui-components/utils'
+import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/ui-components/form'
 import { Input } from '@/ui-components/input'
