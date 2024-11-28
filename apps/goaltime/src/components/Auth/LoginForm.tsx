@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { loginSchema } from '@/shared'
+import { useToast } from '@/ui-components/hooks/use-toast'
 import { cn } from '@/libs/ui-components/src/utils'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
@@ -18,6 +19,14 @@ export interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function LoginForm({ className, login, ...props }: LoginFormProps) {
   const searchParams = useSearchParams()
+  const { toast } = useToast()
+  if (searchParams?.get('error')) {
+    toast({
+      variant: 'destructive',
+      title: 'Error logging in',
+      description: searchParams.get('error'),
+    })
+  }
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -63,12 +72,18 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
                 </FormItem>
               )}
             />
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center pt-6">
               {form.formState.isSubmitting && (
                 <LoadingSpinner className="mr-2 h-4 w-4 animate-spin" />
               )}
               {!form.formState.isSubmitting && (
-                <ShinyButton variant="expandIcon" Icon={ArrowRightIcon} iconPlacement="right" disabled={form.formState.isSubmitting}>
+                <ShinyButton
+                  variant="expandIcon"
+                  Icon={ArrowRightIcon}
+                  iconPlacement="right"
+                  disabled={form.formState.isSubmitting}
+                  className="w-full"
+                >
                   Login with Email
                 </ShinyButton>
               )}
@@ -89,9 +104,6 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
       <ShinyButton variant="expandIcon" Icon={ArrowRightIcon} iconPlacement="right">
         GitHub
       </ShinyButton>
-      {(searchParams?.get('error')) && (
-        <p className="text-sm text-red-500">{searchParams.get('error')}</p>
-      )}
     </div>
   )
 }

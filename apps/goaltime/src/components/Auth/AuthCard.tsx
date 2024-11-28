@@ -6,19 +6,19 @@ import z from 'zod'
 
 import HCaptcha from '@hcaptcha/react-hcaptcha'
 
-import { LoginForm } from '../Auth/LoginForm'
+import { LoginForm } from './LoginForm'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { loginSchema, signUpSchema } from '@/libs/shared/src/lib/schemas'
-import { SignUpForm } from '../Auth/SignUpForm'
+import { SignUpForm } from './SignUpForm'
 
-export interface LoginCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
   loginAction: (formData: z.infer<typeof loginSchema>, captchaToken: string) => Promise<void>
   signupAction: (formData: z.infer<typeof signUpSchema>, captchaToken: string) => Promise<void>
 }
 
-export default function LoginCard({ loginAction, signupAction }: LoginCardProps) {
+export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
   const [currentTab, setCurrentTab] = useState<string>('login')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const captcha = useRef<HCaptcha | null>(null)
@@ -49,7 +49,7 @@ export default function LoginCard({ loginAction, signupAction }: LoginCardProps)
     captcha.current?.resetCaptcha()
   }
   return (
-    <Tabs value={currentTab} onValueChange={setCurrentTab} className='flex flex-col w-full h-full gap-4 items-center justify-start pt-16'>
+    <Tabs value={currentTab} onValueChange={setCurrentTab} className='flex flex-col w-full h-full gap-3 items-center justify-start pt-12'>
       <TabsList>
         <TabsTrigger value="login">Login</TabsTrigger>
         <TabsTrigger value="signup">Signup</TabsTrigger>
