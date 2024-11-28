@@ -2,10 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import z from 'zod'
 
 import { createClient } from '@/server-utils'
 import { LoginSchema, SignUpSchema } from '@/libs/shared/src/lib/schemas'
-import z from 'zod'
 
 export async function loginAction(formData: z.infer<typeof LoginSchema>, captchaToken: string) {
   const supabase = await createClient()
