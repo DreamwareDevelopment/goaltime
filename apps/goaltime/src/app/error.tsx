@@ -1,38 +1,48 @@
 'use client'
- 
-import { Button } from '@/ui-components/button-shiny'
-import { ArrowLeftIcon } from 'lucide-react'
-import { useEffect } from 'react'
- 
-export default function Error({
-  error,
-  reset,
-}: {
+
+import React from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
+import { Button as ShinyButton } from '@/ui-components/button-shiny'
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+
+export interface ErrorPageProps {
   error?: Error & { digest?: string }
   reset?: () => void
-}) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error)
-  }, [error])
- 
+}
+
+export default function ErrorPage({ error, reset }: ErrorPageProps) {
+  if (error) {
+    console.error(error?.message);
+    console.log(error?.digest);
+  }
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-full">
-      <h2 className="text-2xl font-bold text-destructive text-center">Something went wrong!</h2>
-      <Button
-        variant="expandIcon"
-        Icon={ArrowLeftIcon}
-        iconPlacement="left"
-        className="mt-4"
-        onClick={
-          // Attempt to recover by trying to re-render the segment
-          () => {
-            if (reset) reset()
-          }
-        }
-      >
-        Try again
-      </Button>
+    <div className="container mx-auto flex items-center justify-center min-h-screen px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <ExclamationTriangleIcon className="w-8 h-8 text-destructive" />
+          </div>
+          <CardTitle className="text-2xl font-bold">Oops! Something went wrong.</CardTitle>
+          <CardDescription>{error?.message}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-muted p-3 rounded-md">
+            <p className="text-sm text-center">
+              Please try again.
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-6 px-4 md:w-[70%]">
+            <ShinyButton className="w-full" onClick={reset}>Try again</ShinyButton>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Need help? <a href="mailto:support@goaltime.ai" className="text-primary hover:underline">Contact support</a>
+            </p>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
-  )
+  );
 }
