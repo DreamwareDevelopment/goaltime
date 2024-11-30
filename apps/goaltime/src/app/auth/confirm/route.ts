@@ -8,21 +8,28 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = searchParams.get('next') ?? '/welcome'
 
+  let error: Error | null = null
   if (token_hash && type) {
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.verifyOtp({
+    const result = await supabase.auth.verifyOtp({
       type,
       token_hash,
     })
-    if (!error) {
+    if (!result.error) {
       // redirect user to specified redirect URL or root of app
       redirect(next)
+    } else {
+      error = result.error
     }
+  } else {
+    error = new Error('No token hash or type provided')
   }
 
   // redirect the user to an error page with some instructions
-  redirect('/error')
+  const message = encodeURIComponent(error.message)
+  const solution = encodeURIComponent('Try getting a new confirmation email by going back in your browser and clicking resend.')
+  redirect(`/error?error=${message}&solution=${solution}`)
 }

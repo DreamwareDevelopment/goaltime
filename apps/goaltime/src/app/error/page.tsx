@@ -1,15 +1,16 @@
-'use client'
-
 import React from 'react';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
 import { HomeButton } from '../../components/ActionButtons/HomeButton'
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 
-export default function ErrorPage() {
+export interface ErrorPageProps {
+  searchParams: Promise<{ error?: string, solution?: string }>
+}
 
-  const handleGoHome = () => {
-    window.location.href = '/';
-  };
+export default async function ErrorPage({ searchParams }: ErrorPageProps) {
+  const { error, solution } = await searchParams
+
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen px-4">
       <Card className="w-full max-w-md">
@@ -18,18 +19,18 @@ export default function ErrorPage() {
             <ExclamationTriangleIcon className="w-8 h-8 text-destructive" />
           </div>
           <CardTitle className="text-2xl font-bold">Oops! Something went wrong.</CardTitle>
-          <CardDescription>We can&apos;t find the page you&apos;re looking for.</CardDescription>
+          <CardDescription>{error ?? 'We can\'t find the page you\'re looking for.'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted p-3 rounded-md">
             <p className="text-sm text-center">
-              Please try navigating back to the homepage.
+              {solution ?? 'Please try again after navigating back to the homepage.'}
             </p>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-4">
           <div className="flex flex-col items-center space-y-6 px-4 md:w-[70%]">
-            <HomeButton text="Go to Homepage" className="w-full" onClick={handleGoHome} />
+            <HomeButton text="Go to Homepage" className="w-full" />
           </div>
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">

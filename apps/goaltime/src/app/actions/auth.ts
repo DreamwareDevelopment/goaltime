@@ -22,7 +22,7 @@ export async function loginAction(formData: z.infer<typeof LoginSchema>, captcha
     redirect('/login?error=Invalid email or password')
   }
 
-  redirect('/dashboard')
+  redirect('/welcome')
 }
 
 export async function signupAction(formData: z.infer<typeof SignUpSchema>, captchaToken: string) {
