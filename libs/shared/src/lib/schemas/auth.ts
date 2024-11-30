@@ -1,10 +1,5 @@
 import z from 'zod'
 
-// All zod schemas are used for parsing input data, not defining the database schema.
-// Generally, the zod schema will have optional fields with default values 
-// that are not optional in the database schema so as to have less null checks
-// in the codebase.
-
 const minPasswordMessage = 'Password must be at least 8 characters long'
 const maxPasswordMessage = 'Password must be less than 100 characters'
 export const SignUpSchema = z.object({

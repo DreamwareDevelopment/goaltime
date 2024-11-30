@@ -12,7 +12,7 @@
     "paths": {
       "@/*": ["./*"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
-      "@/shared/zod": ["libs/shared/src/lib/schemas.ts"],
+      "@/shared/zod": ["libs/shared/src/lib/schemas/index.ts"],
       "@/shared/models": ["libs/shared/type_gen/.prisma/client/index.d.ts"],
     }
   },
