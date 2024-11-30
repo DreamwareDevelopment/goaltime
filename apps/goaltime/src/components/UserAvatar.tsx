@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { useState } from "react"
+import { User } from "@supabase/supabase-js"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { Button } from "@/ui-components/button-shiny"
@@ -23,8 +24,8 @@ import {
   DialogTitle,
 } from "@/ui-components/dialog"
 import { createClient } from "@/ui-components/hooks/supabase"
-import { UserAndProfile } from "@/shared/utils"
-import { LoadingSpinner } from "@/libs/ui-components/src/svgs/spinner"
+import { LoadingSpinner } from "@/ui-components/svgs/spinner"
+import { UserProfile } from "@/shared/models"
 
 async function signOut() {
   const supabase = await createClient()
@@ -36,13 +37,12 @@ async function signOut() {
 }
 
 export type UserAvatarProps = {
-  userAndProfile: UserAndProfile
+  user: User
+  profile: UserProfile | null
 }
 
-export function UserAvatar({ userAndProfile }: UserAvatarProps) {
+export function UserAvatar({ user, profile }: UserAvatarProps) {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
-
-  const { user, profile } = userAndProfile
 
   const handleLogout = async () => {
     await signOut()
@@ -66,7 +66,7 @@ export function UserAvatar({ userAndProfile }: UserAvatarProps) {
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{profile?.name}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user?.email}
+                {user.email}
               </p>
             </div>
           </DropdownMenuLabel>

@@ -7,8 +7,3 @@ export interface PaginationResponse<T> {
   total: number;
   data: T[];
 }
-
-export type UserAndProfile = {
-  user: User
-  profile: UserProfile
-}
