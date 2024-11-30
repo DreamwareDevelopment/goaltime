@@ -1,4 +1,5 @@
 import z from "zod";
+import { deepRemoveDefaults } from ".";
 
 // Enums
 export const PriorityEnum = z.enum(["High", "Medium", "Low"]);
@@ -41,3 +42,5 @@ export const GoalSchema = z.object({
   updatedAt: z.date().default(new Date()),
   userId: z.string().uuid(),
 });
+
+export const GoalUpdateSchema = deepRemoveDefaults(GoalSchema.partial())
