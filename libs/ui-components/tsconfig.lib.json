@@ -12,6 +12,7 @@
       "@/ui-components/utils": ["libs/ui-components/src/utils.ts"],
       "@/ui-components/svgs/*": ["libs/ui-components/src/svgs/*"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
+      "@/shared/models": ["libs/shared/type_gen/.prisma/client/index.d.ts"],
     }
   },
   "files": [

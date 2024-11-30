@@ -20,7 +20,7 @@
       "@/server-utils/supabase": ["libs/server-utils/src/lib/supabase/index.ts"],
       "@/server-utils/prisma": ["libs/server-utils/src/lib/prisma/client.ts"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
-      "@/shared/zod": ["libs/shared/src/lib/schemas.ts"],
+      "@/shared/zod": ["libs/shared/src/lib/schemas/index.ts"],
       "@/shared/models": ["libs/shared/type_gen/.prisma/client/index.d.ts"],
       "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
       "@/ui-components/utils": ["libs/ui-components/src/utils.ts"],
