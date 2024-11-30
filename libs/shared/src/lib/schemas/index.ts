@@ -16,6 +16,15 @@ type DeepRemoveDefault<I extends z.ZodTypeAny> =
   : I extends z.ZodNullable<infer T> ? z.ZodNullable<DeepRemoveDefault<T>>
   : I;
 
+export function getDefaults<Schema extends z.AnyZodObject>(schema: Schema) {
+    return Object.fromEntries(
+        Object.entries(schema.shape).map(([key, value]) => {
+            if (value instanceof z.ZodDefault) return [key, value._def.defaultValue()]
+            return [key, undefined]
+        })
+    )
+}
+
 export function deepRemoveDefaults <I extends z.ZodTypeAny>(schema: I): DeepRemoveDefault<I> {
     if ( schema instanceof z.ZodDefault )
         return deepRemoveDefaults( schema.removeDefault() )

@@ -21,7 +21,7 @@ export const UserProfileSchema = z.object({
   }).optional(),
   name: z.string().max(100, {
     message: 'Could you please be more concise?',
-  }).optional().default('GT User'),
+  }),
   birthDate: z.date({
     message: 'Please provide a valid date and time',
   }).optional(),
@@ -35,17 +35,18 @@ export const UserProfileSchema = z.object({
     }).optional().default(40),
   preferredLanguage: z.enum(['en'], {
     message: 'Please select a supported language',
-  }).optional().default('en'),
+  }).default('en'),
   preferredCurrency: z.enum(['USD'], {
     message: 'Please select a valid currency',
-  }).optional().default('USD'),
+  }).default('USD'),
   preferredWakeUpTime: z.date({
     message: 'Please provide a valid date and time',
-  }).optional().default(new Date('07:00')),
+  }), // Default to 7:00 AM after timezone is applied by client
   preferredSleepTime: z.date({
     message: 'Please provide a valid date and time',
-  }).optional().default(new Date('23:00')),
+  }), // Default to 11:00 PM after timezone is applied by client
   timezone: z.string({
     message: 'Please provide a valid time zone',
-  }).optional().default('America/Los_Angeles'),
+  }), // Populated by client on load, but can be changed by user
 })
+export type UserProfileInput = z.infer<typeof UserProfileSchema>
