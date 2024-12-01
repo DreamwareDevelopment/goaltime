@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
@@ -21,6 +20,8 @@ import { CalendarIcon, ChevronLeft, ChevronRight, Upload, User } from 'lucide-re
 import { getDefaults, daysOfTheWeek, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { Input } from '@/libs/ui-components/src/components/ui/input'
 import { Checkbox } from "@/ui-components/checkbox"
+import { dayjs, getTime } from '@/shared/utils'
+import { format } from 'date-fns'
 
 const steps = [
   { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthDate'] },
@@ -32,19 +33,39 @@ const daysOfTheWeekOptions: Option[] = Object.values(daysOfTheWeek.Values).map(d
 
 
 export default function WelcomeFlow() {
+  // TODO: get user
   const [currentStep, setCurrentStep] = useState(0)
   const [direction, setDirection] = useState(1)
   const isInitialStep = currentStep === 0
   const isFinalStep = currentStep === steps.length - 1
+  // Timezone handling
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supportedTimezones = (Intl as any).supportedValuesOf('timeZone');
+  const defaultLeavesHomeAt = getTime('08:30', timezone)
+  const defaultReturnsHomeAt = getTime('17:30', timezone)
+  const defaultWakeUpTime = getTime('07:00', timezone)
+  const defaultSleepTime = getTime('23:00', timezone)
 
   const form = useForm<UserProfileInput>({
     resolver: zodResolver(UserProfileSchema),
-    defaultValues: getDefaults(UserProfileSchema),
+    defaultValues: {
+      ...getDefaults(UserProfileSchema),
+      // userId: user.id,
+      timezone,
+      preferredWakeUpTime: defaultWakeUpTime,
+      preferredSleepTime: defaultSleepTime,
+      leavesHomeAt: defaultLeavesHomeAt,
+      returnsHomeAt: defaultReturnsHomeAt,
+    },
   })
 
+  if (form.formState.errors) {
+    console.log('errors', form.formState.errors)
+  }
+
   const onSubmit: SubmitHandler<UserProfileInput> = (data) => {
-    console.log(data)
-    alert('Profile created successfully!')
+    console.log('submitting', data)
   }
 
   const nextStep = async () => {
@@ -270,8 +291,8 @@ export default function WelcomeFlow() {
                                 <Input
                                   type="time"
                                   {...field}
-                                  value={field.value ? format(field.value, 'HH:mm') : ''}
-                                  onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                                  value={field.value ? dayjs(field.value).format('HH:mm') : ''}
+                                  onChange={(e) => field.onChange(getTime(e.target.value, timezone))}
                                 />
                               </FormControl>
                               <FormMessage className="pl-2" />
@@ -292,8 +313,8 @@ export default function WelcomeFlow() {
                                 <Input
                                   type="time"
                                   {...field}
-                                  value={field.value ? format(field.value, 'HH:mm') : ''}
-                                  onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                                  value={field.value ? dayjs(field.value).format('HH:mm') : ''}
+                                  onChange={(e) => field.onChange(getTime(e.target.value, timezone))}
                                 />
                               </FormControl>
                               <FormMessage className="pl-2" />
@@ -361,17 +382,16 @@ export default function WelcomeFlow() {
                         <FormLabel className="pl-2">
                           Timezone
                         </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={setTimezone} defaultValue={timezone}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a timezone" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
-                            <SelectItem value="America/New_York">America/New_York</SelectItem>
-                            <SelectItem value="Europe/London">Europe/London</SelectItem>
-                            <SelectItem value="Asia/Tokyo">Asia/Tokyo</SelectItem>
+                            {supportedTimezones.map((supportedTimezone: string) => (
+                              <SelectItem key={supportedTimezone} value={supportedTimezone}>{supportedTimezone}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage className="pl-2" />
@@ -393,8 +413,8 @@ export default function WelcomeFlow() {
                             <Input
                               type="time"
                               {...field}
-                              value={field.value ? format(field.value, 'HH:mm') : ''}
-                              onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                              value={field.value ? dayjs(field.value).format('HH:mm') : ''}
+                              onChange={(e) => field.onChange(getTime(e.target.value, timezone))}
                             />
                           </FormControl>
                           <FormMessage className="pl-2" />
@@ -415,8 +435,8 @@ export default function WelcomeFlow() {
                             <Input
                               type="time"
                               {...field}
-                              value={field.value ? format(field.value, 'HH:mm') : ''}
-                              onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                              value={field.value ? dayjs(field.value).format('HH:mm') : ''}
+                              onChange={(e) => field.onChange(getTime(e.target.value, timezone))}
                             />
                           </FormControl>
                           <FormMessage className="pl-2" />

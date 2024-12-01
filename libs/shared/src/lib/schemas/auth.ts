@@ -1,4 +1,6 @@
 import z from 'zod'
+import { dayjs } from '../utils'
+import { type Dayjs } from 'dayjs'
 
 const minPasswordMessage = 'Password must be at least 8 characters long'
 const maxPasswordMessage = 'Password must be less than 100 characters'
@@ -37,24 +39,24 @@ export const UserProfileSchema = z.object({
   }).optional(),
   worksRemotely: z.boolean().default(false),
   daysInOffice: z.array(daysOfTheWeek).default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
-  leavesHomeAt: z.date({
-    message: 'Please provide a valid date and time',
-  }).optional(), // Default to 8:30 AM after timezone is applied by client
-  returnsHomeAt: z.date({
-    message: 'Please provide a valid date and time',
-  }).optional(), // Default to 5:30 PM after timezone is applied by client
+  leavesHomeAt: z.custom<Dayjs>((val) => val instanceof dayjs,
+    'Please provide a valid date and time for leavesHomeAt'
+  ).optional(), // Default to 8:30 AM after timezone is applied by client
+  returnsHomeAt: z.custom<Dayjs>((val) => val instanceof dayjs,
+    'Please provide a valid date and time for returnsHomeAt'
+  ).optional(), // Default to 5:30 PM after timezone is applied by client
   preferredLanguage: z.enum(['en'], {
     message: 'Please select a supported language',
   }).default('en'),
   preferredCurrency: z.enum(['USD'], {
     message: 'Please select a valid currency',
   }).default('USD'),
-  preferredWakeUpTime: z.date({
-    message: 'Please provide a valid date and time',
-  }), // Default to 7:00 AM after timezone is applied by client
-  preferredSleepTime: z.date({
-    message: 'Please provide a valid date and time',
-  }), // Default to 11:00 PM after timezone is applied by client
+  preferredWakeUpTime: z.custom<Dayjs>((val) => val instanceof dayjs,
+    'Please provide a valid date and time for preferredWakeUpTime'
+  ), // Default to 7:00 AM after timezone is applied by client
+  preferredSleepTime: z.custom<Dayjs>((val) => val instanceof dayjs,
+    'Please provide a valid date and time for preferredSleepTime'
+  ), // Default to 11:00 PM after timezone is applied by client
   timezone: z.string({
     message: 'Please provide a valid time zone', // TODO: Add list of valid timezones as an enum
   }), // Populated by client on load, but can be changed by user

@@ -5,6 +5,8 @@
     "strict": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "composite": true,
     "declaration": true,
     "noImplicitOverride": true,
