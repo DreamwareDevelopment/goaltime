@@ -256,50 +256,52 @@ export default function WelcomeFlow() {
                         )}
                       />
                     )}
-                    {currentStepFields.includes('leavesHomeAt') && (
-                      <FormField
-                        control={form.control}
-                        name="leavesHomeAt"
-                        render={({ field }) => (
-                          <FormItem className="mb-4">
-                            <FormLabel className="pl-2">
-                              Leaves Home At
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                value={field.value ? format(field.value, 'HH:mm') : ''}
-                                onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
-                              />
-                            </FormControl>
-                            <FormMessage className="pl-2" />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    {currentStepFields.includes('returnsHomeAt') && (
-                      <FormField
-                        control={form.control}
-                        name="returnsHomeAt"
-                        render={({ field }) => (
-                          <FormItem className="mb-4">
-                            <FormLabel className="pl-2">
-                              Returns Home At
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                value={field.value ? format(field.value, 'HH:mm') : ''}
-                                onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
-                              />
-                            </FormControl>
-                            <FormMessage className="pl-2" />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                    <div className="flex flex-wrap gap-8">
+                      {currentStepFields.includes('leavesHomeAt') && (
+                        <FormField
+                          control={form.control}
+                          name="leavesHomeAt"
+                          render={({ field }) => (
+                            <FormItem className="mb-4">
+                              <FormLabel className="pl-2">
+                                Leaves Home At
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="time"
+                                  {...field}
+                                  value={field.value ? format(field.value, 'HH:mm') : ''}
+                                  onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                                />
+                              </FormControl>
+                              <FormMessage className="pl-2" />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                      {currentStepFields.includes('returnsHomeAt') && (
+                        <FormField
+                          control={form.control}
+                          name="returnsHomeAt"
+                          render={({ field }) => (
+                            <FormItem className="mb-4">
+                              <FormLabel className="pl-1">
+                                Returns Home At
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="time"
+                                  {...field}
+                                  value={field.value ? format(field.value, 'HH:mm') : ''}
+                                  onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                                />
+                              </FormControl>
+                              <FormMessage className="pl-2" />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
                   </>
                 )}
                 {currentStepFields.includes('preferredLanguage') && (
@@ -350,50 +352,6 @@ export default function WelcomeFlow() {
                     )}
                   />
                 )}
-                {currentStepFields.includes('preferredWakeUpTime') && (
-                  <FormField
-                    control={form.control}
-                    name="preferredWakeUpTime"
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormLabel className="pl-2">
-                          Normal Wake Up Time
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="time"
-                            {...field}
-                            value={field.value ? format(field.value, 'HH:mm') : ''}
-                            onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
-                          />
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                {currentStepFields.includes('preferredSleepTime') && (
-                  <FormField
-                    control={form.control}
-                    name="preferredSleepTime"
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormLabel className="pl-2">
-                          Normal Sleep Time
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="time"
-                            {...field}
-                            value={field.value ? format(field.value, 'HH:mm') : ''}
-                            onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
-                          />
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
-                )}
                 {currentStepFields.includes('timezone') && (
                   <FormField
                     control={form.control}
@@ -421,6 +379,52 @@ export default function WelcomeFlow() {
                     )}
                   />
                 )}
+                <div className="flex flex-wrap gap-8">
+                  {currentStepFields.includes('preferredWakeUpTime') && (
+                    <FormField
+                      control={form.control}
+                      name="preferredWakeUpTime"
+                      render={({ field }) => (
+                        <FormItem className="mb-4">
+                          <FormLabel className="pl-2">
+                            Normal Wake Up Time
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="time"
+                              {...field}
+                              value={field.value ? format(field.value, 'HH:mm') : ''}
+                              onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                            />
+                          </FormControl>
+                          <FormMessage className="pl-2" />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {currentStepFields.includes('preferredSleepTime') && (
+                    <FormField
+                      control={form.control}
+                      name="preferredSleepTime"
+                      render={({ field }) => (
+                        <FormItem className="mb-4">
+                          <FormLabel className="pl-1">
+                            Normal Sleep Time
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="time"
+                              {...field}
+                              value={field.value ? format(field.value, 'HH:mm') : ''}
+                              onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                            />
+                          </FormControl>
+                          <FormMessage className="pl-2" />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
               </motion.div>
             </AnimatePresence>
           </CardContent>
