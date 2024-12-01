@@ -12,19 +12,24 @@ import { FloatingLabelInput } from "@/ui-components/floating-input"
 import { Button } from "@/ui-components/button"
 import { Label } from "@/ui-components/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
+import { MultiSelect, Option } from "@/ui-components/multi-select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui-components/popover"
 import { Calendar } from "@/ui-components/calendar"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form"
 import { cn } from "@/ui-components/utils"
 import { CalendarIcon, ChevronLeft, ChevronRight, Upload, User } from 'lucide-react'
-import { getDefaults, UserProfileInput, UserProfileSchema } from '@/shared/zod'
+import { getDefaults, daysOfTheWeek, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { Input } from '@/libs/ui-components/src/components/ui/input'
+import { Checkbox } from "@/ui-components/checkbox"
 
 const steps = [
   { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthDate'] },
-  { title: 'Work Details', fields: ['occupation', 'weeklyWorkHours'] },
+  { title: 'Work Details', fields: ['occupation', 'worksRemotely', 'daysInOffice', 'leavesHomeAt', 'returnsHomeAt'] },
   { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime', 'timezone'] },
 ]
+
+const daysOfTheWeekOptions: Option[] = Object.values(daysOfTheWeek.Values).map(day => ({ label: day, value: day }))
+
 
 export default function WelcomeFlow() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -59,7 +64,13 @@ export default function WelcomeFlow() {
     }
   }
 
+  const handleDaysInOfficeChange = (value: Option[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form.setValue('daysInOffice', value.map(option => option.value) as any)
+  }
+
   const currentStepFields = steps[currentStep].fields
+  const worksRemotely = form.watch('worksRemotely')
 
   return (
     <Card className="w-full max-w-lg mx-auto overflow-hidden">
@@ -201,30 +212,95 @@ export default function WelcomeFlow() {
                     )}
                   />
                 )}
-                {currentStepFields.includes('weeklyWorkHours') && (
+                {currentStepFields.includes('worksRemotely') && (
                   <FormField
                     control={form.control}
-                    name="weeklyWorkHours"
+                    name="worksRemotely"
                     render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormLabel className="pl-2">
-                          Weekly Work Hours
-                          <span className="text-xs text-muted-foreground">
-                            &nbsp;&nbsp;(optional)
-                          </span>
+                      <FormItem className="mb-4 flex items-center">
+                        <FormLabel className="pl-2 mt-1">
+                          Working Remote
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          <Checkbox
+                            className="ml-2"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
                           />
                         </FormControl>
                         <FormMessage className="pl-2" />
                       </FormItem>
                     )}
                   />
+                )}
+                {!worksRemotely && (
+                  <>
+                    {currentStepFields.includes('daysInOffice') && (
+                      <FormField
+                        control={form.control}
+                        name="daysInOffice"
+                        render={({ field }) => (
+                          <FormItem className="mb-4">
+                            <FormLabel className="pl-2">
+                              Days in Office
+                            </FormLabel>
+                            <FormControl>
+                              <MultiSelect
+                                options={daysOfTheWeekOptions}
+                                onChange={handleDaysInOfficeChange}
+                                value={field.value.map(day => ({ label: day, value: day }))}
+                              />
+                            </FormControl>
+                            <FormMessage className="pl-2" />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {currentStepFields.includes('leavesHomeAt') && (
+                      <FormField
+                        control={form.control}
+                        name="leavesHomeAt"
+                        render={({ field }) => (
+                          <FormItem className="mb-4">
+                            <FormLabel className="pl-2">
+                              Leaves Home At
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="time"
+                                {...field}
+                                value={field.value ? format(field.value, 'HH:mm') : ''}
+                                onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                              />
+                            </FormControl>
+                            <FormMessage className="pl-2" />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {currentStepFields.includes('returnsHomeAt') && (
+                      <FormField
+                        control={form.control}
+                        name="returnsHomeAt"
+                        render={({ field }) => (
+                          <FormItem className="mb-4">
+                            <FormLabel className="pl-2">
+                              Returns Home At
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="time"
+                                {...field}
+                                value={field.value ? format(field.value, 'HH:mm') : ''}
+                                onChange={(e) => field.onChange(new Date(`1970-01-01T${e.target.value}:00`))}
+                              />
+                            </FormControl>
+                            <FormMessage className="pl-2" />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </>
                 )}
                 {currentStepFields.includes('preferredLanguage') && (
                   <FormField

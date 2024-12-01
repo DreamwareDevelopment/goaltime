@@ -383,7 +383,10 @@ model UserProfile {
   name                String    @default("GT User") @db.VarChar(100)
   birthDate           DateTime? @map("birth_date")
   occupation          String?   @db.VarChar(100)
-  weeklyWorkHours     Int       @default(40) @map("weekly_work_hours")
+  worksRemotely       Boolean   @default(false) @map("works_remotely")
+  leavesHomeAt        DateTime? @map("leaves_home_at")
+  returnsHomeAt       DateTime? @map("returns_home_at")
+  daysInOffice        Json?     @map("days_in_office")
   preferredLanguage   String    @default("en") @db.VarChar(10) @map("preferred_language")
   preferredCurrency   String    @default("USD") @db.VarChar(10) @map("preferred_currency")
   preferredWakeUpTime DateTime  @default(dbgenerated("'07:00'::time")) @db.Time @map("preferred_wake_up_time")
@@ -414,20 +417,21 @@ enum MilestoneView {
 }
 
 model Goal {
-  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title          String
-  description    String?
-  commitment     Float
-  completed      Float              @default(0.0)
-  priority       Priority           @default(Medium)
-  preferredTimes Json
-  color          String
-  milestones     Milestone[]
-  notifications  NotificationSettings?
-  createdAt      DateTime          @default(now()) @map("created_at")
-  updatedAt      DateTime          @updatedAt @map("updated_at")
-  userId         String            @db.Uuid @map("user_id")
-  userProfile    UserProfile       @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  description     String?
+  commitment      Float
+  completed       Float              @default(0.0)
+  priority        Priority           @default(Medium)
+  preferredTimes  Json
+  color           String
+  milestones      Milestone[]
+  notifications   NotificationSettings?
+  canDoDuringWork Boolean           @default(false) @map("can_do_during_work")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  userId          String            @db.Uuid @map("user_id")
+  userProfile     UserProfile       @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
   @@map("goals")

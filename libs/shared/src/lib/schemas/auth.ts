@@ -7,10 +7,17 @@ export const SignUpSchema = z.object({
   password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
   confirmPassword: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
 })
+SignUpSchema.superRefine((input, ctx) => {
+  if (input.password !== input.confirmPassword) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Passwords do not match', path: ['confirmPassword'] })
+  }
+})
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
 })
+
+export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 
 export const UserProfileSchema = z.object({
   userId: z.string({
@@ -28,11 +35,14 @@ export const UserProfileSchema = z.object({
   occupation: z.string().max(100, {
     message: 'Could you please be more concise?',
   }).optional(),
-  weeklyWorkHours: z.number().min(0, {
-      message: "You're not a time traveler, right?",
-    }).max(168, {
-      message: 'Sorry, but no one works that much!',
-    }).optional().default(40),
+  worksRemotely: z.boolean().default(false),
+  daysInOffice: z.array(daysOfTheWeek).default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
+  leavesHomeAt: z.date({
+    message: 'Please provide a valid date and time',
+  }).optional(), // Default to 8:30 AM after timezone is applied by client
+  returnsHomeAt: z.date({
+    message: 'Please provide a valid date and time',
+  }).optional(), // Default to 5:30 PM after timezone is applied by client
   preferredLanguage: z.enum(['en'], {
     message: 'Please select a supported language',
   }).default('en'),
@@ -46,7 +56,39 @@ export const UserProfileSchema = z.object({
     message: 'Please provide a valid date and time',
   }), // Default to 11:00 PM after timezone is applied by client
   timezone: z.string({
-    message: 'Please provide a valid time zone',
+    message: 'Please provide a valid time zone', // TODO: Add list of valid timezones as an enum
   }), // Populated by client on load, but can be changed by user
+})
+UserProfileSchema.superRefine((input, ctx) => {
+  if (!input.worksRemotely) {
+    if (!input.leavesHomeAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'You must specify the time you normally leave home if you are not working remotely',
+        path: ['leavesHomeAt'],
+      })
+    }
+    if (!input.returnsHomeAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'You must specify the time you normally return home if you are not working remotely',
+        path: ['returnsHomeAt'],
+      })
+    }
+    if (input.leavesHomeAt && input.returnsHomeAt && input.leavesHomeAt >= input.returnsHomeAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'You cannot return home before you leave home',
+        path: ['returnsHomeAt'],
+      })
+    }
+    if (input.daysInOffice.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Must have at least one day in office if not working remotely',
+        path: ['daysInOffice'],
+      })
+    }
+  }
 })
 export type UserProfileInput = z.infer<typeof UserProfileSchema>

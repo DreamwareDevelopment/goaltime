@@ -36,6 +36,7 @@ export const GoalSchema = z.object({
   completed: z.number().positive().default(0.0),
   priority: PriorityEnum.default("Medium"),
   preferredTimes: z.array(PreferredTimesEnum).default([]),
+  canDoDuringWork: z.boolean().default(false),
   color: z.string(),
   milestones: z.array(MilestoneSchema).default([]),
   notifications: NotificationSettingsSchema,
