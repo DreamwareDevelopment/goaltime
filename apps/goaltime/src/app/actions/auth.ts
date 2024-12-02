@@ -19,7 +19,7 @@ export async function loginAction(formData: z.infer<typeof LoginSchema>, captcha
   })
   if (error) {
     console.error('Login error', error)
-    redirect('/login?error=Invalid email or password')
+    throw new Error('Invalid email or password')
   }
 
   redirect('/welcome')

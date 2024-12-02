@@ -1,12 +1,10 @@
 import { ArrowRightIcon } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { SignUpSchema } from '@/shared/zod'
-import { useToast } from '@/ui-components/hooks/use-toast'
 import { cn } from "@/ui-components/utils"
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
@@ -18,16 +16,6 @@ export interface SignUpFormProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
-  const searchParams = useSearchParams()
-  const { toast } = useToast()
-  if (searchParams?.get('error')) {
-    toast({
-      variant: 'destructive',
-      title: 'Error logging in',
-      description: searchParams.get('error'),
-    })
-  }
-
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
@@ -37,9 +25,14 @@ export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
     },
   })
 
-  async function onSignup(data: z.infer<typeof SignUpSchema>) {
+  function onSignup(data: z.infer<typeof SignUpSchema>) {
     if (!signup) throw new Error('Signup function is not defined')
-    await signup(data)
+    signup(data).then(() => {
+      console.log('Signup success')
+    }).catch(error => {
+      console.error('Signup error', error)
+      form.setError('root', { message: error.message }, { shouldFocus: true })
+    })
   }
 
   return (
@@ -83,6 +76,11 @@ export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
                     <Input type="password" autoComplete="new-password" placeholder="Confirm password..." {...field} />
                   </FormControl>
                   <FormMessage className="pl-2" />
+                  {form.formState.errors.root && (
+                    <div className="text-sm text-destructive bg-secondary w-full p-1 rounded-md">
+                      {form.formState.errors.root.message}
+                    </div>
+                  )}
                 </FormItem>
               )}
             />

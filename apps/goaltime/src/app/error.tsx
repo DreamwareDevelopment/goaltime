@@ -11,10 +11,6 @@ export interface ErrorPageProps {
 }
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
-  if (error) {
-    console.error(error?.message);
-    console.log(error?.digest);
-  }
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen px-4">
       <Card className="w-full max-w-md">

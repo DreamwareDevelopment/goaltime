@@ -27,7 +27,7 @@ export const UserProfileSchema = z.object({
   }),
   avatarUrl: z.string().url({
     message: 'Please provide a valid URL',
-  }).optional(),
+  }).default('https://github.com/shadcn.png'),
   name: z.string().max(100, {
     message: 'Could you please be more concise?',
   }),

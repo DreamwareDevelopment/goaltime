@@ -30,7 +30,7 @@ export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
 
   const handleSignup = async (formData: z.infer<typeof SignUpSchema>) => {
     if (!captchaToken) {
-      throw new Error('Captcha token is required for client signup')
+      throw new Error('Captcha token is required')
     }
     await signupAction(formData, captchaToken)
     if (!captcha.current) {
@@ -40,7 +40,7 @@ export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
   }
   const handleLogin = async (formData: z.infer<typeof LoginSchema>) => {
     if (!captchaToken) {
-      throw new Error('Captcha token is required for client signup')
+      throw new Error('Captcha token is required')
     }
     await loginAction(formData, captchaToken)
     if (!captcha.current) {

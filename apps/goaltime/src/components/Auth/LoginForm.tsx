@@ -1,12 +1,10 @@
 import { ArrowRightIcon } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { LoginSchema } from '@/shared/zod'
-import { useToast } from '@/ui-components/hooks/use-toast'
 import { cn } from '@/ui-components/utils'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
@@ -18,16 +16,6 @@ export interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function LoginForm({ className, login, ...props }: LoginFormProps) {
-  const searchParams = useSearchParams()
-  const { toast } = useToast()
-  if (searchParams?.get('error')) {
-    toast({
-      variant: 'destructive',
-      title: 'Error logging in',
-      description: searchParams.get('error'),
-    })
-  }
-
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -36,9 +24,14 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
     },
   })
 
-  async function onLogin(data: z.infer<typeof LoginSchema>) {
+  function onLogin(data: z.infer<typeof LoginSchema>) {
     if (!login) throw new Error('Login function is not defined')
-    await login(data)
+    login(data).then(() => {
+      console.log('Login success')
+    }).catch(error => {
+      console.error('Login error', error)
+      form.setError('root', { message: error.message }, { shouldFocus: true })
+    })
   }
 
   return (
@@ -69,6 +62,11 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
                     <Input type="password" autoComplete="current-password" placeholder="Password..." {...field} />
                   </FormControl>
                   <FormMessage className="pl-2" />
+                  {form.formState.errors.root && (
+                    <div className="text-sm text-destructive bg-secondary w-full p-1 rounded-md">
+                      {form.formState.errors.root.message}
+                    </div>
+                  )}
                 </FormItem>
               )}
             />

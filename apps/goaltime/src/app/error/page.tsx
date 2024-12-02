@@ -5,11 +5,11 @@ import { HomeButton } from '../../components/ActionButtons/HomeButton'
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 
 export interface ErrorPageProps {
-  searchParams: Promise<{ error?: string, solution?: string }>
+  searchParams: Promise<{ error?: string, solution?: string, next?: string }>
 }
 
 export default async function ErrorPage({ searchParams }: ErrorPageProps) {
-  const { error, solution } = await searchParams
+  const { error, solution, next } = await searchParams
 
   return (
     <div className="container mx-auto flex items-center justify-center min-h-screen px-4">
@@ -30,7 +30,7 @@ export default async function ErrorPage({ searchParams }: ErrorPageProps) {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-4">
           <div className="flex flex-col items-center space-y-6 px-4 md:w-[70%]">
-            <HomeButton text="Go to Homepage" className="w-full" />
+            <HomeButton href={next ?? '/'} text="Go to Homepage" className="w-full" />
           </div>
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
