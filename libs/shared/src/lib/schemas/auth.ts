@@ -58,7 +58,7 @@ export const UserProfileSchema = z.object({
     'Please provide a valid date and time for preferredSleepTime'
   ), // Default to 11:00 PM after timezone is applied by client
   timezone: z.string({
-    message: 'Please provide a valid time zone', // TODO: Add list of valid timezones as an enum
+    message: 'Please provide a valid time zone',
   }), // Populated by client on load, but can be changed by user
 })
 UserProfileSchema.superRefine((input, ctx) => {
