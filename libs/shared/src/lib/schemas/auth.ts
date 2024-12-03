@@ -31,7 +31,7 @@ export const UserProfileSchema = z.object({
   name: z.string().max(100, {
     message: 'Could you please be more concise?',
   }),
-  birthDate: z.date({
+  birthday: z.date({
     message: 'Please provide a valid date and time',
   }).optional(),
   occupation: z.string().max(100, {

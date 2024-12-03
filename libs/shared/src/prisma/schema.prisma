@@ -381,7 +381,7 @@ model UserProfile {
   userId              String    @unique @db.Uuid @map("user_id")
   avatarUrl           String    @db.VarChar(255) @map("avatar_url")
   name                String    @default("GT User") @db.VarChar(100)
-  birthDate           DateTime? @map("birth_date")
+  birthday            DateTime?
   occupation          String?   @db.VarChar(100)
   worksRemotely       Boolean   @default(false) @map("works_remotely")
   leavesHomeAt        DateTime? @map("leaves_home_at")

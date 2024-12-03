@@ -10,22 +10,19 @@ import { FloatingLabelInput } from "@/ui-components/floating-input"
 import { Button } from "@/ui-components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
 import { MultiSelect, Option } from "@/ui-components/multi-select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/ui-components/popover"
-import { Calendar } from "@/ui-components/calendar"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form"
-import { cn } from "@/ui-components/utils"
-import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getDefaults, daysOfTheWeek, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { Input } from '@/libs/ui-components/src/components/ui/input'
 import { Checkbox } from "@/ui-components/checkbox"
 import { dayjs, getTime } from '@/shared/utils'
-import { format } from 'date-fns'
 import { userStore } from '../proxies/user'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
+import { PersonalFields } from '../../components/Profile/PersonalFields'
 
 const steps = [
-  { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthDate'] },
+  { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthday'] },
   { title: 'Work Details', fields: ['occupation', 'worksRemotely', 'daysInOffice', 'leavesHomeAt', 'returnsHomeAt'] },
   { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime', 'timezone'] },
 ]
@@ -123,66 +120,8 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                 {currentStepFields.includes('avatarUrl') && (
                   <AvatarUrlField form={form} />
                 )}
-                {currentStepFields.includes('name') && (
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormControl>
-                          <FloatingLabelInput
-                            type="text"
-                            autoComplete="name"
-                            label="Name"
-                            {...field}
-                            value={field.value || ''}
-                          />
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                {currentStepFields.includes('birthDate') && (
-                  <FormField
-                    control={form.control}
-                    name="birthDate"
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormLabel className="pl-2">
-                          Birth Date
-                          <span className="text-xs text-muted-foreground">
-                            &nbsp;&nbsp;(optional)
-                          </span>
-                        </FormLabel>
-                        <FormControl>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
+                {currentStepFields.includes('name') && currentStepFields.includes('birthday') && (
+                  <PersonalFields form={form} />
                 )}
                 {currentStepFields.includes('occupation') && (
                   <FormField
