@@ -11,14 +11,14 @@ const daysOfTheWeekOptions: Option[] = Object.values(daysOfTheWeek.Values).map(d
 
 export interface WorkFieldsProps {
   form: UseFormReturn<UserProfileInput>
-  timezone: string
   defaults: {
     leavesHomeAt: dayjs.Dayjs
     returnsHomeAt: dayjs.Dayjs
   }
 }
 
-export function WorkFields({ form, timezone, defaults }: WorkFieldsProps) {
+export function WorkFields({ form, defaults }: WorkFieldsProps) {
+  const timezone = form.watch('timezone')
   const handleDaysInOfficeChange = (value: Option[]) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     form.setValue('daysInOffice', value.map(option => option.value) as any)
@@ -116,7 +116,7 @@ export function WorkFields({ form, timezone, defaults }: WorkFieldsProps) {
                         [],
                         ["hours", "minutes", "am/pm"]
                       ]}
-                      value={(field.value ? dayjs(field.value) : defaults.leavesHomeAt).toDate()}
+                      value={(field.value ? dayjs(field.value) : defaults.returnsHomeAt).toDate()}
                       onChange={(e) => field.onChange(dayjs.tz(e, timezone))}
                     />
                   </FormControl>

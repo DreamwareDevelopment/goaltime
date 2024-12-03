@@ -130,13 +130,12 @@ interface DateTimeInput {
 }
 
 const DEFAULT_TS_OPTIONS = {
-  date: new Date(),
   hour12: true,
 };
 export const DatetimePicker = forwardRef<HTMLDivElement, DateTimeInput>(
   (
     {
-      value = new Date(),
+      value,
       format = DEFAULTS,
       placeholders,
       dtOptions = DEFAULT_TS_OPTIONS,
