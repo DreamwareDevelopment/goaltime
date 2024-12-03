@@ -12,12 +12,12 @@ import { Form } from "@/ui-components/form"
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getDefaults, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { getTime } from '@/shared/utils'
-import { userStore } from '../proxies/user'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
 import { PersonalFields } from '../../components/Profile/PersonalFields'
 import { WorkFields } from '../../components/Profile/WorkFields'
 import { PreferencesFields } from '../../components/Profile/PreferencesFields'
+import { useValtio } from '../../components/data/valtio'
 
 const steps = [
   { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthday'] },
@@ -31,6 +31,7 @@ export interface WelcomeFlowClientProps {
 
 export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   const router = useRouter()
+  const { userStore } = useValtio()
   const [currentStep, setCurrentStep] = useState(0)
   const [direction, setDirection] = useState(1)
   const isInitialStep = currentStep === 0

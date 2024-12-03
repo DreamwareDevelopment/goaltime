@@ -1,17 +1,23 @@
 'use server'
 
-import { SupabaseClient, User } from '@supabase/supabase-js'
-import { UserProfileSchema } from '@/shared/zod'
-import { UserProfile } from '@/shared/models'
+import { UserProfileInput } from '@/shared/zod'
+import { getPrismaClient } from '@/server-utils/prisma'
 
-export async function createUserProfileAction(client: SupabaseClient, user: User) {
-  const userProfile: UserProfile = UserProfileSchema.parse({
-    userId: user.id,
-    ...user.user_metadata,
-  }) as UserProfile
-
-  const { error } = await client.from('user_profiles').insert<UserProfile>(userProfile)
-  if (error) {
-    console.error(error)
+export async function createUserProfileAction(userId: string, profile: UserProfileInput) {
+  const p = {
+    ...profile,
+    userId,
   }
+
+  const prisma = await getPrismaClient()
+  const userProfile = await prisma.userProfile.create({
+    data: {
+      ...p,
+      leavesHomeAt: p.leavesHomeAt?.toDate(),
+      returnsHomeAt: p.returnsHomeAt?.toDate(),
+      preferredWakeUpTime: p.preferredWakeUpTime?.toDate(),
+      preferredSleepTime: p.preferredSleepTime?.toDate(),
+    },
+  })
+  return userProfile
 }

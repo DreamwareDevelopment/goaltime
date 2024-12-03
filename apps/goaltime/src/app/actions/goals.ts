@@ -3,18 +3,18 @@
 import z from 'zod'
 
 import { GoalSchema, GoalUpdateSchema } from '@/shared/zod'
-import { Goal, UserProfile } from '@/shared/models'
+import { UserProfile } from '@/shared/models'
 import { getPrismaClient } from '@/server-utils/prisma'
 
 export async function createGoalAction(profile: UserProfile, goal: z.infer<typeof GoalSchema>) {
   const prisma = await getPrismaClient()
   const g = {
     ...goal,
-    userId: profile.id,
+    userId: profile.userId,
   }
   // Remove relations from copied goal object
   // fine to mutate since this is on the server, 
-  // the client store won't be mutated
+  // the client valtio store won't be mutated
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delete (g as any).milestones
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,10 +35,10 @@ export async function createGoalAction(profile: UserProfile, goal: z.infer<typeo
   return newGoal
 }
 
-export async function updateGoalAction(previous: Goal, goal: z.infer<typeof GoalUpdateSchema>) {
+export async function updateGoalAction(id: string, goal: z.infer<typeof GoalUpdateSchema>) {
   const prisma = await getPrismaClient()
   const updatedGoal = await prisma.goal.update({
-    where: { id: previous.id },
+    where: { id },
     data: {
       ...goal,
       milestones: undefined,
