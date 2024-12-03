@@ -5,18 +5,16 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, AnimatePresence } from 'framer-motion'
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
 import { FloatingLabelInput } from "@/ui-components/floating-input"
 import { Button } from "@/ui-components/button"
-import { Label } from "@/ui-components/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
 import { MultiSelect, Option } from "@/ui-components/multi-select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui-components/popover"
 import { Calendar } from "@/ui-components/calendar"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form"
 import { cn } from "@/ui-components/utils"
-import { CalendarIcon, ChevronLeft, ChevronRight, Upload, User } from 'lucide-react'
+import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getDefaults, daysOfTheWeek, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { Input } from '@/libs/ui-components/src/components/ui/input'
 import { Checkbox } from "@/ui-components/checkbox"
@@ -24,6 +22,7 @@ import { dayjs, getTime } from '@/shared/utils'
 import { format } from 'date-fns'
 import { userStore } from '../proxies/user'
 import { useRouter } from 'next/navigation'
+import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
 
 const steps = [
   { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthDate'] },
@@ -108,7 +107,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   return (
     <Card className="w-full max-w-lg mx-auto overflow-hidden">
       <CardHeader>
-        <CardTitle>Welcome! Let&apos;s set up your profile</CardTitle>
+        <CardTitle className="flex justify-center gap-2 w-full">Welcome! Let&apos;s set up your profile</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -121,6 +120,9 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                 exit={{ x: isInitialStep ? -300 : isFinalStep ? 300 : -direction * 300, opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
+                {currentStepFields.includes('avatarUrl') && (
+                  <AvatarUrlField form={form} />
+                )}
                 {currentStepFields.includes('name') && (
                   <FormField
                     control={form.control}
@@ -135,55 +137,6 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                             {...field}
                             value={field.value || ''}
                           />
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                {currentStepFields.includes('avatarUrl') && (
-                  <FormField
-                    control={form.control}
-                    name="avatarUrl"
-                    render={({ field }) => (
-                      <FormItem className="mb-4 pl-2">
-                        <FormLabel>
-                          Avatar
-                          <span className="text-xs text-muted-foreground">
-                            &nbsp;&nbsp;(optional)
-                          </span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="flex items-center space-x-4">
-                            <Avatar>
-                              <AvatarImage src={field.value} />
-                              <AvatarFallback>
-                                <User />
-                              </AvatarFallback>
-                            </Avatar>
-                            <Label htmlFor="avatar-upload" className="cursor-pointer">
-                              <div className="flex items-center space-x-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md">
-                                <Upload className="w-4 h-4" />
-                                <span>Upload Image</span>
-                              </div>
-                              <Input
-                                id="avatar-upload"
-                                type="file"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) {
-                                    const reader = new FileReader()
-                                    reader.onloadend = () => {
-                                      field.onChange(reader.result as string)
-                                    }
-                                    reader.readAsDataURL(file)
-                                  }
-                                }}
-                              />
-                            </Label>
-                          </div>
                         </FormControl>
                         <FormMessage className="pl-2" />
                       </FormItem>
