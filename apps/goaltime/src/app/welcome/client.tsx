@@ -6,10 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
-import { Button } from "@/ui-components/button"
+import { Button as ShinyButton } from "@/ui-components/button-shiny"
 
 import { Form } from "@/ui-components/form"
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { getDefaults, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { getTime } from '@/shared/utils'
 import { useRouter } from 'next/navigation'
@@ -126,20 +126,34 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
               </motion.div>
             </AnimatePresence>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex flex-wrap justify-between gap-4">
             {currentStep > 0 && (
-              <Button onClick={prevStep} variant="outline" type="button">
-                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-              </Button>
+              <ShinyButton
+                onClick={prevStep}
+                variant="expandIcon"
+                Icon={ArrowLeft}
+                iconPlacement="left"
+                type="button"
+                className="min-w-[178px] bg-accent text-accent-foreground hover:bg-accent/80"
+              >
+                Previous
+              </ShinyButton>
             )}
             {currentStep < steps.length - 1 ? (
-              <Button onClick={nextStep} className="ml-auto" type="button">
-                Next <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
+              <ShinyButton
+                variant="expandIcon"
+                Icon={ArrowRight}
+                iconPlacement="right"
+                onClick={nextStep}
+                className="ml-auto min-w-[178px]"
+                type="button"
+              >
+                Next
+              </ShinyButton>
             ) : (
-              <Button type="submit" className="ml-auto">
+              <ShinyButton variant="gooeyLeft" type="submit" className="ml-auto min-w-[178px]">
                 Submit
-              </Button>
+              </ShinyButton>
             )}
           </CardFooter>
         </form>

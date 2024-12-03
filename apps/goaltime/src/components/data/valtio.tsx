@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useRef } from 'react'
 
 import { goalStore, userStore } from './proxies'
