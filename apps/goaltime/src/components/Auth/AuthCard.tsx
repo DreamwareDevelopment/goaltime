@@ -13,13 +13,16 @@ import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
 import { SignUpForm } from './SignUpForm'
 
+export type AuthTab = 'login' | 'signup'
+
 export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
   loginAction: (formData: z.infer<typeof LoginSchema>, captchaToken: string) => Promise<void>
   signupAction: (formData: z.infer<typeof SignUpSchema>, captchaToken: string) => Promise<void>
+  type?: AuthTab
 }
 
-export function AuthCard({ loginAction, signupAction }: AuthCardProps) {
-  const [currentTab, setCurrentTab] = useState<string>('login')
+export function AuthCard({ loginAction, signupAction, type }: AuthCardProps) {
+  const [currentTab, setCurrentTab] = useState<string>(type || 'login')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const captcha = useRef<HCaptcha | null>(null)
 

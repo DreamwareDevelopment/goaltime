@@ -6,23 +6,28 @@ import z from 'zod'
 
 import { createClient } from '@/server-utils/supabase'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
+import { getProfile } from '../queries/user'
 
 export async function loginAction(formData: z.infer<typeof LoginSchema>, captchaToken: string) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error, data: { user } } = await supabase.auth.signInWithPassword({
     email: formData.email,
     password: formData.password,
     options: {
       captchaToken,
     },
   })
-  if (error) {
+  if (error || !user) {
     console.error('Login error', error)
     throw new Error('Invalid email or password')
   }
-
-  redirect('/welcome')
+  const profile = await getProfile(user.id)
+  if (!profile) {
+    redirect('/welcome')
+  } else {
+    redirect('/dashboard')
+  }
 }
 
 export async function signupAction(formData: z.infer<typeof SignUpSchema>, captchaToken: string) {
