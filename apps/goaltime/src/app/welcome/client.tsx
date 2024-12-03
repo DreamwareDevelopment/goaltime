@@ -6,28 +6,25 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
-import { FloatingLabelInput } from "@/ui-components/floating-input"
 import { Button } from "@/ui-components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select"
-import { MultiSelect, Option } from "@/ui-components/multi-select"
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form"
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getDefaults, daysOfTheWeek, UserProfileInput, UserProfileSchema } from '@/shared/zod'
+import { getDefaults, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { Input } from '@/libs/ui-components/src/components/ui/input'
-import { Checkbox } from "@/ui-components/checkbox"
 import { dayjs, getTime } from '@/shared/utils'
 import { userStore } from '../proxies/user'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
 import { PersonalFields } from '../../components/Profile/PersonalFields'
+import { WorkFields } from '../../components/Profile/WorkFields'
 
 const steps = [
   { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthday'] },
   { title: 'Work Details', fields: ['occupation', 'worksRemotely', 'daysInOffice', 'leavesHomeAt', 'returnsHomeAt'] },
   { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime', 'timezone'] },
 ]
-
-const daysOfTheWeekOptions: Option[] = Object.values(daysOfTheWeek.Values).map(day => ({ label: day, value: day }))
 
 export interface WelcomeFlowClientProps {
   userId: string
@@ -93,13 +90,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     }
   }
 
-  const handleDaysInOfficeChange = (value: Option[]) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    form.setValue('daysInOffice', value.map(option => option.value) as any)
-  }
-
   const currentStepFields = steps[currentStep].fields
-  const worksRemotely = form.watch('worksRemotely')
 
   return (
     <Card className="w-full max-w-lg mx-auto overflow-hidden">
@@ -124,110 +115,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                   <PersonalFields form={form} />
                 )}
                 {currentStepFields.includes('occupation') && (
-                  <FormField
-                    control={form.control}
-                    name="occupation"
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormControl>
-                          <FloatingLabelInput type="text" autoComplete="occupation" label="Occupation  (optional)" {...field} />
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                {currentStepFields.includes('worksRemotely') && (
-                  <FormField
-                    control={form.control}
-                    name="worksRemotely"
-                    render={({ field }) => (
-                      <FormItem className="mb-4 flex items-center">
-                        <FormLabel className="pl-2 mt-1">
-                          Working Remote
-                        </FormLabel>
-                        <FormControl>
-                          <Checkbox
-                            className="ml-2"
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage className="pl-2" />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                {!worksRemotely && (
-                  <>
-                    {currentStepFields.includes('daysInOffice') && (
-                      <FormField
-                        control={form.control}
-                        name="daysInOffice"
-                        render={({ field }) => (
-                          <FormItem className="mb-4">
-                            <FormLabel className="pl-2">
-                              Days in Office
-                            </FormLabel>
-                            <FormControl>
-                              <MultiSelect
-                                options={daysOfTheWeekOptions}
-                                onChange={handleDaysInOfficeChange}
-                                value={field.value.map(day => ({ label: day, value: day }))}
-                              />
-                            </FormControl>
-                            <FormMessage className="pl-2" />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                    <div className="flex flex-wrap gap-8">
-                      {currentStepFields.includes('leavesHomeAt') && (
-                        <FormField
-                          control={form.control}
-                          name="leavesHomeAt"
-                          render={({ field }) => (
-                            <FormItem className="mb-4">
-                              <FormLabel className="pl-2">
-                                Leaves Home At
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="time"
-                                  {...field}
-                                  value={field.value ? dayjs(field.value).format('HH:mm') : ''}
-                                  onChange={(e) => field.onChange(getTime(e.target.value, timezone))}
-                                />
-                              </FormControl>
-                              <FormMessage className="pl-2" />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                      {currentStepFields.includes('returnsHomeAt') && (
-                        <FormField
-                          control={form.control}
-                          name="returnsHomeAt"
-                          render={({ field }) => (
-                            <FormItem className="mb-4">
-                              <FormLabel className="pl-1">
-                                Returns Home At
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="time"
-                                  {...field}
-                                  value={field.value ? dayjs(field.value).format('HH:mm') : ''}
-                                  onChange={(e) => field.onChange(getTime(e.target.value, timezone))}
-                                />
-                              </FormControl>
-                              <FormMessage className="pl-2" />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-                  </>
+                  <WorkFields form={form} timezone={timezone} defaults={{ leavesHomeAt: defaultLeavesHomeAt, returnsHomeAt: defaultReturnsHomeAt }} />
                 )}
                 {currentStepFields.includes('preferredLanguage') && (
                   <FormField

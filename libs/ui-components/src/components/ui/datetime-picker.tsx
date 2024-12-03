@@ -99,7 +99,7 @@ const DatetimeGrid = forwardRef<
                       </React.Fragment>
                     ))
                   : null}
-                {format[1]?.length && !i ? (
+                {format[1]?.length && format[0]?.length && !i ? (
                   // date-time separator - only if both date and time are present
                   <span
                     className={cn(
