@@ -5,7 +5,7 @@ import { User } from '@supabase/supabase-js'
 import { UserProfile } from '@/shared/models'
 import { getPrismaClient } from '@/server-utils/prisma'
 
-export async function getUser(): Promise<User> {
+async function getUser(): Promise<User> {
   const supabase = await createClient()
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {
@@ -16,6 +16,16 @@ export async function getUser(): Promise<User> {
   }
 
   return data.user
+}
+
+export type SanitizedUser = Pick<User, 'id' | 'email'>
+
+export async function getSanitizedUser(): Promise<SanitizedUser> {
+  const user = await getUser()
+  return {
+    id: user.id,
+    email: user.email,
+  }
 }
 
 export async function getProfile(userId: User['id']): Promise<UserProfile | null> {

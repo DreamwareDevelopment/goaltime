@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { useState } from "react"
-import { User } from "@supabase/supabase-js"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { Button } from "@/ui-components/button-shiny"
@@ -26,6 +25,7 @@ import {
 import { createClient } from "@/ui-components/hooks/supabase"
 import { LoadingSpinner } from "@/ui-components/svgs/spinner"
 import { UserProfile } from "@/shared/models"
+import { SanitizedUser } from "../app/queries/user"
 
 async function signOut() {
   const supabase = await createClient()
@@ -37,7 +37,7 @@ async function signOut() {
 }
 
 export type UserAvatarProps = {
-  user: User
+  user: SanitizedUser
   profile: UserProfile | null
 }
 

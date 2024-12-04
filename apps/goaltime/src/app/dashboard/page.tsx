@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { getUser, getProfile } from '../queries/user'
+import { getProfile, getSanitizedUser } from '../queries/user'
 import { UserAvatar } from '../../components/UserAvatar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
@@ -11,7 +11,7 @@ import { ScheduleCard } from '../../components/ScheduleCard'
 import { goals, schedule } from '../mocks/mocks'
 
 export default async function Dashboard() {
-  const user = await getUser()
+  const user = await getSanitizedUser()
   const profile = await getProfile(user.id)
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
@@ -22,9 +22,9 @@ export default async function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GoalCarousel goals={goals} className="lg:col-span-2 overflow-hidden" />
-        <GoalProgressCard goals={goals} />
         <ScheduleCard schedule={schedule} />
+        <GoalProgressCard goals={goals} />
+        <GoalCarousel goals={goals} className="lg:col-span-2 overflow-hidden" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 mt-6">

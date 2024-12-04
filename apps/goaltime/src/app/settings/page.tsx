@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
-import { getUser, getProfile } from '../queries/user'
+import { getSanitizedUser, getProfile } from '../queries/user'
 import SettingsClient from './client'
 
 export default async function SettingsServer() {
-  const user = await getUser()
+  const user = await getSanitizedUser()
   const profile = await getProfile(user.id)
   if (!profile) {
     const error = encodeURIComponent('Profile not found')
