@@ -45,7 +45,14 @@ export function AuthCard({ loginAction, signupAction, type }: AuthCardProps) {
     if (!captchaToken) {
       throw new Error('Captcha token is required')
     }
-    await loginAction(formData, captchaToken)
+    try {
+      await loginAction(formData, captchaToken)
+    } catch (error) {
+      console.error('Login error', error)
+      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+        throw error
+      }
+    }
     if (!captcha.current) {
       console.warn('Captcha ref is not initialized')
     }
