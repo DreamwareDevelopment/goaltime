@@ -48,8 +48,7 @@ export function AuthCard({ loginAction, signupAction, type }: AuthCardProps) {
     try {
       await loginAction(formData, captchaToken)
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.error('Login card error', (error as any).digest)
+      console.error('Login card error', error)
       if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
         throw error
       }

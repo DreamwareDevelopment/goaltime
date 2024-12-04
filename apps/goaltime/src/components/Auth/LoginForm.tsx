@@ -29,8 +29,8 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
     login(data).then(() => {
       console.log('Login success')
     }).catch(error => {
-      console.error('Login form error', error.digest)
-      form.setError('root', { message: error.message }, { shouldFocus: true })
+      console.error('Login form error', error)
+      form.setError('root', { message: "Invalid email or password" }, { shouldFocus: true })
     })
   }
 
