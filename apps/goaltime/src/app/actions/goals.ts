@@ -7,7 +7,7 @@ import { UserProfile } from '@/shared/models'
 import { getPrismaClient } from '@/server-utils/prisma'
 
 export async function createGoalAction(profile: UserProfile, goal: z.infer<typeof GoalSchema>) {
-  const prisma = await getPrismaClient()
+  const prisma = await getPrismaClient(profile.userId)
   const g = {
     ...goal,
     userId: profile.userId,
@@ -23,20 +23,16 @@ export async function createGoalAction(profile: UserProfile, goal: z.infer<typeo
   const newGoal = await prisma.goal.create({
     data: {
       ...g,
-      milestones: {
-        create: goal.milestones,
-      },
-      notifications: {
-        create: goal.notifications,
-      },
+      milestones: undefined,
+      notifications: undefined,
     },
   })
   // TODO: Schedule notifications
   return newGoal
 }
 
-export async function updateGoalAction(id: string, goal: z.infer<typeof GoalUpdateSchema>) {
-  const prisma = await getPrismaClient()
+export async function updateGoalAction(profile: UserProfile, id: string, goal: z.infer<typeof GoalUpdateSchema>) {
+  const prisma = await getPrismaClient(profile.userId)
   const updatedGoal = await prisma.goal.update({
     where: { id },
     data: {

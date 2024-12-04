@@ -24,17 +24,9 @@ import {
 } from "@/ui-components/dialog"
 import { createClient } from "@/ui-components/hooks/supabase"
 import { LoadingSpinner } from "@/ui-components/svgs/spinner"
+import { useAvatarUrl } from "@/ui-components/hooks/avatar-url"
 import { UserProfile } from "@/shared/models"
 import { SanitizedUser } from "../app/queries/user"
-
-async function signOut() {
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signOut()
-  if (error) {
-    redirect('/error')
-  }
-  redirect('/')
-}
 
 export type UserAvatarProps = {
   user: SanitizedUser
@@ -43,12 +35,17 @@ export type UserAvatarProps = {
 
 export function UserAvatar({ user, profile }: UserAvatarProps) {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
+  const supabase = createClient()
 
   const handleLogout = async () => {
-    await signOut()
-    console.log("User logged out")
-    setIsLogoutDialogOpen(false)
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      redirect('/error')
+    }
+    redirect('/')
   }
+
+  const [avatarUrl] = useAvatarUrl(profile?.avatarUrl ?? '', supabase)
 
   return (
     <>
@@ -56,7 +53,7 @@ export function UserAvatar({ user, profile }: UserAvatarProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-11 w-11">
-              <AvatarImage src={profile?.avatarUrl} alt={profile?.name} />
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={profile?.name} />}
               <AvatarFallback>{!profile ? <LoadingSpinner /> : profile?.name.split(' ').map(n => n[0].toUpperCase()).join('')}</AvatarFallback>
             </Avatar>
           </Button>

@@ -29,9 +29,10 @@ export async function getSanitizedUser(): Promise<SanitizedUser> {
 }
 
 export async function getProfile(userId: User['id']): Promise<UserProfile | null> {
-  const prisma = await getPrismaClient()
+  const prisma = await getPrismaClient(userId)
   const userProfile = await prisma.userProfile.findUnique({
     where: {
+      // userId: '2074d8f5-7016-4999-9ce4-6afe1981f1ad',
       userId,
     },
   })

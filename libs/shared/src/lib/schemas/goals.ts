@@ -8,16 +8,18 @@ export const MilestoneViewEnum = z.enum(["daily", "lifetime"]);
 
 // Milestone Schema
 export const MilestoneSchema = z.object({
+  goalId: z.string().uuid(),
+  userId: z.string().uuid(),
   text: z.string(),
   completed: z.boolean().default(false),
   view: MilestoneViewEnum,
-  goalId: z.string().uuid(),
   updatedAt: z.date(),
 });
 
 // NotificationSettings Schema
 export const NotificationSettingsSchema = z.object({
   goalId: z.string().uuid(),
+  userId: z.string().uuid(),
   pushBefore: z.string().duration().optional(),
   pushAfter: z.string().duration().optional(),
   pushCheckIn: z.boolean().default(false),
@@ -30,6 +32,7 @@ export const NotificationSettingsSchema = z.object({
 
 // Goal Schema
 export const GoalSchema = z.object({
+  userId: z.string().uuid(),
   title: z.string().max(100, { message: "Title must be less than 100 characters" }),
   description: z.string().max(1000, { message: "Description must be less than 1000 characters" }).optional(),
   commitment: z.number().positive().max(100, { message: "That's a lot of hours, try breaking it up into component goals." }),
@@ -41,7 +44,6 @@ export const GoalSchema = z.object({
   milestones: z.array(MilestoneSchema).default([]),
   notifications: NotificationSettingsSchema,
   updatedAt: z.date().default(new Date()),
-  userId: z.string().uuid(),
 });
 
 export const GoalUpdateSchema = deepRemoveDefaults(GoalSchema.partial())

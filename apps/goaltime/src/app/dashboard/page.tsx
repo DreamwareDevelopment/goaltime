@@ -9,10 +9,14 @@ import { GoalyticsCard } from '../../components/GoalyticsCard'
 import { GoalCreationButton } from '../../components/GoalCreationButton'
 import { ScheduleCard } from '../../components/ScheduleCard'
 import { goals, schedule } from '../mocks/mocks'
+import { redirect } from 'next/navigation'
 
 export default async function Dashboard() {
   const user = await getSanitizedUser()
   const profile = await getProfile(user.id)
+  if (!profile) {
+    redirect('/welcome')
+  }
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">

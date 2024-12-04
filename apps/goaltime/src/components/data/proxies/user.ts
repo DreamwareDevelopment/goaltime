@@ -29,11 +29,12 @@ export const userStore = proxy<{
   },
   async uploadProfileImage(userId, image) {
     const supabase = createClient()
-    const { data, error } = await supabase.storage.from('profile_images').upload(`${userId}`, image, { upsert: true })
+    const { data, error } = await supabase.storage.from('profile_images').upload(`${userId}/profile_image`, image, { upsert: true, contentType: image.type })
     if (error) {
       console.error('error uploading profile image', error)
       throw error
     }
-    return data.fullPath
+    console.log('uploaded profile image')
+    return data.path
   }
 })

@@ -6,7 +6,7 @@ import { createGoalAction, updateGoalAction } from '../../../app/actions/goals'
 
 export const goalStore = proxy<{
   goals: Goal[],
-  updateGoal(id: string, update: Partial<Goal>): Promise<void>,
+  updateGoal(profile: UserProfile, id: string, update: Partial<Goal>): Promise<void>,
   createGoal(profile: UserProfile, object: Partial<Goal>): Promise<void>
 }>({
   goals: [],
@@ -15,11 +15,11 @@ export const goalStore = proxy<{
 
     await createGoalAction(profile, validated)
   },
-  async updateGoal(id, update) {
+  async updateGoal(profile, id, update) {
     const validated = GoalUpdateSchema.parse(update)
     const index = goalStore.goals.findIndex(g => g.id === id)
     if (index >= 0) {
-      await updateGoalAction(id, validated)
+      await updateGoalAction(profile, id, validated)
     }
     throw new Error(`Goal ${id} not found`)
   }

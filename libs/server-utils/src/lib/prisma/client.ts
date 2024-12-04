@@ -1,11 +1,43 @@
 import { PrismaClient } from '@/libs/shared/type_gen/.prisma/client'
 
-export async function getPrismaClient(): Promise<PrismaClient> {
-  const datasourceUrl = process.env.POSTGRES_PRISMA_URL
+let _instance: ExtendedPrismaClient
+export async function getPrismaClient(userId: string): Promise<ExtendedPrismaClient> {
+  if (!userId) {
+    throw new Error('userId is required to access the database')
+  }
+  if (!_instance) {
+    _instance = await newPrismaClient(userId)
+  }
+  return _instance
+}
+
+export type ExtendedPrismaClient = Awaited<ReturnType<typeof newPrismaClient>>
+
+export async function newPrismaClient(userId: string) {
+  const datasourceUrl = process.env.SUPABASE_PRISMA_URL
   if (!datasourceUrl) {
-    throw new Error('POSTGRES_PRISMA_URL is not set')
+    throw new Error('SUPABASE_PRISMA_URL is not set')
   }
   const client = new PrismaClient({ datasourceUrl })
-  await client.$connect()
-  return client
+  const extendedClient = client.$extends({
+    name: 'SupabaseRowLevelSecurity',
+    query: {
+      $allModels: {
+        async $allOperations({ args, query }) {
+          try {
+            const [, result] = await client.$transaction([
+              client.$executeRaw`SELECT set_config('app.user_id', ${userId}, TRUE)`,
+              query(args),
+            ])
+            return result
+          } catch (e) {
+            console.error(e)
+            throw new Error('Not authorized')
+          }
+        },
+      },
+    },
+  })
+  await extendedClient.$connect()
+  return extendedClient
 }

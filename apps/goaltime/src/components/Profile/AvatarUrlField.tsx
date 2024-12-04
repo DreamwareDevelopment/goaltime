@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { UseFormReturn } from "react-hook-form";
 import { DropzoneOptions, FileError, ErrorCode } from "react-dropzone";
 import { useToast } from "@/ui-components/hooks/use-toast";
+import { useAvatarUrl } from "@/ui-components/hooks/avatar-url";
 
 const FileSvgDraw = () => {
   return (
@@ -79,6 +80,8 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
       });
     }
   } satisfies DropzoneOptions;
+
+  const [avatarUrl, setAvatarUrl] = useAvatarUrl(form.watch("avatarUrl"))
   return (
     <FormField
       control={form.control}
@@ -94,7 +97,7 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
           <FormControl>
             <div className="flex flex-col justify-center items-center gap-4">
               <Avatar>
-                <AvatarImage src={field.value} />
+                <AvatarImage src={avatarUrl ?? ''} />
                 <AvatarFallback>
                   <User />
                 </AvatarFallback>
@@ -113,6 +116,7 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
                   const url = files?.[0] ? URL.createObjectURL(files[0]) : null;
                   if (url && files) {
                     setImage(files[0])
+                    setAvatarUrl(url)
                     field.onChange(url);
                   }
                 }} className="outline-dashed outline-1 outline-background-foreground">
