@@ -103,11 +103,7 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
                 id="avatar-upload"
                 value={null}
                 onValueChange={(files) => {
-                  const url = files?.[0] ? URL.createObjectURL(files[0]) : null
-                  if (url && files) {
-                    field.onChange(url);
-                    setImage(files[0])
-                  }
+                  // do nothing, handled below
                 }}
                 dropzoneOptions={dropzoneOptions}
                 className="relative max-w-xs space-y-1 p-2"
@@ -115,7 +111,8 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
                 <FileInput onChange={(event) => {
                   const files = (event.target as HTMLInputElement).files;
                   const url = files?.[0] ? URL.createObjectURL(files[0]) : null;
-                  if (url) {
+                  if (url && files) {
+                    setImage(files[0])
                     field.onChange(url);
                   }
                 }} className="outline-dashed outline-1 outline-background-foreground">
