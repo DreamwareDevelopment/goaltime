@@ -72,7 +72,7 @@ export function WorkFields({ form }: WorkFieldsProps) {
                   <MultiSelect
                     options={daysOfTheWeekOptions}
                     onChange={handleDaysInOfficeChange}
-                    value={field.value.map(day => ({ label: day, value: day }))}
+                    value={field.value?.map(day => ({ label: day, value: day }))}
                   />
                 </FormControl>
                 <FormMessage className="pl-2" />

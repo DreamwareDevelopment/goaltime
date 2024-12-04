@@ -10,3 +10,11 @@ export async function createUserProfileAction(profile: UserProfileInput) {
   })
   return userProfile
 }
+
+export async function updateUserProfileAction(profile: UserProfileInput) {
+  const prisma = await getPrismaClient()
+  return prisma.userProfile.update({
+    where: { userId: profile.userId },
+    data: profile,
+  })
+}

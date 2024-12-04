@@ -72,7 +72,7 @@ export function UserAvatar({ user, profile }: UserAvatarProps) {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/account">Account</Link>
+            <Link href="/settings">Account</Link>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setIsLogoutDialogOpen(true)}>
             Log out

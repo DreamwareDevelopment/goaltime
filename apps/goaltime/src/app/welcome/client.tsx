@@ -57,7 +57,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     },
   })
 
-  if (form.formState.errors) {
+  if (Object.keys(form.formState.errors).length > 0) {
     console.log('errors', form.formState.errors)
   }
 
