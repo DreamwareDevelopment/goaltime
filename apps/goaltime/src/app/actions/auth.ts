@@ -19,7 +19,7 @@ export async function loginAction(formData: z.infer<typeof LoginSchema>, captcha
     },
   })
   if (error || !user) {
-    console.error('Login error', error)
+    console.error('Login action error', error)
     throw new Error('Invalid email or password')
   }
   const profile = await getProfile(user.id)
