@@ -4,17 +4,12 @@ import { dayjs } from '@/shared/utils'
 import { DatetimePicker } from "@/ui-components/datetime-picker";
 import { UserProfileInput } from "@/shared/zod";
 import { UseFormReturn } from "react-hook-form";
-import { TimezoneField } from "./TimezoneField";
 
 export interface PreferencesFieldsProps {
   form: UseFormReturn<UserProfileInput>
-  defaults: {
-    wakeUpTime: dayjs.Dayjs
-    sleepTime: dayjs.Dayjs
-  }
 }
 
-export function PreferencesFields({ form, defaults }: PreferencesFieldsProps) {
+export function PreferencesFields({ form }: PreferencesFieldsProps) {
   const timezone = form.watch('timezone')
   return (
     <div>
@@ -62,7 +57,6 @@ export function PreferencesFields({ form, defaults }: PreferencesFieldsProps) {
         </FormItem>
       )}
     />
-    <TimezoneField form={form} />
     <div className="flex flex-wrap gap-8">
       <FormField
         control={form.control}
@@ -79,8 +73,8 @@ export function PreferencesFields({ form, defaults }: PreferencesFieldsProps) {
                   [],
                   ["hours", "minutes", "am/pm"]
                 ]}
-                value={(field.value ? dayjs(field.value) : defaults.wakeUpTime).toDate()}
-                onChange={(e) => field.onChange(dayjs.tz(e, timezone))}
+                value={field.value}
+                onChange={(e) => field.onChange(dayjs.tz(e, timezone).toDate())}
               />
             </FormControl>
             <FormMessage className="pl-2" />
@@ -102,8 +96,8 @@ export function PreferencesFields({ form, defaults }: PreferencesFieldsProps) {
                   [],
                   ["hours", "minutes", "am/pm"]
                 ]}
-                value={(field.value ? dayjs(field.value) : defaults.sleepTime).toDate()}
-                onChange={(e) => field.onChange(dayjs.tz(e, timezone))}
+                value={field.value}
+                onChange={(e) => field.onChange(dayjs.tz(e, timezone).toDate())}
               />
             </FormControl>
             <FormMessage className="pl-2" />

@@ -11,27 +11,29 @@ const daysOfTheWeekOptions: Option[] = Object.values(daysOfTheWeek.Values).map(d
 
 export interface WorkFieldsProps {
   form: UseFormReturn<UserProfileInput>
-  defaults: {
-    leavesHomeAt: dayjs.Dayjs
-    returnsHomeAt: dayjs.Dayjs
-  }
 }
 
-export function WorkFields({ form, defaults }: WorkFieldsProps) {
+export function WorkFields({ form }: WorkFieldsProps) {
   const timezone = form.watch('timezone')
   const handleDaysInOfficeChange = (value: Option[]) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     form.setValue('daysInOffice', value.map(option => option.value) as any)
   }
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <FormField
         control={form.control}
         name="occupation"
         render={({ field }) => (
-          <FormItem className="mb-4">
+          <FormItem>
             <FormControl>
-              <FloatingLabelInput type="text" autoComplete="occupation" label="Occupation  (optional)" {...field} />
+              <FloatingLabelInput
+                type="text"
+                autoComplete="occupation"
+                label="Occupation  (optional)"
+                value={field.value ?? ''}
+                onChange={field.onChange}
+              />
             </FormControl>
             <FormMessage className="pl-2" />
           </FormItem>
@@ -41,8 +43,8 @@ export function WorkFields({ form, defaults }: WorkFieldsProps) {
         control={form.control}
         name="worksRemotely"
         render={({ field }) => (
-          <FormItem className="mb-4 flex items-center">
-            <FormLabel className="pl-2 mt-1">
+          <FormItem className="flex items-center">
+            <FormLabel className="pl-2">
               Working Remote
             </FormLabel>
             <FormControl>
@@ -62,7 +64,7 @@ export function WorkFields({ form, defaults }: WorkFieldsProps) {
             control={form.control}
             name="daysInOffice"
             render={({ field }) => (
-              <FormItem className="mb-4">
+              <FormItem>
                 <FormLabel className="pl-2">
                   Days in Office
                 </FormLabel>
@@ -77,12 +79,12 @@ export function WorkFields({ form, defaults }: WorkFieldsProps) {
               </FormItem>
             )}
           />
-          <div className="flex flex-wrap gap-8">
+          <div className="flex flex-wrap gap-4">
             <FormField
               control={form.control}
               name="leavesHomeAt"
               render={({ field }) => (
-                <FormItem className="mb-4">
+                <FormItem>
                   <FormLabel className="pl-2">
                     Leaves Home At
                   </FormLabel>
@@ -93,8 +95,8 @@ export function WorkFields({ form, defaults }: WorkFieldsProps) {
                         [],
                         ["hours", "minutes", "am/pm"]
                       ]}
-                      value={(field.value ? dayjs(field.value) : defaults.leavesHomeAt).toDate()}
-                      onChange={(e) => field.onChange(dayjs.tz(e, timezone))}
+                      value={field.value}
+                      onChange={(e) => field.onChange(dayjs.tz(e, timezone).toDate())}
                     />
                   </FormControl>
                   <FormMessage className="pl-2" />
@@ -105,7 +107,7 @@ export function WorkFields({ form, defaults }: WorkFieldsProps) {
               control={form.control}
               name="returnsHomeAt"
               render={({ field }) => (
-                <FormItem className="mb-4">
+                <FormItem>
                   <FormLabel className="pl-1">
                     Returns Home At
                   </FormLabel>
@@ -116,8 +118,8 @@ export function WorkFields({ form, defaults }: WorkFieldsProps) {
                         [],
                         ["hours", "minutes", "am/pm"]
                       ]}
-                      value={(field.value ? dayjs(field.value) : defaults.returnsHomeAt).toDate()}
-                      onChange={(e) => field.onChange(dayjs.tz(e, timezone))}
+                      value={field.value}
+                      onChange={(e) => field.onChange(dayjs.tz(e, timezone).toDate())}
                     />
                   </FormControl>
                   <FormMessage className="pl-2" />

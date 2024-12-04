@@ -9,7 +9,7 @@ import { useToast } from "@/ui-components/hooks/use-toast";
 
 const FileSvgDraw = () => {
   return (
-    <>
+    <div className="flex flex-col items-center text-center justify-center p-2">
       <svg
         className="w-8 h-8 mb-2"
         aria-hidden="true"
@@ -26,12 +26,12 @@ const FileSvgDraw = () => {
         />
       </svg>
       <p className="mb-1 text-sm">
-        <span className="font-semibold">Click or drop new profile picture</span>
+        <span className="font-semibold">Click or drop photo</span>
       </p>
       <p className="text-xs text-muted-foreground">
         SVG, PNG, JPG or GIF
       </p>
-    </>
+    </div>
   );
 };
 

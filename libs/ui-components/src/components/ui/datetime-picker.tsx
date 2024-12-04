@@ -66,7 +66,7 @@ const DatetimeGrid = forwardRef<
     return (
       <div
         className={cn(
-          "flex items-center w-fit p-1 border-2",
+          "flex items-center w-fit p-1 border-[1px]",
           className,
           "border-input rounded-md gap-1 selection:bg-transparent selection:text-foreground",
         )}

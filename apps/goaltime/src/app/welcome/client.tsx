@@ -20,9 +20,9 @@ import { PreferencesFields } from '../../components/Profile/PreferencesFields'
 import { useValtio } from '../../components/data/valtio'
 
 const steps = [
-  { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthday'] },
+  { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthday', 'timezone'] },
   { title: 'Work Details', fields: ['occupation', 'worksRemotely', 'daysInOffice', 'leavesHomeAt', 'returnsHomeAt'] },
-  { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime', 'timezone'] },
+  { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime'] },
 ]
 
 export interface WelcomeFlowClientProps {
@@ -47,13 +47,13 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   const form = useForm<UserProfileInput>({
     resolver: zodResolver(UserProfileSchema),
     defaultValues: {
-      userId,
       ...getDefaults(UserProfileSchema),
+      userId,
       timezone: clientTimezone,
-      preferredWakeUpTime: defaultWakeUpTime,
-      preferredSleepTime: defaultSleepTime,
-      leavesHomeAt: defaultLeavesHomeAt,
-      returnsHomeAt: defaultReturnsHomeAt,
+      preferredWakeUpTime: defaultWakeUpTime.toDate(),
+      preferredSleepTime: defaultSleepTime.toDate(),
+      leavesHomeAt: defaultLeavesHomeAt.toDate(),
+      returnsHomeAt: defaultReturnsHomeAt.toDate(),
     },
   })
 
@@ -61,9 +61,8 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     console.log('errors', form.formState.errors)
   }
 
-  const onSubmit: SubmitHandler<UserProfileInput> = (data) => {
-    console.log('submitting', data)
-    userStore.createUserProfile(data).then(() => {
+  const onSubmit: SubmitHandler<UserProfileInput> = (profile) => {
+    userStore.createUserProfile(profile).then(() => {
       console.log('done creating user profile')
       router.push('/dashboard')
     }).catch(error => {
@@ -73,7 +72,9 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     })
   }
 
-  const nextStep = async () => {
+  const nextStep = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
     const currentStepFields = steps[currentStep].fields
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isValid = await form.trigger(currentStepFields as any)
@@ -83,7 +84,9 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     }
   }
 
-  const prevStep = () => {
+  const prevStep = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
     if (currentStep > 0) {
       setDirection(-1)
       setCurrentStep(currentStep - 1)
@@ -115,13 +118,10 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                   <PersonalFields form={form} />
                 )}
                 {currentStepFields.includes('occupation') && (
-                  <WorkFields form={form} defaults={{ leavesHomeAt: defaultLeavesHomeAt, returnsHomeAt: defaultReturnsHomeAt }} />
+                  <WorkFields form={form} />
                 )}
                 {currentStepFields.includes('preferredWakeUpTime') && currentStepFields.includes('preferredSleepTime') && (
-                  <PreferencesFields
-                    form={form}
-                    defaults={{ wakeUpTime: defaultWakeUpTime, sleepTime: defaultSleepTime }}
-                  />
+                  <PreferencesFields form={form} />
                 )}
               </motion.div>
             </AnimatePresence>

@@ -12,10 +12,7 @@ export const userStore = proxy<{
   userId: null,
   profile: null,
   async createUserProfile(profile: UserProfileInput): Promise<void> {
-    if (!this.userId) {
-      throw new Error('User not found')
-    }
-    const userProfile = await createUserProfileAction(this.userId, profile)
+    const userProfile = await createUserProfileAction(profile)
     this.profile = userProfile
   }
 })

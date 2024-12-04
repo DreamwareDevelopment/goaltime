@@ -17,15 +17,16 @@ import {
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/ui-components/form";
 import { UseFormReturn } from "react-hook-form";
 import { UserProfileInput } from "@/shared/zod";
+import { cn } from "@/ui-components/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supportedTimezones = (Intl as any).supportedValuesOf('timeZone') as string[];
 
-interface TimezoneFieldProps {
+interface TimezoneFieldProps extends React.HTMLAttributes<HTMLDivElement> {
   form: UseFormReturn<UserProfileInput>;
 }
 
-export function TimezoneField({ form }: TimezoneFieldProps) {
+export function TimezoneField({ form, className }: TimezoneFieldProps) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -33,7 +34,7 @@ export function TimezoneField({ form }: TimezoneFieldProps) {
       control={form.control}
       name="timezone"
       render={({ field }) => (
-        <FormItem className="mb-4">
+        <FormItem className={cn("", className)}>
           <FormLabel className="pl-2">
             Timezone
           </FormLabel>
@@ -44,7 +45,7 @@ export function TimezoneField({ form }: TimezoneFieldProps) {
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}
-                  className="w-full justify-between my-2"
+                  className="w-full justify-between h-[56px]"
                 >
                   {field.value || "Select a timezone..."}
                   <ChevronsUpDown className="opacity-50" />
