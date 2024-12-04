@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export const SUPABASE_COOKIE_NAME = 'sb-svgvsxiiuhlpjdavehlk-auth-token'
+export const SUPABASE_COOKIE_NAME = process.env.SUPABASE_COOKIE_NAME
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

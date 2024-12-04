@@ -7,8 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui-
 import { Input } from "@/ui-components/input"
 
 import { MobileMenu } from '../components/Landing/MobileMenu'
+import { cookies } from 'next/headers'
+import { SUPABASE_COOKIE_NAME } from '@/server-utils/supabase'
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const cookieStore = await cookies()
+  const isLoggedIn = Boolean(SUPABASE_COOKIE_NAME &&cookieStore.get(SUPABASE_COOKIE_NAME)?.value)
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-4 lg:px-6 h-14 flex items-center">
@@ -27,7 +31,7 @@ export default function LandingPage() {
             <a href="#pricing">Pricing</a>
           </Button>
           <Button>
-            <Link href="/login?type=signup">Set Goals</Link>
+            <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
           </Button>
           <MobileMenu />
         </nav>
@@ -45,8 +49,12 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="space-x-4">
-                <Button>Start Free Trial</Button>
-                <Button variant="outline">Watch Demo</Button>
+                <Button asChild>
+                  <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Start Free Trial</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/demo">Watch Demo</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -141,7 +149,7 @@ export default function LandingPage() {
                 <form className="flex space-x-2">
                   <Input className="max-w-lg flex-1" placeholder="Enter your email" type="email" />
                   <Button type="submit">
-                    Get Started
+                    Set Your Goals
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
