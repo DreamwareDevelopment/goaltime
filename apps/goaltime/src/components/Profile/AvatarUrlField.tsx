@@ -35,7 +35,12 @@ const FileSvgDraw = () => {
   );
 };
 
-export function AvatarUrlField({ form }: { form: UseFormReturn<UserProfileInput> }) {
+export interface AvatarUrlFieldProps {
+  form: UseFormReturn<UserProfileInput>
+  setImage: (file: File | null) => void
+}
+
+export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
   const { toast} = useToast();
   const dropzoneOptions = {
     accept: {
@@ -99,8 +104,9 @@ export function AvatarUrlField({ form }: { form: UseFormReturn<UserProfileInput>
                 value={null}
                 onValueChange={(files) => {
                   const url = files?.[0] ? URL.createObjectURL(files[0]) : null
-                  if (url) {
+                  if (url && files) {
                     field.onChange(url);
+                    setImage(files[0])
                   }
                 }}
                 dropzoneOptions={dropzoneOptions}

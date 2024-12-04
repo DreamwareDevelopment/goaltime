@@ -37,6 +37,8 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   const isInitialStep = currentStep === 0
   const isFinalStep = currentStep === steps.length - 1
 
+  const [image, setImage] = useState<File | null>(null)
+
   const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const defaultLeavesHomeAt = getTime('08:30', clientTimezone)
@@ -61,7 +63,20 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     console.log('errors', form.formState.errors)
   }
 
-  const onSubmit: SubmitHandler<UserProfileInput> = (profile) => {
+  const onSubmit: SubmitHandler<UserProfileInput> = async (profile) => {
+    if (image) {
+      try {
+        const imageUrl = await userStore.uploadProfileImage(profile.userId, image)
+        if (userStore.profile) {
+          userStore.profile.avatarUrl = imageUrl
+        }
+        profile.avatarUrl = imageUrl
+      } catch (error) {
+        console.error('error uploading profile image', error)
+        form.setError('avatarUrl', { message: `Error uploading profile image: ${error}` })
+        return
+      }
+    }
     userStore.createUserProfile(profile).then(() => {
       console.log('done creating user profile')
       router.push('/dashboard')
@@ -112,7 +127,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                 transition={{ duration: 0.3 }}
               >
                 {currentStepFields.includes('avatarUrl') && (
-                  <AvatarUrlField form={form} />
+                  <AvatarUrlField form={form} setImage={setImage} />
                 )}
                 {currentStepFields.includes('name') && currentStepFields.includes('birthday') && (
                   <PersonalFields form={form} />
