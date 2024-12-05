@@ -19,7 +19,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name adding_email_subscriptions",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name nullable_profile_dates",
         "cwd": "libs/shared"
       }
     },

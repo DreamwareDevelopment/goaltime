@@ -108,19 +108,14 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
             >
               Back
             </ShinyButton>
-            {isSubmitting || isValidating && (
-              <LoadingSpinner className="mx-auto h-4 w-4 animate-spin" />
-            )}
-            {!(isSubmitting || isValidating) && (
-              <ShinyButton
-                variant="gooeyLeft"
-                type="submit"
-                disabled={!isDirty}
-                className="ml-auto min-w-[178px]"
-              >
-                Save Changes
-              </ShinyButton>
-            )}
+            <ShinyButton
+              variant="gooeyLeft"
+              type="submit"
+              disabled={!isDirty}
+              className="ml-auto min-w-[178px]"
+            >
+              {isSubmitting || isValidating ? <LoadingSpinner className="h-4 w-4" /> : 'Save Changes'}
+            </ShinyButton>
           </CardFooter>
         </form>
       </Form>

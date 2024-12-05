@@ -22,6 +22,9 @@ export function MailingListForm() {
   const { toast } = useToast()
   const form = useForm<EmailSubscriptionInput>({
     resolver: zodResolver(EmailSubscriptionSchema),
+    defaultValues: {
+      email: '',
+    },
   })
   const { formState } = form
   const { isSubmitting, isValidating } = formState
@@ -70,19 +73,15 @@ export function MailingListForm() {
             </div>
           )}
         />
-        {(isSubmitting || isValidating) ? (
-          <LoadingSpinner className="w-4 h-4" />
-        ) : (
-          <ShinyButton 
-            variant="expandIcon" 
-            Icon={ArrowRight} 
-            iconPlacement="right" 
-            type="submit"
-            className="mx-auto"
-          >
-            Set Your Goals
-          </ShinyButton>
-        )}
+        <ShinyButton 
+          variant="expandIcon" 
+          Icon={ArrowRight} 
+          iconPlacement="right" 
+          type="submit"
+          className="mx-auto"
+        >
+          {isSubmitting || isValidating ? <LoadingSpinner className="w-4 h-4" /> : 'Set Your Goals'}
+        </ShinyButton>
       </form>
     </Form>
   )

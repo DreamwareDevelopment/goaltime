@@ -1,0 +1,7 @@
+-- create role "service" with login password '1a31Ekj4qk8l';
+-- GRANT ALL PRIVILEGES ON DATABASE "postgres" TO "service";
+-- CREATE POLICY "tenant_isolation_policy" ON "user_profiles" USING ("user_id" = current_setting('app.user_id', TRUE)::uuid);
+-- GRANT USAGE ON SCHEMA public TO service;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO service;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service;
+-- ALTER USER service CREATEDB

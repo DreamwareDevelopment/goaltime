@@ -4,12 +4,18 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { LoginSchema } from '@/shared/zod'
 import { cn } from '@/ui-components/utils'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/ui-components/form'
 import { Input } from '@/ui-components/input'
+
+const minPasswordMessage = 'Password must be at least 8 characters long'
+const maxPasswordMessage = 'Password must be less than 100 characters'
+const LoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
+})
 
 export interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {
   login: (formData: z.infer<typeof LoginSchema>) => Promise<void>
@@ -20,7 +26,8 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: email || "",
+      email: email || '',
+      password: '',
     },
   })
   const { formState } = form
@@ -74,20 +81,15 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
               )}
             />
             <div className="flex justify-center pt-6">
-              {(isSubmitting || isValidating) && (
-                <LoadingSpinner className="h-4 w-4 animate-spin" />
-              )}
-              {!(isSubmitting || isValidating) && (
-                <ShinyButton
-                  variant="expandIcon"
-                  Icon={ArrowRightIcon}
-                  iconPlacement="right"
-                  className="w-full"
-                  type="submit"
-                >
-                  Login with Email
-                </ShinyButton>
-              )}
+              <ShinyButton
+                variant="expandIcon"
+                Icon={ArrowRightIcon}
+                iconPlacement="right"
+                className="w-full"
+                type="submit"
+              >
+                {isSubmitting || isValidating ? <LoadingSpinner className="h-4 w-4" /> : 'Login with Email'}
+              </ShinyButton>
             </div>
           </div>
         </form>

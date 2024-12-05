@@ -141,7 +141,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
               </motion.div>
             </AnimatePresence>
           </CardContent>
-          <CardFooter className="flex flex-wrap justify-between gap-4">
+          <CardFooter className="flex flex-wrap justify-between items-center gap-4 w-full">
             {currentStep > 0 && (
               <ShinyButton
                 onClick={prevStep}
@@ -165,8 +165,6 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
               >
                 Next
               </ShinyButton>
-            ) : (isSubmitting || isValidating) ? (
-              <LoadingSpinner className="mx-auto h-4 w-4 animate-spin" />
             ) : (
               <ShinyButton
                 variant="gooeyLeft"
@@ -174,7 +172,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                 disabled={!isDirty}
                 className="ml-auto min-w-[178px]"
               >
-                Prepare Goals
+                {isSubmitting || isValidating ? <LoadingSpinner className="h-4 w-4" /> : 'Prepare Goals'}
               </ShinyButton>
             )}
           </CardFooter>

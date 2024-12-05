@@ -121,7 +121,7 @@ const DatetimeGrid = forwardRef<
 DatetimeGrid.displayName = "DatetimeGrid";
 
 interface DateTimeInput {
-  value?: Date;
+  value?: Date | null;
   format: DateTimeFormatDefaults;
   placeholders?: InputPlaceholders;
   onChange?: Options["onChangeDate"];
@@ -151,7 +151,7 @@ export const DatetimePicker = forwardRef<HTMLDivElement, DateTimeInput>(
       [onChange],
     );
     const timescape = useTimescape({
-      date: value,
+      date: value ?? undefined,
       onChangeDate: handleDateChange,
       ...dtOptions,
     });

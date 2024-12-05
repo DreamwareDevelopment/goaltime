@@ -1,22 +1,5 @@
 import z from 'zod'
 
-const minPasswordMessage = 'Password must be at least 8 characters long'
-const maxPasswordMessage = 'Password must be less than 100 characters'
-export const SignUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
-  confirmPassword: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
-})
-SignUpSchema.superRefine((input, ctx) => {
-  if (input.password !== input.confirmPassword) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Passwords do not match', path: ['confirmPassword'] })
-  }
-})
-export const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
-})
-
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 
 export const UserProfileSchema = z.object({
@@ -31,18 +14,18 @@ export const UserProfileSchema = z.object({
   }),
   birthday: z.date({
     message: 'Please provide a valid date and time',
-  }).optional(),
+  }).nullable().optional().default(null),
   occupation: z.string().max(100, {
     message: 'Could you please be more concise?',
-  }).optional(),
+  }).nullable().optional().default(null),
   worksRemotely: z.boolean().default(false),
   daysInOffice: z.array(daysOfTheWeek).default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
   leavesHomeAt: z.date({
     message: 'Please provide a valid date and time for leavesHomeAt',
-  }).optional(), // Default to 8:30 AM after timezone is applied by client
+  }).nullable().optional().default(null), // Default to 8:30 AM after timezone is applied by client
   returnsHomeAt: z.date({
     message: 'Please provide a valid date and time for returnsHomeAt',
-  }).optional(), // Default to 5:30 PM after timezone is applied by client
+  }).nullable().optional().default(null), // Default to 5:30 PM after timezone is applied by client
   preferredLanguage: z.enum(['en'], {
     message: 'Please select a supported language',
   }).default('en'),
@@ -51,10 +34,10 @@ export const UserProfileSchema = z.object({
   }).default('USD'),
   preferredWakeUpTime: z.date({
     message: 'Please provide a valid date and time for preferredWakeUpTime',
-  }), // Default to 7:00 AM after timezone is applied by client
+  }).nullable().optional().default(null), // Default to 7:00 AM after timezone is applied by client
   preferredSleepTime: z.date({
     message: 'Please provide a valid date and time for preferredSleepTime',
-  }), // Default to 11:00 PM after timezone is applied by client
+  }).nullable().optional().default(null), // Default to 11:00 PM after timezone is applied by client
   timezone: z.string({
     message: 'Please provide a valid time zone',
   }), // Populated by client on load, but can be changed by user
