@@ -1,6 +1,6 @@
 import { ArrowRightIcon } from 'lucide-react'
 import React from 'react'
-import { useForm } from 'react-hook-form'
+import { SubmitHandler, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -28,7 +28,8 @@ export function SignUpForm({ className, signup, email, ...props }: SignUpFormPro
   const { formState } = form
   const { isSubmitting, isValidating } = formState
 
-  async function onSignup(data: z.infer<typeof SignUpSchema>) {
+  const onSubmit: SubmitHandler<z.infer<typeof SignUpSchema>> = async (data, event) => {
+    event?.preventDefault()
     if (!signup) throw new Error('Signup function is not defined')
     try {
       await signup(data)
@@ -42,7 +43,7 @@ export function SignUpForm({ className, signup, email, ...props }: SignUpFormPro
   return (
     <div className={cn('grid gap-4', className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSignup)}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div>
             <FormField
               control={form.control}

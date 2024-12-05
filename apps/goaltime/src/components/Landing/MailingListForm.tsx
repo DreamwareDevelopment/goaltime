@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { SubmitHandler, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form"
@@ -31,7 +31,8 @@ export function MailingListForm() {
 
   const router = useRouter()
 
-  const onSubmit = async (data: EmailSubscriptionInput) => {
+  const onSubmit: SubmitHandler<EmailSubscriptionInput> = async (data, event) => {
+    event?.preventDefault()
     try {
       await subscribeToMailingListAction(data.email)
       toast({

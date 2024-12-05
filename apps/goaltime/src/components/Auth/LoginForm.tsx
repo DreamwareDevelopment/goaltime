@@ -1,6 +1,6 @@
 import { ArrowRightIcon } from 'lucide-react'
 import React from 'react'
-import { useForm } from 'react-hook-form'
+import { SubmitHandler, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -27,8 +27,8 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
   const { formState } = form
   const { isSubmitting, isValidating } = formState
 
-  async function onLogin(data: z.infer<typeof LoginSchema>) {
-    if (!login) throw new Error('Login function is not defined')
+  const onSubmit: SubmitHandler<z.infer<typeof LoginSchema>> = async (data, event) => {
+    event?.preventDefault()
     try {
       await login(data)
       console.log('Login success')
@@ -41,7 +41,7 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
   return (
     <div className={cn('grid gap-4', className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onLogin)}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div>
             <FormField
               control={form.control}

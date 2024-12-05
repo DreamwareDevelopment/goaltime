@@ -63,7 +63,8 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     console.log('errors', form.formState.errors)
   }
 
-  const onSubmit: SubmitHandler<UserProfileInput> = async (profile) => {
+  const onSubmit: SubmitHandler<UserProfileInput> = async (profile, event) => {
+    event?.preventDefault()
     if (image) {
       try {
         const imageUrl = await userStore.uploadProfileImage(profile.userId, image)
@@ -77,14 +78,15 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
         return
       }
     }
-    userStore.createUserProfile(profile).then(() => {
+    try {
+      await userStore.createUserProfile(profile)
       console.log('done creating user profile')
       router.push('/dashboard')
-    }).catch(error => {
+    } catch (error) {
       console.error('error creating user profile', error)
       // TODO: Get better type checking on these error page params
       router.push(`/error?error=${error}&next=${encodeURIComponent('/login')}&solution=Please try again.`)
-    })
+    }
   }
 
   const nextStep = async (e: React.MouseEvent<HTMLButtonElement>) => {

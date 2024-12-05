@@ -47,7 +47,8 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
 
   // Unfortunately, it seems react-hook-form seems to be copying the proxy object, 
   // so we need to update both the proxy and the form state
-  const onSubmit: SubmitHandler<UserProfileInput> = async (profile) => {
+  const onSubmit: SubmitHandler<UserProfileInput> = async (profile, event) => {
+    event?.preventDefault()
     if (!isDirty) {
       toast({
         variant: 'default',
