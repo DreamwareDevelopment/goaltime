@@ -9,19 +9,7 @@ import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/ui-components/form'
 import { Input } from '@/ui-components/input'
-
-const minPasswordMessage = 'Password must be at least 8 characters long'
-const maxPasswordMessage = 'Password must be less than 100 characters'
-export const SignUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
-  confirmPassword: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
-})
-SignUpSchema.superRefine((input, ctx) => {
-  if (input.password !== input.confirmPassword) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Passwords do not match', path: ['confirmPassword'] })
-  }
-})
+import { SignUpSchema } from '@/shared/zod'
 
 export interface SignUpFormProps extends React.HTMLAttributes<HTMLDivElement> {
   signup: (formData: z.infer<typeof SignUpSchema>) => Promise<void>

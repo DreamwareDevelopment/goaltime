@@ -5,8 +5,9 @@
 
 import z from "zod"
 
-export * from "./goals";
 export * from "./auth";
+export * from "./goals";
+export * from "./user";
 
 type DeepRemoveDefault<I extends z.ZodTypeAny> =
   I extends z.ZodDefault<infer T> ? T

@@ -9,13 +9,7 @@ import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/ui-components/form'
 import { Input } from '@/ui-components/input'
-
-const minPasswordMessage = 'Password must be at least 8 characters long'
-const maxPasswordMessage = 'Password must be less than 100 characters'
-const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
-})
+import { LoginSchema } from '@/shared/zod'
 
 export interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {
   login: (formData: z.infer<typeof LoginSchema>) => Promise<void>
