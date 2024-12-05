@@ -1,8 +1,6 @@
 //@ts-check
 
 const { composePlugins, withNx } = require('@nx/next');
-// @ts-expect-error PrismaPlugin type is not defined
-const { PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin')
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
@@ -18,7 +16,6 @@ const nextConfig = {
 const plugins = [
   // Add more Next.js plugins to this list if needed.
   withNx,
-  new PrismaPlugin()
 ];
 
 module.exports = composePlugins(...plugins)(nextConfig);
