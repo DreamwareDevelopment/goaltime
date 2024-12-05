@@ -78,7 +78,6 @@
     "@nx/react": "20.0.5",
     "@nx/workspace": "20.0.5",
     "@playwright/test": "^1.36.0",
-    "@prisma/nextjs-monorepo-workaround-plugin": "^6.0.1",
     "@swc-node/register": "~1.9.1",
     "@swc/cli": "~0.3.12",
     "@swc/core": "~1.5.7",

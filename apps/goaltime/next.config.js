@@ -1,6 +1,7 @@
 //@ts-check
 
 const { composePlugins, withNx } = require('@nx/next');
+const { PrismaPlugin } = require('./prisma_fix')
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
@@ -11,6 +12,12 @@ const nextConfig = {
     // See: https://github.com/gregberge/svgr
     svgr: false,
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()]
+    }
+    return config
+  }
 };
 
 const plugins = [
