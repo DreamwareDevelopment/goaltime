@@ -54,7 +54,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     form.setValue('preferredSleepTime', getTime('23:00', clientTimezone).toDate())
     form.setValue('leavesHomeAt', getTime('08:30', clientTimezone).toDate())
     form.setValue('returnsHomeAt', getTime('17:30', clientTimezone).toDate())
-  })
+  }, [form])
 
   if (Object.keys(form.formState.errors).length > 0) {
     console.log('errors', form.formState.errors)
