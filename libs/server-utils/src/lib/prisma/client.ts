@@ -1,9 +1,10 @@
 import { PrismaClient } from '@/libs/shared/type_gen/.prisma/client'
 
 let _instance: ExtendedPrismaClient
-export async function getPrismaClient(userId: string): Promise<ExtendedPrismaClient> {
+export async function getPrismaClient(userId?: string): Promise<ExtendedPrismaClient> {
   if (!userId) {
-    throw new Error('userId is required to access the database')
+    console.warn('No user ID provided, using non-RLS client')
+    return newPrismaClient()
   }
   if (!_instance) {
     _instance = await newPrismaClient(userId)
@@ -13,12 +14,15 @@ export async function getPrismaClient(userId: string): Promise<ExtendedPrismaCli
 
 export type ExtendedPrismaClient = Awaited<ReturnType<typeof newPrismaClient>>
 
-export async function newPrismaClient(userId: string) {
+export async function newPrismaClient(userId?: string) {
   const datasourceUrl = process.env.SUPABASE_PRISMA_URL
   if (!datasourceUrl) {
     throw new Error('SUPABASE_PRISMA_URL is not set')
   }
   const client = new PrismaClient({ datasourceUrl })
+  if (!userId) {
+    return client
+  }
   const extendedClient = client.$extends({
     name: 'SupabaseRowLevelSecurity',
     query: {

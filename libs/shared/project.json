@@ -19,7 +19,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name adding_rls",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name adding_email_subscriptions",
         "cwd": "libs/shared"
       }
     },

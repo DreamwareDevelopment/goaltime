@@ -19,9 +19,10 @@ export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
   loginAction: (formData: z.infer<typeof LoginSchema>, captchaToken: string) => Promise<void>
   signupAction: (formData: z.infer<typeof SignUpSchema>, captchaToken: string) => Promise<void>
   type?: AuthTab
+  email?: string
 }
 
-export function AuthCard({ loginAction, signupAction, type }: AuthCardProps) {
+export function AuthCard({ loginAction, signupAction, type, email }: AuthCardProps) {
   const [currentTab, setCurrentTab] = useState<string>(type || 'login')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const captcha = useRef<HCaptcha | null>(null)
@@ -85,7 +86,7 @@ export function AuthCard({ loginAction, signupAction, type }: AuthCardProps) {
           </CardHeader>
           <CardContent>
             <Suspense fallback={<LoadingSpinner />}>
-              <LoginForm login={handleLogin} />
+              <LoginForm login={handleLogin} email={email} />
             </Suspense>
           </CardContent>
           <CardFooter className="px-8 text-center text-sm text-muted-foreground">
@@ -130,7 +131,7 @@ export function AuthCard({ loginAction, signupAction, type }: AuthCardProps) {
           </CardHeader>
           <CardContent>
             <Suspense fallback={<LoadingSpinner />}>
-              <SignUpForm signup={handleSignup} />
+              <SignUpForm signup={handleSignup} email={email} />
             </Suspense>
           </CardContent>
           <CardFooter className="px-8 text-center text-sm text-muted-foreground">

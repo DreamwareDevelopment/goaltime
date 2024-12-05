@@ -13,15 +13,14 @@ import { Input } from '@/ui-components/input'
 
 export interface SignUpFormProps extends React.HTMLAttributes<HTMLDivElement> {
   signup: (formData: z.infer<typeof SignUpSchema>) => Promise<void>
+  email?: string
 }
 
-export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
+export function SignUpForm({ className, signup, email, ...props }: SignUpFormProps) {
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
+      email: email || "",
     },
   })
   const { formState } = form

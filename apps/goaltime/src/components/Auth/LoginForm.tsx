@@ -13,14 +13,14 @@ import { Input } from '@/ui-components/input'
 
 export interface LoginFormProps extends React.HTMLAttributes<HTMLDivElement> {
   login: (formData: z.infer<typeof LoginSchema>) => Promise<void>
+  email?: string
 }
 
-export function LoginForm({ className, login, ...props }: LoginFormProps) {
+export function LoginForm({ className, login, email, ...props }: LoginFormProps) {
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: email || "",
     },
   })
   const { formState } = form

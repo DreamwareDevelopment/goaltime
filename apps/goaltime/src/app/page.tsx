@@ -4,11 +4,11 @@ import React from 'react'
 
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui-components/card"
-import { Input } from "@/ui-components/input"
 
 import { MobileMenu } from '../components/Landing/MobileMenu'
 import { cookies } from 'next/headers'
 import { SUPABASE_COOKIE_NAME } from '@/server-utils/supabase'
+import { MailingListForm } from '../components/Landing/MailingListForm'
 
 export default async function LandingPage() {
   const cookieStore = await cookies()
@@ -33,7 +33,7 @@ export default async function LandingPage() {
           <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="min-w-[178px]">
             <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
           </ShinyButton>
-          <MobileMenu />
+          <MobileMenu/>
         </nav>
       </header>
       <main className="flex-1">
@@ -137,7 +137,7 @@ export default async function LandingPage() {
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="space-y-2">
+              <div className="space-y-6 mb-1">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
                   Ready to achieve your goals?
                 </h2>
@@ -145,13 +145,8 @@ export default async function LandingPage() {
                   Join thousands of successful goal-setters and take control of your time today.
                 </p>
               </div>
-              <div className="w-full max-w-sm space-y-2">
-                <form className="flex space-x-2">
-                  <Input className="max-w-lg flex-1" placeholder="Enter your email" type="email" />
-                  <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" type="submit">
-                    Set Your Goals
-                  </ShinyButton>
-                </form>
+              <div className="w-full max-w-sm space-y-4">
+                <MailingListForm />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   By signing up, you agree to our <a href="#" className="underline underline-offset-2">Terms & Conditions</a>
                 </p>

@@ -18,3 +18,8 @@ export async function updateUserProfileAction(profile: UserProfileInput) {
     data: profile,
   })
 }
+
+export async function subscribeToMailingListAction(email: string) {
+  const prisma = await getPrismaClient()
+  return prisma.emailSubscription.create({ data: { email } })
+}

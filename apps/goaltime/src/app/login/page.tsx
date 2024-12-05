@@ -15,11 +15,12 @@ export const metadata: Metadata = {
 interface LoginPageProps {
   searchParams: Promise<{
     type?: string
+    email?: string
   }>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { type } = await searchParams
+  const { type, email } = await searchParams
   if (type && type !== 'login' && type !== 'signup') {
     const message = encodeURIComponent('Invalid login type')
     const solution = encodeURIComponent('Please go to the login page.')
@@ -36,7 +37,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </ShinyButton>
       </header>
       <div className="w-full h-full">
-        <AuthCard loginAction={loginAction} signupAction={signupAction} type={type as AuthTab} />
+        <AuthCard
+          loginAction={loginAction}
+          signupAction={signupAction}
+          type={type as AuthTab}
+          email={email}
+        />
       </div>
     </div>
   )
