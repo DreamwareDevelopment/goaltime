@@ -19,6 +19,8 @@ import { useValtio } from '../../components/data/valtio'
 import { UserProfile } from '@/shared/models'
 import { useSnapshot } from 'valtio'
 import { useToast } from '@/ui-components/hooks/use-toast'
+import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { ArrowLeft } from 'lucide-react'
 
 export interface SettingsClientProps {
   profile: UserProfile
@@ -36,6 +38,8 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
     resolver: zodResolver(UserProfileSchema),
     values: profile as UserProfileInput,
   })
+  const { formState } = form
+  const { isSubmitting, isValidating, isDirty } = formState
 
   if (Object.keys(form.formState.errors).length > 0) {
     console.log('errors', form.formState.errors)
@@ -44,6 +48,13 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
   // Unfortunately, it seems react-hook-form seems to be copying the proxy object, 
   // so we need to update both the proxy and the form state
   const onSubmit: SubmitHandler<UserProfileInput> = async (profile) => {
+    if (!isDirty) {
+      toast({
+        variant: 'default',
+        title: 'No changes to save',
+      })
+      return
+    }
     if (image) {
       try {
         const imageUrl = await userStore.uploadProfileImage(profile.userId, image)
@@ -57,18 +68,17 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
         return
       }
     }
-    userStore.updateUserProfile(profile).then(() => {
+    try {
+      await userStore.updateUserProfile(profile)
       toast({
         variant: 'default',
         title: 'Profile updated',
-        description: 'Your profile has been updated successfully',
       })
-      router.push('/dashboard')
-    }).catch(error => {
+    } catch (error) {
       console.error('error creating user profile', error)
       // TODO: Get better type checking on these error page params
       router.push(`/error?error=${error}&next=${encodeURIComponent('/login')}&solution=Please try again.`)
-    })
+    }
   }
 
   return (
@@ -87,10 +97,30 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
             <Separator />
             <PreferencesFields form={form} />
           </CardContent>
-          <CardFooter className="flex flex-wrap justify-between gap-4">
-            <ShinyButton variant="gooeyLeft" type="submit" className="ml-auto min-w-[178px]">
-              Submit
+          <CardFooter className="flex flex-wrap justify-between w-full gap-4">
+            <ShinyButton
+              variant="expandIcon"
+              Icon={ArrowLeft}
+              iconPlacement="left"
+              type="button"
+              onClick={() => router.push('/dashboard')}
+              className="min-w-[178px] bg-accent hover:bg-accent/80 text-accent-foreground"
+            >
+              Back
             </ShinyButton>
+            {isSubmitting || isValidating && (
+              <LoadingSpinner className="mx-auto h-4 w-4 animate-spin" />
+            )}
+            {!(isSubmitting || isValidating) && (
+              <ShinyButton
+                variant="gooeyLeft"
+                type="submit"
+                disabled={!isDirty}
+                className="ml-auto min-w-[178px]"
+              >
+                Save Changes
+              </ShinyButton>
+            )}
           </CardFooter>
         </form>
       </Form>

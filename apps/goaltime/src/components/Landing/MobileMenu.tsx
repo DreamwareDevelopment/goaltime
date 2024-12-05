@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from "@/ui-components/button"
-import { Menu, X, Clock } from 'lucide-react'
-import Link from 'next/link'
+import { Button as ShinyButton } from "@/ui-components/button-shiny"
+import { Menu, X, Clock, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Separator } from '@/ui-components/separator'
 
 export function MobileMenu() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -22,30 +24,51 @@ export function MobileMenu() {
 
   return (
     <>
-      <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
+      <ShinyButton variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
         <Menu />
         <span className="sr-only">Open menu</span>
-      </Button>
+      </ShinyButton>
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
           <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-background shadow-lg">
-            <div className="flex items-center justify-between p-4">
+            <div className="flex items-center justify-between p-4 pb-0">
               <a className="flex items-center justify-center" href="#">
                 <Clock className="h-6 w-6 mr-2" />
                 <span className="font-bold">GoalTime</span>
               </a>
-              <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+              <ShinyButton variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                 <X />
                 <span className="sr-only">Close menu</span>
-              </Button>
+              </ShinyButton>
             </div>
-            <nav className="flex flex-col gap-4 p-4">
-              <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
-              <a href="#testimonials" onClick={() => setMobileMenuOpen(false)}>Testimonials</a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
-              <Button>
-                <Link href="/login?type=signup">Set Goals</Link>
-              </Button>
+            <nav className="flex flex-col p-4 pt-2">
+              <ShinyButton variant="linkHover2" className="py-[40px]" onClick={() => {
+                setMobileMenuOpen(false)
+                router.push('/#features')
+              }}>
+                Features
+              </ShinyButton>
+              <Separator />
+              <ShinyButton variant="linkHover2" className="py-[40px]" onClick={() => {
+                setMobileMenuOpen(false)
+                router.push('/#testimonials')
+              }}>
+                Testimonials
+              </ShinyButton>
+              <Separator />
+              <ShinyButton variant="linkHover2" className="py-[40px]" onClick={() => {
+                setMobileMenuOpen(false)
+                router.push('/#pricing')
+              }}>
+                Pricing
+              </ShinyButton>
+              <Separator/>
+              <ShinyButton className="mt-[32px]" variant="expandIcon" Icon={ArrowRight} iconPlacement="right" onClick={() => {
+                setMobileMenuOpen(false)
+                router.push('/login?type=signup')
+              }}>
+                Set Goals
+              </ShinyButton>
             </nav>
           </div>
         </div>

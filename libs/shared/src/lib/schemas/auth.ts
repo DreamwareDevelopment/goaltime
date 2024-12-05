@@ -23,7 +23,7 @@ export const UserProfileSchema = z.object({
   userId: z.string({
     message: 'User ID is required to create a user profile',
   }),
-  avatarUrl: z.string().url({
+  avatarUrl: z.string({
     message: 'Please provide a valid URL',
   }).default('https://github.com/shadcn.png'),
   name: z.string().max(100, {

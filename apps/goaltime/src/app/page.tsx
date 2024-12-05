@@ -1,8 +1,8 @@
-import { ArrowRight, CheckCircle, Clock, Target, Calendar } from 'lucide-react'
+import { ArrowRight, CheckCircle, Clock, Target, Calendar, Play, Plus } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
-import { Button } from "@/ui-components/button"
+import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui-components/card"
 import { Input } from "@/ui-components/input"
 
@@ -12,7 +12,7 @@ import { SUPABASE_COOKIE_NAME } from '@/server-utils/supabase'
 
 export default async function LandingPage() {
   const cookieStore = await cookies()
-  const isLoggedIn = Boolean(SUPABASE_COOKIE_NAME &&cookieStore.get(SUPABASE_COOKIE_NAME)?.value)
+  const isLoggedIn = Boolean(SUPABASE_COOKIE_NAME && cookieStore.get(SUPABASE_COOKIE_NAME)?.value)
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-4 lg:px-6 h-14 flex items-center">
@@ -21,26 +21,26 @@ export default async function LandingPage() {
           <span className="font-bold">GoalTime</span>
         </a>
         <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Button variant="ghost" className="hidden md:flex" asChild>
+          <ShinyButton variant="linkHover2" className="hidden md:flex bg-background hover:bg-background/80 text-background-foreground" asChild>
             <a href="#features">Features</a>
-          </Button>
-          <Button variant="ghost" className="hidden md:flex" asChild>
+          </ShinyButton>
+          <ShinyButton variant="linkHover2" className="hidden md:flex bg-background hover:bg-background/80 text-background-foreground" asChild>
             <a href="#testimonials">Testimonials</a>
-          </Button>
-          <Button variant="ghost" className="hidden md:flex" asChild>
+          </ShinyButton>
+          <ShinyButton variant="linkHover2" className="hidden md:flex bg-background hover:bg-background/80 text-background-foreground" asChild>
             <a href="#pricing">Pricing</a>
-          </Button>
-          <Button>
+          </ShinyButton>
+          <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="min-w-[178px]">
             <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
-          </Button>
+          </ShinyButton>
           <MobileMenu />
         </nav>
       </header>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="space-y-2">
+            <div className="flex flex-col items-center gap-6 text-center">
+              <div className="flex flex-col gap-4">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
                   Achieve Your Goals with GoalTime
                 </h1>
@@ -48,13 +48,13 @@ export default async function LandingPage() {
                   Manage your time effectively, set meaningful goals, and track your progress with our intuitive AI-powered platform.
                 </p>
               </div>
-              <div className="space-x-4">
-                <Button asChild>
+              <div className="flex flex-wrap gap-10">
+                <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild>
                   <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Start Free Trial</Link>
-                </Button>
-                <Button variant="outline" asChild>
+                </ShinyButton>
+                <ShinyButton variant="expandIcon" Icon={Play} iconPlacement="right" asChild className="bg-accent hover:bg-accent/80 text-accent-foreground h-[63px]">
                   <Link href="/demo">Watch Demo</Link>
-                </Button>
+                </ShinyButton>
               </div>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default async function LandingPage() {
                     </ul>
                   </CardContent>
                   <CardContent>
-                    <Button className="w-full">Choose Plan</Button>
+                    <ShinyButton variant="expandIcon" Icon={Plus} iconPlacement="right" className="w-full">Choose Plan</ShinyButton>
                   </CardContent>
                 </Card>
               ))}
@@ -148,10 +148,9 @@ export default async function LandingPage() {
               <div className="w-full max-w-sm space-y-2">
                 <form className="flex space-x-2">
                   <Input className="max-w-lg flex-1" placeholder="Enter your email" type="email" />
-                  <Button type="submit">
+                  <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" type="submit">
                     Set Your Goals
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  </ShinyButton>
                 </form>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   By signing up, you agree to our <a href="#" className="underline underline-offset-2">Terms & Conditions</a>

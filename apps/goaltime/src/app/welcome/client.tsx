@@ -18,6 +18,7 @@ import { PersonalFields } from '../../components/Profile/PersonalFields'
 import { WorkFields } from '../../components/Profile/WorkFields'
 import { PreferencesFields } from '../../components/Profile/PreferencesFields'
 import { useValtio } from '../../components/data/valtio'
+import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 
 const steps = [
   { title: 'Basic Info', fields: ['name', 'avatarUrl', 'birthday', 'timezone'] },
@@ -46,6 +47,8 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
       userId,
     }
   })
+  const { formState } = form
+  const { isSubmitting, isValidating, isDirty } = formState
 
   useEffect(() => {
     const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -162,9 +165,16 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
               >
                 Next
               </ShinyButton>
+            ) : (isSubmitting || isValidating) ? (
+              <LoadingSpinner className="mx-auto h-4 w-4 animate-spin" />
             ) : (
-              <ShinyButton variant="gooeyLeft" type="submit" className="ml-auto min-w-[178px]">
-                Submit
+              <ShinyButton
+                variant="gooeyLeft"
+                type="submit"
+                disabled={!isDirty}
+                className="ml-auto min-w-[178px]"
+              >
+                Prepare Goals
               </ShinyButton>
             )}
           </CardFooter>

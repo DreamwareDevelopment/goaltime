@@ -24,15 +24,18 @@ export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
       confirmPassword: "",
     },
   })
+  const { formState } = form
+  const { isSubmitting, isValidating } = formState
 
-  function onSignup(data: z.infer<typeof SignUpSchema>) {
+  async function onSignup(data: z.infer<typeof SignUpSchema>) {
     if (!signup) throw new Error('Signup function is not defined')
-    signup(data).then(() => {
+    try {
+      await signup(data)
       console.log('Signup success')
-    }).catch(error => {
+    } catch (error) {
       console.error('Signup error', error)
-      form.setError('root', { message: error.message }, { shouldFocus: true })
-    })
+      form.setError('root', { message: 'Sign up failed, try again later...' }, { shouldFocus: true })
+    }
   }
 
   return (
@@ -85,15 +88,14 @@ export function SignUpForm({ className, signup, ...props }: SignUpFormProps) {
               )}
             />
             <div className="flex justify-center pt-6">
-              {form.formState.isSubmitting && (
-                <LoadingSpinner className="mr-2 h-4 w-4 animate-spin" />
+              {(isSubmitting || isValidating) && (
+                <LoadingSpinner className="h-4 w-4 animate-spin" />
               )}
-              {!form.formState.isSubmitting && (
+              {!(isSubmitting || isValidating) && (
                 <ShinyButton
                   variant="expandIcon"
                   Icon={ArrowRightIcon}
                   iconPlacement="right"
-                  disabled={form.formState.isSubmitting}
                   className="w-full"
                 >
                   Sign Up with Email

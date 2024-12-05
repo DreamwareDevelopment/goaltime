@@ -87,7 +87,7 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
       control={form.control}
       name="avatarUrl"
       render={({ field }) => (
-        <FormItem className="mb-4 pl-2">
+        <FormItem className="pl-2">
           <FormLabel className="flex justify-center items-center gap-2 w-full">
             Avatar
             <span className="text-xs text-muted-foreground">

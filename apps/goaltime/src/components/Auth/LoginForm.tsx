@@ -23,15 +23,18 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
       password: "",
     },
   })
+  const { formState } = form
+  const { isSubmitting, isValidating } = formState
 
-  function onLogin(data: z.infer<typeof LoginSchema>) {
+  async function onLogin(data: z.infer<typeof LoginSchema>) {
     if (!login) throw new Error('Login function is not defined')
-    login(data).then(() => {
+    try {
+      await login(data)
       console.log('Login success')
-    }).catch(error => {
+    } catch (error) {
       console.error('Login form error', error)
       form.setError('root', { message: "Invalid email or password" }, { shouldFocus: true })
-    })
+    }
   }
 
   return (
@@ -71,16 +74,16 @@ export function LoginForm({ className, login, ...props }: LoginFormProps) {
               )}
             />
             <div className="flex justify-center pt-6">
-              {form.formState.isSubmitting && (
-                <LoadingSpinner className="mr-2 h-4 w-4 animate-spin" />
+              {(isSubmitting || isValidating) && (
+                <LoadingSpinner className="h-4 w-4 animate-spin" />
               )}
-              {!form.formState.isSubmitting && (
+              {!(isSubmitting || isValidating) && (
                 <ShinyButton
                   variant="expandIcon"
                   Icon={ArrowRightIcon}
                   iconPlacement="right"
-                  disabled={form.formState.isSubmitting}
                   className="w-full"
+                  type="submit"
                 >
                   Login with Email
                 </ShinyButton>
