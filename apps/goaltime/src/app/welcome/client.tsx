@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -39,24 +39,21 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
 
   const [image, setImage] = useState<File | null>(null)
 
-  const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
-  const defaultLeavesHomeAt = getTime('08:30', clientTimezone)
-  const defaultReturnsHomeAt = getTime('17:30', clientTimezone)
-  const defaultWakeUpTime = getTime('07:00', clientTimezone)
-  const defaultSleepTime = getTime('23:00', clientTimezone)
-
   const form = useForm<UserProfileInput>({
     resolver: zodResolver(UserProfileSchema),
     defaultValues: {
       ...getDefaults(UserProfileSchema),
       userId,
-      timezone: clientTimezone,
-      preferredWakeUpTime: defaultWakeUpTime.toDate(),
-      preferredSleepTime: defaultSleepTime.toDate(),
-      leavesHomeAt: defaultLeavesHomeAt.toDate(),
-      returnsHomeAt: defaultReturnsHomeAt.toDate(),
-    },
+    }
+  })
+
+  useEffect(() => {
+    const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    form.setValue('timezone', clientTimezone)
+    form.setValue('preferredWakeUpTime', getTime('07:00', clientTimezone).toDate())
+    form.setValue('preferredSleepTime', getTime('23:00', clientTimezone).toDate())
+    form.setValue('leavesHomeAt', getTime('08:30', clientTimezone).toDate())
+    form.setValue('returnsHomeAt', getTime('17:30', clientTimezone).toDate())
   })
 
   if (Object.keys(form.formState.errors).length > 0) {
