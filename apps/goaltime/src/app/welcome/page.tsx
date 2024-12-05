@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { getSanitizedUser, getProfile } from '../queries/user'
 import WelcomeFlowClient from './client'
 
+export const dynamic = 'force-dynamic';
+
 export default async function WelcomeFlowServer() {
   const user = await getSanitizedUser()
   const profile = await getProfile(user.id)
