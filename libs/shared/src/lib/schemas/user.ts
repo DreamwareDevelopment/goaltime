@@ -1,4 +1,6 @@
 import z from 'zod'
+import { FieldErrors } from 'react-hook-form'
+import { ZodSchemaResolver } from '.'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 
@@ -13,7 +15,11 @@ export const UserProfileSchema = z.object({
     message: 'Could you please be more concise?',
   }),
   birthday: z.date({
-    message: 'Please provide a valid date and time',
+    message: 'Please provide a valid birthday',
+  }).min(new Date('1900-01-01'), {
+    message: 'Please provide a valid birthday',
+  }).max(new Date(), {
+    message: 'Please provide a valid birthday',
   }).nullable().optional().default(null),
   occupation: z.string().max(100, {
     message: 'Could you please be more concise?',
@@ -42,36 +48,36 @@ export const UserProfileSchema = z.object({
     message: 'Please provide a valid time zone',
   }), // Populated by client on load, but can be changed by user
 })
-UserProfileSchema.superRefine((input, ctx) => {
+export type UserProfileInput = z.infer<typeof UserProfileSchema>
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const refineUserProfileSchema: ZodSchemaResolver<UserProfileInput, any> = async (input: UserProfileInput) => {
+  const errors: FieldErrors<UserProfileInput> = {}
   if (!input.worksRemotely) {
     if (!input.leavesHomeAt) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      errors.leavesHomeAt = {
+        type: 'validate',
         message: 'You must specify the time you normally leave home if you are not working remotely',
-        path: ['leavesHomeAt'],
-      })
+      }
     }
     if (!input.returnsHomeAt) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      errors.returnsHomeAt = {
+        type: 'validate',
         message: 'You must specify the time you normally return home if you are not working remotely',
-        path: ['returnsHomeAt'],
-      })
+      }
     }
     if (input.leavesHomeAt && input.returnsHomeAt && input.leavesHomeAt >= input.returnsHomeAt) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      errors.returnsHomeAt = {
+        type: 'validate',
         message: 'You cannot return home before you leave home',
-        path: ['returnsHomeAt'],
-      })
+      }
     }
     if (input.daysInOffice.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      errors.daysInOffice = {
+        type: 'validate',
         message: 'Must have at least one day in office if not working remotely',
-        path: ['daysInOffice'],
-      })
+      }
     }
   }
-})
-export type UserProfileInput = z.infer<typeof UserProfileSchema>
+  return errors
+}

@@ -3,6 +3,8 @@
 // that are not optional in the database schema so as to have less null checks
 // in the codebase.
 
+import { FieldErrors, FieldValues, ResolverOptions, ResolverResult } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod"
 
 export * from "./auth";
@@ -59,4 +61,26 @@ export function deepRemoveDefaults <I extends z.ZodTypeAny>(schema: I): DeepRemo
         return z.ZodNullable.create( deepRemoveDefaults( schema.unwrap() ) ) as DeepRemoveDefault<I>
 
     return schema as DeepRemoveDefault<I>
+}
+
+export type ZodSchemaResolver<TFieldValues extends FieldValues, TContext> = (values: TFieldValues, context: TContext | undefined, options: ResolverOptions<TFieldValues>) => Promise<FieldErrors<TFieldValues>>
+type ZodResolver<TFieldValues extends FieldValues, TContext> = (values: TFieldValues, context: TContext | undefined, options: ResolverOptions<TFieldValues>) => Promise<ResolverResult<TFieldValues>>
+
+export function getZodResolver<Schema extends z.ZodTypeAny, TContext>(
+  schema: Schema,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  refineResolver?: ZodSchemaResolver<z.infer<Schema>, any>
+): ZodResolver<z.infer<Schema>, TContext> {
+  return async (values, context, options) => {
+    const result = await zodResolver(schema)(values, context, options);
+    const extraErrors = refineResolver ? await refineResolver(values, context, options) : {};
+
+    return {
+      ...result,
+      errors: {
+        ...(result.errors as FieldErrors<z.infer<Schema>>),
+        ...(extraErrors as FieldErrors<z.infer<Schema>>),
+      },
+    };
+  };
 }

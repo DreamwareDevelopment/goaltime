@@ -42,7 +42,8 @@ export interface AvatarUrlFieldProps {
 }
 
 export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
-  const { toast} = useToast();
+  const { toast } = useToast();
+  const { setError, setValue } = form
   const dropzoneOptions = {
     accept: {
       "image/*": [".jpg", ".jpeg", ".png"],
@@ -59,11 +60,11 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
     },
     validator: (file) => {
       if (file.size > 1 * 1024 * 1024) {
-        form.setError("avatarUrl", {
+        setError("avatarUrl", {
           message: "File must be less than 1MB",
         });
         const defaultUrl = getDefaultValue(UserProfileSchema.shape.avatarUrl);
-        form.setValue("avatarUrl", defaultUrl);
+        setValue("avatarUrl", defaultUrl);
         return {
           code: ErrorCode.FileTooLarge,
           message: "File must be less than 1MB",

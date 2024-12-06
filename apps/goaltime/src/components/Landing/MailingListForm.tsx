@@ -26,7 +26,7 @@ export function MailingListForm() {
       email: '',
     },
   })
-  const { formState } = form
+  const { handleSubmit, formState } = form
   const { isSubmitting, isValidating } = formState
 
   const router = useRouter()
@@ -53,7 +53,7 @@ export function MailingListForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-wrap gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-wrap gap-4">
         <FormField
           control={form.control}
           name="email"

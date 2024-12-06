@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
@@ -10,7 +9,7 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny"
 
 import { Form } from "@/ui-components/form"
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { getDefaults, UserProfileInput, UserProfileSchema } from '@/shared/zod'
+import { getDefaults, getZodResolver, refineUserProfileSchema, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { getTime } from '@/shared/utils'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
@@ -41,26 +40,26 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   const [image, setImage] = useState<File | null>(null)
 
   const form = useForm<UserProfileInput>({
-    resolver: zodResolver(UserProfileSchema),
+    resolver: getZodResolver(UserProfileSchema, refineUserProfileSchema),
     defaultValues: {
       ...getDefaults(UserProfileSchema),
       userId,
     }
   })
-  const { formState } = form
+  const { handleSubmit, formState, setError, setValue } = form
   const { isSubmitting, isValidating, isDirty } = formState
 
   useEffect(() => {
     const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-    form.setValue('timezone', clientTimezone)
-    form.setValue('preferredWakeUpTime', getTime('07:00', clientTimezone).toDate())
-    form.setValue('preferredSleepTime', getTime('23:00', clientTimezone).toDate())
-    form.setValue('leavesHomeAt', getTime('08:30', clientTimezone).toDate())
-    form.setValue('returnsHomeAt', getTime('17:30', clientTimezone).toDate())
-  }, [form])
+    setValue('timezone', clientTimezone)
+    setValue('preferredWakeUpTime', getTime('07:00', clientTimezone).toDate())
+    setValue('preferredSleepTime', getTime('23:00', clientTimezone).toDate())
+    setValue('leavesHomeAt', getTime('08:30', clientTimezone).toDate())
+    setValue('returnsHomeAt', getTime('17:30', clientTimezone).toDate())
+  }, [setValue])
 
-  if (Object.keys(form.formState.errors).length > 0) {
-    console.log('errors', form.formState.errors)
+  if (Object.keys(formState.errors).length > 0) {
+    console.log('errors', formState.errors)
   }
 
   const onSubmit: SubmitHandler<UserProfileInput> = async (profile, event) => {
@@ -74,7 +73,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
         profile.avatarUrl = imageUrl
       } catch (error) {
         console.error('error uploading profile image', error)
-        form.setError('avatarUrl', { message: `Error uploading profile image: ${error}` })
+        setError('avatarUrl', { message: `Error uploading profile image: ${error}` })
         return
       }
     }
@@ -118,7 +117,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
         <CardTitle className="flex justify-center gap-2 w-full">Welcome! Let&apos;s set up your profile</CardTitle>
       </CardHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent>
             <AnimatePresence mode="wait">
               <motion.div

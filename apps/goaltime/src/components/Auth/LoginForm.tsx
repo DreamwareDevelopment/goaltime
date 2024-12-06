@@ -24,7 +24,7 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
       password: '',
     },
   })
-  const { formState } = form
+  const { handleSubmit, formState, setError } = form
   const { isSubmitting, isValidating } = formState
 
   const onSubmit: SubmitHandler<z.infer<typeof LoginSchema>> = async (data, event) => {
@@ -34,14 +34,14 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
       console.log('Login success')
     } catch (error) {
       console.error('Login form error', error)
-      form.setError('root', { message: "Invalid email or password" }, { shouldFocus: true })
+      setError('root', { message: "Invalid email or password" }, { shouldFocus: true })
     }
   }
 
   return (
     <div className={cn('grid gap-4', className)} {...props}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div>
             <FormField
               control={form.control}
@@ -66,9 +66,9 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
                     <Input type="password" autoComplete="current-password" placeholder="Password..." {...field} />
                   </FormControl>
                   <FormMessage className="pl-2" />
-                  {form.formState.errors.root && (
+                  {formState.errors.root && (
                     <div className="text-sm text-destructive bg-secondary w-full p-1 rounded-md">
-                      {form.formState.errors.root.message}
+                      {formState.errors.root.message}
                     </div>
                   )}
                 </FormItem>

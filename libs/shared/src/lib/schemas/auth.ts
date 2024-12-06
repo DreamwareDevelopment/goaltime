@@ -12,8 +12,3 @@ export const SignUpSchema = z.object({
   password: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
   confirmPassword: z.string().min(8, { message: minPasswordMessage }).max(100, { message: maxPasswordMessage }),
 })
-SignUpSchema.superRefine((input, ctx) => {
-  if (input.password !== input.confirmPassword) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Passwords do not match', path: ['confirmPassword'] })
-  }
-})
