@@ -48,6 +48,11 @@ export async function updateGoalAction(goal: GoalInput): Promise<Goal> {
   return updatedGoal
 }
 
+export async function deleteGoalAction(goalId: string, userId: string): Promise<void> {
+  const prisma = await getPrismaClient(userId)
+  await prisma.goal.delete({ where: { id: goalId, userId } })
+}
+
 export async function createMilestoneAction(milestone: MilestoneInput): Promise<Milestone> {
   const prisma = await getPrismaClient(milestone.userId)
   const newMilestone = await prisma.milestone.create({

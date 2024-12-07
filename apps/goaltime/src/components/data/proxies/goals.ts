@@ -1,7 +1,7 @@
 import { proxy } from 'valtio'
 
 import { GoalInput, MilestoneInput } from "@/shared/zod"
-import { createGoalAction, createMilestoneAction, deleteMilestoneAction, deleteMilestonesAction, updateGoalAction, updateMilestoneAction } from '../../../app/actions/goals'
+import { createGoalAction, createMilestoneAction, deleteGoalAction, deleteMilestoneAction, deleteMilestonesAction, updateGoalAction, updateMilestoneAction } from '../../../app/actions/goals'
 import { Goal, Milestone, NotificationSettings } from '@/shared/models'
 import { MilestoneViewEnum } from '@/shared/zod'
 
@@ -11,6 +11,7 @@ export const goalStore = proxy<{
   notifications: Record<string, NotificationSettings> | null,
   updateGoal(input: GoalInput): Promise<void>,
   createGoal(input: GoalInput): Promise<void>,
+  deleteGoal(goalId: string, userId: string): Promise<void>,
   updateMilestone(milestone: MilestoneInput): Promise<void>,
   createMilestone(milestone: MilestoneInput): Promise<void>,
   deleteMilestone(milestone: MilestoneInput): Promise<void>,
@@ -22,10 +23,10 @@ export const goalStore = proxy<{
   milestones: null,
   notifications: null,
   async createGoal(input) {
-    const newGoal = await createGoalAction(input)
     if (!goalStore.goals) {
-      goalStore.goals = []
+      throw new Error('Invariant: goals not initialized in goalStore')
     }
+    const newGoal = await createGoalAction(input)
     goalStore.goals.push(newGoal)
     if (!goalStore.notifications) {
       goalStore.notifications = {}
@@ -43,12 +44,22 @@ export const goalStore = proxy<{
   },
   async updateGoal(input) {
     if (!goalStore.goals) {
-      goalStore.goals = []
+      throw new Error('Invariant: goals not initialized in goalStore')
     }
     const index = goalStore.goals.findIndex(g => g.id === input.id)
     if (index >= 0) {
       const result = await updateGoalAction(input)
       goalStore.goals[index] = result
+    }
+  },
+  async deleteGoal(goalId, userId) {
+    if (!goalStore.goals) {
+      throw new Error('Invariant: goals not initialized in goalStore')
+    }
+    await deleteGoalAction(goalId, userId)
+    const index = goalStore.goals.findIndex(g => g.id === goalId)
+    if (index >= 0) {
+      goalStore.goals.splice(index, 1)
     }
   },
   async createMilestone(input) {

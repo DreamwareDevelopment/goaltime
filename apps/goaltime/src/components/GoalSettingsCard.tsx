@@ -13,6 +13,7 @@ import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
 import { CommitmentInput, DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { useValtio } from './data/valtio'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -28,6 +29,8 @@ export function GoalSettingsCard({
   userId,
   handleSubmit
 }: GoalSettingsCardProps) {
+  const { goalStore: { deleteGoal } } = useValtio()
+
   // TODO: Calculate a globally unused color
   const color = goal?.color ?? 'red';
   const form = useForm<GoalInput>({
@@ -52,6 +55,15 @@ export function GoalSettingsCard({
     await handleSubmit(data)
   }
 
+  const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault()
+    if (!goal || !goal.userId) {
+      throw new Error('Invariant: goal or userId not defined in handleDelete')
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await deleteGoal(goal.id!, goal.userId)
+  }
+
   return (
     <Card className={cn("border-none", className)}>
       { showTitle && <CardHeader className="pb-5">
@@ -69,12 +81,19 @@ export function GoalSettingsCard({
             </div>
             <PreferredTimes form={form} />
             <NotificationSettings form={form} />
-            <ShinyButton variant="gooeyLeft" className="w-full max-w-[707px] ml-[2px] text-white" style={{ backgroundColor: form.watch('color') }}>
-              {isSubmitting || isValidating ? 
-                <LoadingSpinner className="h-4 w-4" /> : 
-                "Save Goal"
-              }
-            </ShinyButton>
+            <div className="flex flex-row gap-4">
+              <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
+                {isSubmitting || isValidating ? 
+                  <LoadingSpinner className="h-4 w-4" /> : 
+                  "Save Goal"
+                }
+              </ShinyButton>
+              { goal && (
+                <ShinyButton variant="destructive" onClick={handleDelete} className="h-[63px]">
+                  Delete Goal
+                </ShinyButton>
+              )}
+            </div>
           </CardContent>
         </form>
       </Form>
