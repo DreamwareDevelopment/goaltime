@@ -85,7 +85,11 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         <AccordionItem value="settings" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
-            <GoalSettingsCard goal={getMutableGoal(goal, notifications)} userId={goal.userId} handleSubmit={handleSubmit} />
+            <GoalSettingsCard
+              goal={getMutableGoal(goal, notifications)}
+              userId={goal.userId}
+              handleSubmit={handleSubmit}
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

@@ -20,6 +20,7 @@ export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivEleme
   showTitle?: boolean;
   userId: string;
   handleSubmit: (goal: GoalInput) => Promise<void>;
+  close?: () => void;
 }
 
 export function GoalSettingsCard({
@@ -27,7 +28,8 @@ export function GoalSettingsCard({
   showTitle = false,
   className,
   userId,
-  handleSubmit
+  handleSubmit,
+  close
 }: GoalSettingsCardProps) {
   const { goalStore: { deleteGoal } } = useValtio()
 
@@ -53,6 +55,7 @@ export function GoalSettingsCard({
   const onSubmit: SubmitHandler<GoalInput> = async (data, event) => {
     event?.preventDefault()
     await handleSubmit(data)
+    close?.()
   }
 
   const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -89,7 +92,7 @@ export function GoalSettingsCard({
                 }
               </ShinyButton>
               { goal && (
-                <ShinyButton variant="destructive" onClick={handleDelete} className="h-[63px]">
+                <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
                   Delete Goal
                 </ShinyButton>
               )}
