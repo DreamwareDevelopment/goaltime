@@ -75,8 +75,9 @@ export default async function Dashboard() {
   if (!profile) {
     redirect('/welcome')
   }
-  const goals = await getGoals(profile)
-  const milestones = await getMilestones(profile)
-  const notifications = await getNotifications(profile)
+  const goalsPromise = getGoals(profile)
+  const milestonesPromise = getMilestones(profile)
+  const notificationsPromise = getNotifications(profile)
+  const [goals, milestones, notifications] = await Promise.all([goalsPromise, milestonesPromise, notificationsPromise])
   return <DashboardClient goals={goals} profile={profile} schedule={schedule} user={user} milestones={milestones} notifications={notifications} />
 }
