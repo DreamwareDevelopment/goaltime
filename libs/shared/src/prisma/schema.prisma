@@ -461,20 +461,16 @@ model NotificationSettings {
   goal        Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   userId      String      @db.Uuid @map("user_id")
   userProfile UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
-  
   // Push Notifications
-  pushBefore  DateTime? @db.Time @map("push_before")
-  pushAfter   DateTime? @db.Time @map("push_after")
-  pushCheckIn Boolean   @default(false) @map("push_check_in")
-  
+  pushBefore  Int? @map("push_before") // Store as minutes
+  pushAfter   Int? @map("push_after")  // Store as minutes
   // Text Notifications
-  textBefore  DateTime? @db.Time @map("text_before")
-  textAfter   DateTime? @db.Time @map("text_after")
+  textBefore  Int? @map("text_before") // Store as minutes
+  textAfter   Int? @map("text_after")  // Store as minutes
   textCheckIn Boolean   @default(false) @map("text_check_in")
-  
   // Phone Notifications
-  phoneBefore DateTime? @db.Time @map("phone_before")
-  phoneAfter  DateTime? @db.Time @map("phone_after")
+  phoneBefore Int? @map("phone_before") // Store as minutes
+  phoneAfter  Int? @map("phone_after")  // Store as minutes
 
   @@schema("public")
 }

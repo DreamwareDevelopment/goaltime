@@ -19,7 +19,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name nullable_profile_dates",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name notifications_schema_changes",
         "cwd": "libs/shared"
       }
     },

@@ -1,5 +1,6 @@
 import z from "zod";
-import { deepRemoveDefaults } from ".";
+import { isValidHexColor } from "../utils";
+import { Goal, NotificationSettings } from "../../../type_gen/.prisma/client";
 
 // Enums
 export const PriorityEnum = z.enum(["High", "Medium", "Low"]);
@@ -15,35 +16,60 @@ export const MilestoneSchema = z.object({
   view: MilestoneViewEnum,
   updatedAt: z.date(),
 });
+export type MilestoneInput = z.infer<typeof MilestoneSchema>
+export const MilestoneInputWithIdSchema = MilestoneSchema.extend({ id: z.string().uuid(), goalId: z.string().uuid() });
+export type MilestoneInputWithId = z.infer<typeof MilestoneInputWithIdSchema>;
 
 // NotificationSettings Schema
 export const NotificationSettingsSchema = z.object({
-  goalId: z.string().uuid(),
   userId: z.string().uuid(),
-  pushBefore: z.string().duration().optional(),
-  pushAfter: z.string().duration().optional(),
-  pushCheckIn: z.boolean().default(false),
-  textBefore: z.string().duration().optional(),
-  textAfter: z.string().duration().optional(),
-  textCheckIn: z.boolean().default(false),
-  phoneBefore: z.string().duration().optional(),
-  phoneAfter: z.string().duration().optional(),
+  pushBefore: z.number().int().min(0).optional().nullable().default(0),
+  pushAfter: z.number().int().min(0).optional().nullable().default(2),
+  textBefore: z.number().int().min(0).optional().nullable().default(null),
+  textAfter: z.number().int().min(0).optional().nullable().default(null),
+  textCheckIn: z.boolean().default(true),
+  phoneBefore: z.number().int().min(0).optional().nullable().default(20),
+  phoneAfter: z.number().int().min(0).optional().nullable().default(null),
 });
+export type NotificationSettingsInput = z.infer<typeof NotificationSettingsSchema>
+export const NotificationSettingsInputWithIdSchema = NotificationSettingsSchema.extend({ id: z.string().uuid(), goalId: z.string().uuid() });
+export type NotificationSettingsInputWithId = z.infer<typeof NotificationSettingsInputWithIdSchema>;
 
 // Goal Schema
 export const GoalSchema = z.object({
+  id: z.string().uuid().optional(),
   userId: z.string().uuid(),
-  title: z.string().max(100, { message: "Title must be less than 100 characters" }),
-  description: z.string().max(1000, { message: "Description must be less than 1000 characters" }).optional(),
-  commitment: z.number().positive().max(100, { message: "That's a lot of hours, try breaking it up into component goals." }),
-  completed: z.number().positive().default(0.0),
+  title: z.string()
+    .min(1.0, { message: "Title is required" })
+    .max(100.0, { message: "Title must be less than 100 characters" })
+    .default(""),
+  description: z.string()
+    .max(1000, { message: "Description must be less than 1000 characters" })
+    .optional().nullable().default(null),
+  commitment: z.number()
+    .positive()
+    .min(1.0, { message: "Commitment must be at least 1 hour" })
+    .max(100.0, { message: "That's a lot of hours, try breaking it up into component goals." })
+    .default(1.0),
+  completed: z.number()
+    .min(0.0, { message: "Completed must be at least 0 hours" })
+    .max(100.0, { message: "Completed must be less than 100 hours" })
+    .default(0.0),
   priority: PriorityEnum.default("Medium"),
-  preferredTimes: z.array(PreferredTimesEnum).default([]),
+  preferredTimes: z.array(PreferredTimesEnum)
+    .default([])
+    .refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
   canDoDuringWork: z.boolean().default(false),
-  color: z.string(),
-  milestones: z.array(MilestoneSchema).default([]),
+  color: z.string().refine((color) => isValidHexColor(color), { message: "Invalid color" }),
   notifications: NotificationSettingsSchema,
   updatedAt: z.date().default(new Date()),
 });
+export type GoalInput = z.infer<typeof GoalSchema>
 
-export const GoalUpdateSchema = deepRemoveDefaults(GoalSchema.partial())
+export function newGoalFromDb(goal: Goal, notifications: NotificationSettings): GoalInput {
+  return {
+    ...goal,
+    preferredTimes: goal.preferredTimes && Array.isArray(goal.preferredTimes) ? goal.preferredTimes as Array<z.infer<typeof PreferredTimesEnum>> : [],
+    notifications,
+  };
+}

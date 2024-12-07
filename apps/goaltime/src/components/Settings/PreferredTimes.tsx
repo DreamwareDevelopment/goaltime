@@ -1,8 +1,9 @@
+import { UseFormReturn } from "react-hook-form";
 import { Label } from "@/ui-components/label";
 import { Button } from "@/ui-components/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui-components/tooltip'
-
-import { Goal } from "../GoalSettingsCard";
+import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
+import { GoalInput } from "@/shared/zod";
 
 export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
 
@@ -16,38 +17,53 @@ const timeSlots: { [key in TimeSlot]: string } = {
 }
 
 interface PreferredTimesProps {
-  goal: Goal;
-  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
+  form: UseFormReturn<GoalInput>;
 }
 
-export const PreferredTimes = ({ goal, onChange }: PreferredTimesProps) => {
-  const handleTimeSlotToggle = (slot: TimeSlot) => {
-    const newPreferredTimes = goal.preferredTimes.includes(slot) ? goal.preferredTimes.filter(t => t !== slot) : [...goal.preferredTimes, slot];
-    onChange('preferredTimes', newPreferredTimes);
-  }
+export const PreferredTimes = ({ form }: PreferredTimesProps) => {
   return (
-    <div className="space-y-2">
-      <Label className="ml-2">Preferred Time Slots</Label>
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(timeSlots).map(([slot, time]) => (
-          <TooltipProvider key={slot}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={goal.preferredTimes.includes(slot as TimeSlot) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleTimeSlotToggle(slot as TimeSlot)}
-                >
-                  {slot}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{time}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
-    </div>
+    <FormField
+      control={form.control}
+      name="preferredTimes"
+      render={({ field }) => (
+        <FormItem className="space-y-2">
+          <Label className="ml-2">Preferred Time Slots</Label>
+          <FormControl>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(timeSlots).map(([slot, time]) => {
+                const timeSlot = slot as TimeSlot;
+                const isSelected = field.value?.includes(timeSlot) ?? false;
+
+                return (
+                  <TooltipProvider key={slot}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            const newPreferredTimes = isSelected
+                              ? field.value.filter((t: TimeSlot) => t !== timeSlot)
+                              : [...(field.value || []), timeSlot];
+                            field.onChange(newPreferredTimes);
+                          }}
+                        >
+                          {slot}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{time}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })}
+            </div>
+          </FormControl>
+          <FormMessage className="ml-2" />
+        </FormItem>
+      )}
+    />
   )
 }

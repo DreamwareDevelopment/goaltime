@@ -4,14 +4,16 @@ import { cn } from "@/ui-components/utils"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"
 
-import { Goal } from "./GoalSettingsCard"
 import { GoalCreationButton } from "./GoalCreationButton";
+import { useValtio } from "./data/valtio"
+import { useSnapshot } from "valtio";
 
-export interface GoalProgressCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  goals: Goal[]
-}
-
-export function GoalProgressCard({ goals, className }: GoalProgressCardProps) {
+export function GoalProgressCard({ className }: React.HTMLAttributes<HTMLDivElement>) {
+  const { goalStore } = useValtio();
+  if (!goalStore.goals) {
+    throw new Error('Invariant: Goals not initialized before using GoalProgressCard')
+  }
+  const goals = useSnapshot(goalStore.goals);
   return (
     <Card className={cn(className)}>
       <CardHeader>

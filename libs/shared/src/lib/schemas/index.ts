@@ -23,13 +23,16 @@ export function getDefaultValue<Schema extends z.ZodDefault<z.ZodTypeAny>>(field
     return field._def.defaultValue();
 }
 
-export function getDefaults<Schema extends z.AnyZodObject>(schema: Schema) {
-    return Object.fromEntries(
-        Object.entries(schema.shape).map(([key, value]) => {
-            if (value instanceof z.ZodDefault) return [key, value._def.defaultValue()]
-            return [key, undefined]
-        })
-    )
+export function getDefaults<Schema extends z.AnyZodObject, ExtraValues extends Record<string, unknown> = Record<string, unknown>>(schema: Schema, extraValues: ExtraValues = {} as ExtraValues): z.infer<Schema> & ExtraValues {
+    return {
+        ...Object.fromEntries(
+            Object.entries(schema.shape).map(([key, value]) => {
+                if (value instanceof z.ZodDefault) return [key, value._def.defaultValue()]
+                return [key, undefined]
+            })
+        ),
+        ...extraValues,
+    }
 }
 
 export function deepRemoveDefaults <I extends z.ZodTypeAny>(schema: I): DeepRemoveDefault<I> {

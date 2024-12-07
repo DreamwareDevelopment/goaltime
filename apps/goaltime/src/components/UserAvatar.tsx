@@ -25,17 +25,18 @@ import {
 import { createClient } from "@/ui-components/hooks/supabase"
 import { LoadingSpinner } from "@/ui-components/svgs/spinner"
 import { useAvatarUrl } from "@/ui-components/hooks/avatar-url"
-import { UserProfile } from "@/shared/models"
-import { SanitizedUser } from "../app/queries/user"
+import { useValtio } from "./data/valtio"
+import { useSnapshot } from "valtio"
 
-export type UserAvatarProps = {
-  user: SanitizedUser
-  profile: UserProfile | null
-}
-
-export function UserAvatar({ user, profile }: UserAvatarProps) {
+export function UserAvatar() {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
   const supabase = createClient()
+  const { userStore } = useValtio();
+  if (!userStore.profile || !userStore.user) {
+    throw new Error('Invariant: User profile not initialized before using UserAvatar')
+  }
+  const profile = useSnapshot(userStore.profile);
+  const user = useSnapshot(userStore.user);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()

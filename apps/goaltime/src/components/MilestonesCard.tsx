@@ -10,65 +10,65 @@ import { Button } from "@/ui-components/button";
 import { Checkbox } from "@/ui-components/checkbox";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Input } from "@/ui-components/input";
-
-import { Goal } from "./GoalSettingsCard";
-
-export interface Milestone {
-  id: number;
-  text: string;
-  completed: boolean;
-  view: MilestoneView;
-}
-
-export enum MilestoneView {
-  Daily = "daily",
-  Lifetime = "lifetime"
-}
+import { useValtio } from "./data/valtio";
+import { useSnapshot } from "valtio";
+import { MilestoneInputWithId, MilestoneSchema, MilestoneViewEnum } from "@/shared/zod";
+import z from "zod";
 
 export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  goal: Goal;
-  view: MilestoneView;
+  goalId: string;
+  view: z.infer<typeof MilestoneViewEnum>;
 }
 
-export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
-  const [milestones, setMilestones] = useState<Milestone[]>(goal.milestones)
+export function MilestonesCard({ goalId, view, className }: MilestonesCardProps) {
+  const { goalStore, userStore } = useValtio();
+  if (!userStore.user) {
+    throw new Error('User not initialized')
+  }
+  goalStore.ensureMilestones(goalId)
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const milestones = useSnapshot(goalStore.milestones![goalId][view])
+  const { id: userId } = useSnapshot(userStore.user)
+
   const [newMilestone, setNewMilestone] = useState<string>("")
-
-  const addMilestone = () => {
-    if (newMilestone.trim() !== "") {
-      setMilestones([...milestones, { id: Date.now(), text: newMilestone.trim(), completed: false, view: view }])
-      setNewMilestone("")
+  const addMilestone = async () => {
+    if (newMilestone.trim() === "") {
+      return
     }
+    const data = MilestoneSchema.parse({ goalId, view, text: newMilestone.trim(), userId })
+    await goalStore.createMilestone(data)
   }
 
-  const toggleMilestone = (id: number) => {
-    setMilestones(milestones.map(milestone =>
-      milestone.id === id ? { ...milestone, completed: !milestone.completed } : milestone
-    ))
+  const toggleMilestone = async (id: string) => {
+    const milestone = milestones.find(milestone => milestone.id === id)
+    if (!milestone) {
+      return
+    }
+    await goalStore.updateMilestone(milestone)
   }
 
-  const deleteMilestone = (id: number) => {
-    setMilestones(milestones.filter(milestone => milestone.id !== id))
+  const deleteMilestone = (milestone: MilestoneInputWithId) => {
+    goalStore.deleteMilestone(milestone)
   }
 
   const clearCompletedMilestones = () => {
-    setMilestones(milestones.filter(milestone => !milestone.completed))
+    goalStore.deleteMilestones(milestones.filter(milestone => !milestone.completed))
   }
 
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState("")
 
-  const startEditing = (milestone: Milestone) => {
+  const startEditing = (milestone: MilestoneInputWithId) => {
     setEditingId(milestone.id)
     setEditText(milestone.text)
   }
 
   const saveEdit = () => {
     if (editingId) {
-      setMilestones(milestones.map(milestone =>
-        milestone.id === editingId ? { ...milestone, text: editText } : milestone
-      ))
-      setEditingId(null)
+      const milestone = milestones.find(milestone => milestone.id === editingId)
+      if (milestone) {
+        goalStore.updateMilestone(milestone)
+      }
     }
     cancelEdit()
   }
@@ -131,7 +131,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
                     className="flex-shrink-0"
                     variant="ghost"
                     size="icon"
-                    onClick={() => deleteMilestone(milestone.id)}
+                    onClick={() => deleteMilestone(milestone)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -141,7 +141,7 @@ export function MilestonesCard({ goal, view, className }: MilestonesCardProps) {
           ))}
           <li className="flex items-center space-x-4 pt-4 pr-3">
             <FloatingLabelInput
-              id={`new-milestone-${goal.id}`}
+              id={`new-milestone-${goalId}`}
               className="flex-grow"
               type="text"
               label="I will..."

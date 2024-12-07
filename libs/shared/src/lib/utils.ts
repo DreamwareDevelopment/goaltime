@@ -11,3 +11,23 @@ export { dayjs }
 export const getTime = (time: string, timezone: string) => {
   return dayjs.tz(`1970-01-01T${time}:00`, timezone)
 }
+
+export function isValidHexColor(color: string): boolean {
+  return /^#([0-9A-F]{3}){1,2}$/i.test(color);
+}
+
+export function parseDuration(duration: string): number {
+  const match = duration.match(/(\d+)([smhd])/);
+  if (!match) throw new Error("Invalid duration format");
+
+  const value = parseInt(match[1]);
+  const unit = match[2];
+
+  switch (unit) {
+    case 's': return value;
+    case 'm': return value * 60;
+    case 'h': return value * 3600;
+    case 'd': return value * 86400;
+    default: throw new Error("Invalid duration unit");
+  }
+}

@@ -1,18 +1,42 @@
+"use client"
+
 import { cn } from "@/ui-components/utils"
 import { PlateEditor } from "@/plate-ui/plate-editor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
+import { GoalInput, MilestoneViewEnum, newGoalFromDb } from "@/shared/zod";
 
-import { MilestonesCard, MilestoneView } from "./MilestonesCard";
-import { Goal, GoalSettingsCard } from "./GoalSettingsCard";
+import { MilestonesCard } from "./MilestonesCard";
+import { GoalSettingsCard } from "./GoalSettingsCard";
+import { useToast } from "@/ui-components/hooks/use-toast";
+import { useValtio } from "./data/valtio";
+import { Goal } from "@/shared/models";
+import { useSnapshot } from "valtio";
 
 export interface GoalCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal: Goal;
 }
 
 export function GoalCard({ goal, className }: GoalCardProps) {
+  const { toast } = useToast();
+  const { goalStore } = useValtio()
+  if (!goalStore.notifications || !goalStore.notifications[goal.id]) {
+    throw new Error('Notifications not initialized')
+  }
+  const notifications = useSnapshot(goalStore.notifications[goal.id])
+  goalStore.ensureMilestones(goal.id)
+
+  const handleSubmit = async (input: GoalInput) => {
+    try {
+      await goalStore.updateGoal(input)
+      toast({ title: 'Goal updated', variant: 'default' })
+    } catch (error) {
+      toast({ title: 'Error updating goal', description: (error as Error).message, variant: 'destructive' })
+    }
+  }
+
   return (
     <ScrollArea className={cn(className)} key={goal.id}>
       <Accordion type="single" collapsible defaultValue="milestones" className="w-full h-full">
@@ -27,10 +51,10 @@ export function GoalCard({ goal, className }: GoalCardProps) {
                 </TabsList>
               </div>
               <TabsContent value="daily">
-                <MilestonesCard goal={goal} view={MilestoneView.Daily} />
+                <MilestonesCard goalId={goal.id} view={MilestoneViewEnum.Enum.daily} />
               </TabsContent>
               <TabsContent value="lifetime">
-                <MilestonesCard goal={goal} view={MilestoneView.Lifetime} />
+                <MilestonesCard goalId={goal.id} view={MilestoneViewEnum.Enum.lifetime} />
               </TabsContent>
             </Tabs>
           </AccordionContent>
@@ -52,7 +76,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         <AccordionItem value="settings" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
-            <GoalSettingsCard goal={goal} />
+            <GoalSettingsCard goal={newGoalFromDb(goal, notifications)} userId={goal.userId} handleSubmit={handleSubmit} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

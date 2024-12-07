@@ -7,13 +7,15 @@ import { Card } from "@/ui-components/card"
 import { Carousel, CarouselMainContainer, SliderMainItem, SliderThumbItem, CarouselThumbsContainer, CarouselNext, CarouselPrevious } from "@/ui-components/carousel"
 
 import { GoalCard } from "./GoalCard"
-import { Goal } from "./GoalSettingsCard";
+import { useSnapshot } from "valtio";
+import { useValtio } from "./data/valtio";
 
-export interface GoalCarouselProps extends React.HTMLAttributes<HTMLDivElement> {
-  goals: Goal[]
-}
-
-export function GoalCarousel({ goals, className }: GoalCarouselProps) {
+export function GoalCarousel({ className }: React.HTMLAttributes<HTMLDivElement>) {
+  const { goalStore } = useValtio();
+  if (!goalStore.goals) {
+    throw new Error('Invariant: Goals not initialized before using GoalCarousel')
+  }
+  const goals = useSnapshot(goalStore.goals);
   const [orientation, setOrientation] = useState<"horizontal" | "vertical">("vertical");
 
   useEffect(() => {

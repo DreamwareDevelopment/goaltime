@@ -4,19 +4,20 @@ import { UserProfile } from "@/shared/models"
 import { UserProfileInput } from "@/shared/zod"
 import { createUserProfileAction, updateUserProfileAction } from '../../../app/actions/user'
 import { createClient } from '@/ui-components/hooks/supabase'
+import { SanitizedUser } from '../../../app/queries/user'
 
 export const userStore = proxy<{
-  userId: string | null,
+  user: SanitizedUser | null,
   profile: UserProfile | null,
   createUserProfile(profile: UserProfileInput): Promise<void>,
   updateUserProfile(profile: UserProfileInput): Promise<void>,
   uploadProfileImage(userId: string, image: File): Promise<string>,
-  setUserProfile(profile: UserProfile): void,
+  init(user: SanitizedUser, profile: UserProfile): void,
 }>({
-  userId: null,
+  user: null,
   profile: null,
-  setUserProfile(profile) {
-    this.userId = profile.userId
+  init(user, profile) {
+    this.user = user
     this.profile = profile
   },
   async createUserProfile(profile) {

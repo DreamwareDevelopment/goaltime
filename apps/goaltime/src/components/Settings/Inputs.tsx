@@ -1,82 +1,95 @@
+import { UseFormReturn } from "react-hook-form";
+
 import { AutosizeTextarea } from "@/ui-components/text-area";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
+import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 import { Input } from "@/ui-components/input";
 import { Label } from "@/ui-components/label";
+import { GoalInput } from "@/shared/zod";
 
-import { Goal } from "../GoalSettingsCard";
 
 export interface TitleInputProps {
-  goal: Goal;
-  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
+  form: UseFormReturn<GoalInput>;
 }
 
-export const TitleInput: React.FC<TitleInputProps> = ({ goal, onChange }) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange('title', e.target.value);
-  }
-
+export const TitleInput: React.FC<TitleInputProps> = ({ form }) => {
   return (
-    <FloatingLabelInput
-      id="title"
+    <FormField
+      control={form.control}
       name="title"
-      value={goal.title}
-      onChange={handleInputChange}
-      label="Title"
+      render={({ field }) => (
+        <FormItem className="flex flex-col items-start">
+          <FormControl>
+            <FloatingLabelInput
+              label="Title"
+              {...field}
+            />
+          </FormControl>
+          <FormMessage className="ml-2" />
+        </FormItem>
+      )}
     />
   )
 }
 
 export interface DescriptionInputProps {
-  goal: Goal;
-  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
+  form: UseFormReturn<GoalInput>;
 }
 
-export const DescriptionInput: React.FC<DescriptionInputProps> = ({ goal, onChange }) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange('description', e.target.value);
-  }
-
+export const DescriptionInput: React.FC<DescriptionInputProps> = ({ form }) => {
   return (
-    <AutosizeTextarea
-      id="description"
+    <FormField
+      control={form.control}
       name="description"
-      value={goal.description}
-      onChange={handleInputChange}
-      placeholder="Description (optional)"
+      render={({ field }) => (
+        <FormItem>
+          <FormControl>
+            <AutosizeTextarea
+              id="description"
+              name="description"
+              value={field.value || ''}
+              onChange={field.onChange}
+              placeholder="Description (optional)"
+            />
+          </FormControl>
+          <FormMessage className="ml-2" />
+        </FormItem>
+      )}
     />
   )
 }
 
 export interface CommitmentInputProps {
-  goal: Goal;
-  onChange: <T extends keyof Goal>(field: T, value: Goal[T]) => void;
+  form: UseFormReturn<GoalInput>;
 }
 
-export const CommitmentInput: React.FC<CommitmentInputProps> = ({ goal, onChange }) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target
-    if (isNaN(Number(value))) throw new Error('Invalid input');
-    onChange('commitment', Number(value));
-  }
-
+export const CommitmentInput: React.FC<CommitmentInputProps> = ({ form }) => {
   return (
-    <div className="space-y-2">
-      <Label className="ml-2 text-nowrap" htmlFor="commitment">Weekly Commitment</Label>
-      <div className="relative">
-        <Input
-          id="commitment"
-          name="commitment"
-          type="number"
-          value={goal.commitment}
-          onChange={handleInputChange}
-          min={0}
-          placeholder="Enter..."
-          className="pr-10"
-        />
-        <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-          hrs
-        </span>
-      </div>
-    </div>
+    <FormField
+      control={form.control}
+      name="commitment"
+      render={({ field }) => (
+        <FormItem className="space-y-2">
+          <Label className="ml-2 text-nowrap" htmlFor="commitment">Weekly Commitment</Label>
+          <FormControl>
+            <div className="relative">
+              <Input
+                placeholder="Enter..."
+                className="pr-10"
+                type="number"
+                min={1}
+                max={100}
+                {...field}
+                onChange={(e) => field.onChange(Number(e.target.value))}
+              />
+              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                hrs
+              </span>
+            </div>
+          </FormControl>
+          <FormMessage className="ml-2" />
+        </FormItem>
+      )}
+    />
   )
 }
