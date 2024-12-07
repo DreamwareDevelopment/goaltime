@@ -1,28 +1,35 @@
 import { PrismaClient } from '@/libs/shared/type_gen/.prisma/client'
 
-let _instance: ExtendedPrismaClient
+let _instance: ExtendedPrismaClient | undefined
+let _nonRlsInstance: PrismaClient | undefined
 export async function getPrismaClient(userId?: string): Promise<ExtendedPrismaClient> {
   if (!userId) {
     console.warn('No user ID provided, using non-RLS client')
-    return newPrismaClient()
+    if (!_nonRlsInstance) {
+      _nonRlsInstance = newPrismaClient()
+      await _nonRlsInstance.$connect()
+    }
+    return _nonRlsInstance as ExtendedPrismaClient
   }
   if (!_instance) {
-    _instance = await newPrismaClient(userId)
+    _instance = extendClient(newPrismaClient(userId), userId)
+    await _instance.$connect()
   }
-  return _instance
+  return _instance as ExtendedPrismaClient
 }
 
-export type ExtendedPrismaClient = Awaited<ReturnType<typeof newPrismaClient>>
+export type ExtendedPrismaClient = Awaited<ReturnType<typeof extendClient>>
 
-export async function newPrismaClient(userId?: string) {
+function newPrismaClient(userId?: string) {
+  console.log('newPrismaClient', userId)
   const datasourceUrl = process.env.SUPABASE_PRISMA_URL
   if (!datasourceUrl) {
     throw new Error('SUPABASE_PRISMA_URL is not set')
   }
-  const client = new PrismaClient({ datasourceUrl })
-  if (!userId) {
-    return client
-  }
+  return new PrismaClient({ datasourceUrl })
+}
+
+function extendClient(client: PrismaClient, userId: string) {
   const extendedClient = client.$extends({
     name: 'SupabaseRowLevelSecurity',
     query: {
@@ -42,6 +49,22 @@ export async function newPrismaClient(userId?: string) {
       },
     },
   })
-  await extendedClient.$connect()
   return extendedClient
 }
+
+function cleanup() {
+  console.log('Prisma cleanup')
+  if (_instance) {
+    _instance.$disconnect()
+    _instance = undefined
+  }
+  if (_nonRlsInstance) {
+    _nonRlsInstance.$disconnect()
+    _nonRlsInstance = undefined
+  }
+}
+
+process.on('beforeExit', cleanup)
+process.on('SIGINT', cleanup)
+process.on('SIGTERM', cleanup)
+process.on('SIGUSR2', cleanup)
