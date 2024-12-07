@@ -1,6 +1,6 @@
 import { proxy } from 'valtio'
 
-import { GoalInput, MilestoneInput, MilestoneInputWithId } from "@/shared/zod"
+import { GoalInput, MilestoneInput } from "@/shared/zod"
 import { createGoalAction, createMilestoneAction, deleteMilestoneAction, deleteMilestonesAction, updateGoalAction, updateMilestoneAction } from '../../../app/actions/goals'
 import { Goal, Milestone, NotificationSettings } from '@/shared/models'
 import { MilestoneViewEnum } from '@/shared/zod'
@@ -11,10 +11,10 @@ export const goalStore = proxy<{
   notifications: Record<string, NotificationSettings> | null,
   updateGoal(input: GoalInput): Promise<void>,
   createGoal(input: GoalInput): Promise<void>,
-  updateMilestone(milestone: MilestoneInputWithId): Promise<void>,
+  updateMilestone(milestone: MilestoneInput): Promise<void>,
   createMilestone(milestone: MilestoneInput): Promise<void>,
-  deleteMilestone(milestone: MilestoneInputWithId): Promise<void>,
-  deleteMilestones(milestones: MilestoneInputWithId[]): Promise<void>,
+  deleteMilestone(milestone: MilestoneInput): Promise<void>,
+  deleteMilestones(milestones: MilestoneInput[]): Promise<void>,
   ensureMilestones(goalId: string): void,
   init(goals: Goal[], milestones: Milestone[] | null, notifications: NotificationSettings[]): void,
 }>({

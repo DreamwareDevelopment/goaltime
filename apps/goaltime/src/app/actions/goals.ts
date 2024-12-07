@@ -1,6 +1,6 @@
 'use server'
 
-import { GoalInput, MilestoneInput, MilestoneInputWithId } from '@/shared/zod'
+import { GoalInput, MilestoneInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import { Goal, Milestone, Prisma } from '@/libs/shared/type_gen/.prisma/client'
 
@@ -56,7 +56,7 @@ export async function createMilestoneAction(milestone: MilestoneInput): Promise<
   return newMilestone
 }
 
-export async function updateMilestoneAction(milestone: MilestoneInputWithId): Promise<Milestone> {
+export async function updateMilestoneAction(milestone: MilestoneInput): Promise<Milestone> {
   const prisma = await getPrismaClient(milestone.userId)
   const updatedMilestone = await prisma.milestone.update({
     where: { id: milestone.id, userId: milestone.userId },
@@ -65,12 +65,18 @@ export async function updateMilestoneAction(milestone: MilestoneInputWithId): Pr
   return updatedMilestone
 }
 
-export async function deleteMilestoneAction(milestone: MilestoneInputWithId): Promise<void> {
+export async function deleteMilestoneAction(milestone: MilestoneInput): Promise<void> {
   const prisma = await getPrismaClient(milestone.userId)
   await prisma.milestone.delete({ where: { id: milestone.id, userId: milestone.userId } })
 }
 
-export async function deleteMilestonesAction(milestones: MilestoneInputWithId[]): Promise<void> {
+export async function deleteMilestonesAction(milestones: MilestoneInput[]): Promise<void> {
   const prisma = await getPrismaClient(milestones[0].userId)
-  await prisma.milestone.deleteMany({ where: { id: { in: milestones.map(m => m.id) }, userId: milestones[0].userId } })
+  await prisma.milestone.deleteMany({
+    where: {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      id: { in: milestones.map(m => m.id!) },
+      userId: milestones[0].userId,
+    },
+  })
 }

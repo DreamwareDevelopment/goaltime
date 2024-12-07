@@ -12,7 +12,7 @@ import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Input } from "@/ui-components/input";
 import { useValtio } from "./data/valtio";
 import { useSnapshot } from "valtio";
-import { MilestoneInputWithId, MilestoneSchema, MilestoneViewEnum } from "@/shared/zod";
+import { MilestoneInput, MilestoneSchema, MilestoneViewEnum } from "@/shared/zod";
 import z from "zod";
 
 export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -47,7 +47,7 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
     await goalStore.updateMilestone(milestone)
   }
 
-  const deleteMilestone = (milestone: MilestoneInputWithId) => {
+  const deleteMilestone = (milestone: MilestoneInput) => {
     goalStore.deleteMilestone(milestone)
   }
 
@@ -58,8 +58,9 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState("")
 
-  const startEditing = (milestone: MilestoneInputWithId) => {
-    setEditingId(milestone.id)
+  const startEditing = (milestone: MilestoneInput) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    setEditingId(milestone.id!)
     setEditText(milestone.text)
   }
 

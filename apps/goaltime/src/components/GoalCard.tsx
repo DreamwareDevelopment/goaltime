@@ -1,19 +1,28 @@
 "use client"
 
+import z from "zod";
 import { cn } from "@/ui-components/utils"
 import { PlateEditor } from "@/plate-ui/plate-editor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
-import { GoalInput, MilestoneViewEnum, newGoalFromDb } from "@/shared/zod";
+import { GoalInput, MilestoneViewEnum, PreferredTimesEnum } from "@/shared/zod";
 
 import { MilestonesCard } from "./MilestonesCard";
 import { GoalSettingsCard } from "./GoalSettingsCard";
 import { useToast } from "@/ui-components/hooks/use-toast";
 import { useValtio } from "./data/valtio";
-import { Goal } from "@/shared/models";
+import { Goal, NotificationSettings } from "@/shared/models";
 import { useSnapshot } from "valtio";
+
+function getMutableGoal(goal: Goal, notifications: NotificationSettings): GoalInput {
+  return {
+    ...goal,
+    preferredTimes: goal.preferredTimes && Array.isArray(goal.preferredTimes) ? goal.preferredTimes as Array<z.infer<typeof PreferredTimesEnum>> : [],
+    notifications,
+  };
+}
 
 export interface GoalCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal: Goal;
@@ -76,7 +85,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         <AccordionItem value="settings" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
-            <GoalSettingsCard goal={newGoalFromDb(goal, notifications)} userId={goal.userId} handleSubmit={handleSubmit} />
+            <GoalSettingsCard goal={getMutableGoal(goal, notifications)} userId={goal.userId} handleSubmit={handleSubmit} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
