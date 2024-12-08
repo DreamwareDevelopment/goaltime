@@ -14,7 +14,7 @@ export const MilestoneSchema = z.object({
   text: z.string(),
   completed: z.boolean().default(false),
   view: MilestoneViewEnum,
-  updatedAt: z.date(),
+  updatedAt: z.date().default(new Date()),
 });
 export type MilestoneInput = z.infer<typeof MilestoneSchema>
 

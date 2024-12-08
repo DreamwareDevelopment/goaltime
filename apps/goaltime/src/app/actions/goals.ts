@@ -32,6 +32,7 @@ export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotific
 
 export async function updateGoalAction(goal: GoalInput): Promise<Goal> {
   const prisma = await getPrismaClient(goal.userId)
+  goal.updatedAt = new Date()
   const updatedGoal = await prisma.goal.update({
     where: { id: goal.id, userId: goal.userId },
     data: {
@@ -63,6 +64,7 @@ export async function createMilestoneAction(milestone: MilestoneInput): Promise<
 
 export async function updateMilestoneAction(milestone: MilestoneInput): Promise<Milestone> {
   const prisma = await getPrismaClient(milestone.userId)
+  milestone.updatedAt = new Date()
   const updatedMilestone = await prisma.milestone.update({
     where: { id: milestone.id, userId: milestone.userId },
     data: milestone,

@@ -8,7 +8,9 @@ import { MilestoneViewEnum } from '@/shared/zod'
 export const goalStore = proxy<{
   goals: Goal[] | null,
   milestones: Record<string, Record<string, Milestone[]>> | null,
+  milestoneLock: Promise<void> | null,
   notifications: Record<string, NotificationSettings> | null,
+  runInMutex(fn: () => Promise<void>): Promise<void>,
   updateGoal(input: GoalInput): Promise<void>,
   createGoal(input: GoalInput): Promise<void>,
   deleteGoal(goalId: string, userId: string): Promise<void>,
@@ -21,7 +23,19 @@ export const goalStore = proxy<{
 }>({
   goals: null,
   milestones: null,
+  milestoneLock: null,
   notifications: null,
+  async runInMutex(fn: () => Promise<void>): Promise<void> {
+    if (goalStore.milestoneLock) {
+      await goalStore.milestoneLock
+    }
+    goalStore.milestoneLock = new Promise((resolve) => {
+      fn().then(() => {
+        goalStore.milestoneLock = null
+        resolve()
+      })
+    })
+  },
   async createGoal(input) {
     if (!goalStore.goals) {
       throw new Error('Invariant: goals not initialized in goalStore')
@@ -63,50 +77,82 @@ export const goalStore = proxy<{
     }
   },
   async createMilestone(input) {
-    const newMilestone = await createMilestoneAction(input)
-    if (!goalStore.milestones) {
-      goalStore.milestones = {}
-    }
-    if (!goalStore.milestones[newMilestone.goalId]) {
-      goalStore.milestones[newMilestone.goalId] = {}
-    }
-    if (!goalStore.milestones[newMilestone.goalId][newMilestone.view]) {
-      goalStore.milestones[newMilestone.goalId][newMilestone.view] = []
-    }
-    goalStore.milestones[newMilestone.goalId][newMilestone.view].push(newMilestone)
+    // Optimistically add the milestone to the store
+    await goalStore.runInMutex(async () => {
+      const createdAt = new Date()
+      if (!goalStore.milestones) {
+        goalStore.milestones = {}
+      }
+      if (!goalStore.milestones[input.goalId]) {
+        goalStore.milestones[input.goalId] = {}
+      }
+      if (!goalStore.milestones[input.goalId][input.view]) {
+        goalStore.milestones[input.goalId][input.view] = []
+      }
+      const milestones = goalStore.milestones[input.goalId][input.view]
+      milestones.push({
+        ...input,
+        createdAt,
+        id: '',
+      })
+      const createdMilestone = await createMilestoneAction(input)
+      milestones[milestones.length - 1] = createdMilestone
+    })
   },
   async updateMilestone(input) {
-    const updatedMilestone = await updateMilestoneAction(input)
-    console.log('updated milestone', updatedMilestone)
-    if (!goalStore.milestones || !goalStore.milestones[input.goalId] || !goalStore.milestones[input.goalId][input.view]) {
-      throw new Error('Milestones not initialized')
-    }
-    const index = goalStore.milestones[input.goalId][input.view].findIndex(m => m.id === updatedMilestone.id)
-    if (index >= 0) {
-      goalStore.milestones[input.goalId][input.view][index] = updatedMilestone
-    }
+    await goalStore.runInMutex(async () => {
+      if (!goalStore.milestones || !goalStore.milestones[input.goalId] || !goalStore.milestones[input.goalId][input.view]) {
+        throw new Error('Milestones not initialized')
+      }
+      console.log(`Updating milestone ${input.id} for goal ${input.goalId} view ${input.view}`)
+      const milestones = goalStore.milestones[input.goalId][input.view]
+      const index = milestones.findIndex(m => m.id === input.id)
+      if (index >= 0) {
+        milestones.splice(index, 1)
+      }
+      milestones.push(input as Milestone)
+      const updatedMilestone = await updateMilestoneAction(input)
+      milestones[milestones.length - 1] = updatedMilestone
+      console.log(`Updated milestone ${input.id} for goal ${input.goalId} view ${input.view}`)
+    })
   },
   async deleteMilestone(input) {
-    await deleteMilestoneAction(input)
-    if (!goalStore.milestones || !goalStore.milestones[input.goalId] || !goalStore.milestones[input.goalId][input.view]) {
-      throw new Error('Milestones not initialized')
-    }
-    const index = goalStore.milestones[input.goalId][input.view].findIndex(m => m.id === input.id)
-    if (index >= 0) {
-      goalStore.milestones[input.goalId][input.view].splice(index, 1)
-    }
+    await goalStore.runInMutex(async () => {
+      if (!goalStore.milestones || !goalStore.milestones[input.goalId] || !goalStore.milestones[input.goalId][input.view]) {
+        throw new Error('Milestones not initialized')
+      }
+      console.log(`Deleting milestone ${input.id} from goal ${input.goalId} view ${input.view}`)
+      // Optimistically remove the milestone from the store
+      const milestones = goalStore.milestones[input.goalId][input.view]
+      const index = milestones.findIndex((m) => m.id === input.id)
+      if (index >= 0) {
+        milestones.splice(index, 1)
+      } else {
+        throw new Error(`Milestone ${input.id} not found in goal ${input.goalId} view ${input.view}`)
+      }
+      await deleteMilestoneAction(input)
+      console.log('deleted milestone', input.id)
+    })
   },
   async deleteMilestones(milestones) {
-    await deleteMilestonesAction(milestones)
-    if (!goalStore.milestones || !goalStore.milestones[milestones[0].goalId]) {
-      throw new Error('Milestones not initialized')
-    }
-    for (const milestone of milestones) {
-      const index = goalStore.milestones[milestone.goalId][milestone.view].findIndex(m => m.id === milestone.id)
-      if (index >= 0) {
-        goalStore.milestones[milestone.goalId][milestone.view].splice(index, 1)
+    await goalStore.runInMutex(async () => {
+      if (!goalStore.milestones || !goalStore.milestones[milestones[0].goalId]) {
+        throw new Error('Milestones not initialized')
       }
-    }
+      // Optimistically remove the milestones from the store
+      for (const milestone of milestones) {
+        console.log(`Deleting milestone ${milestone.id} from goal ${milestone.goalId} view ${milestone.view}`)
+        const milestones = goalStore.milestones[milestone.goalId][milestone.view]
+        const index = milestones.findIndex((m) => m.id === milestone.id)
+        if (index >= 0) {
+          milestones.splice(index, 1)
+        } else {
+          throw new Error(`Milestone ${milestone.id} not found in goal ${milestone.goalId} view ${milestone.view}`)
+        }
+      }
+      await deleteMilestonesAction(milestones)
+      console.log(`Deleted milestones ${milestones.map((m) => m.id).join(', ')}`)
+    })
   },
   ensureMilestones(goalId: string) {
     if (!goalStore.milestones) {

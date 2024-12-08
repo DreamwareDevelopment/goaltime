@@ -30,7 +30,6 @@ export function MilestoneUpdateForm({ milestone, ...props }: MilestoneUpdateForm
   }
 
   const onSubmit: SubmitHandler<MilestoneInput> = async (data, event) => {
-    console.log('updating milestone', data)
     event?.preventDefault()
     try {
       await updateMilestone(data)
@@ -48,6 +47,7 @@ export function MilestoneUpdateForm({ milestone, ...props }: MilestoneUpdateForm
   const handleDelete = async () => {
     try {
       await deleteMilestone(milestone)
+      setIsEditing(false)
     } catch (error) {
       console.error(error)
       toast({

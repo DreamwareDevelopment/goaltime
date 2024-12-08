@@ -7,6 +7,7 @@ import { MilestoneViewEnum } from "@/shared/zod";
 import { Button } from "@/ui-components/button";
 import { Card, CardContent, CardFooter } from "@/ui-components/card";
 import { cn } from "@/ui-components/utils";
+import { useRerender } from "@/ui-components/hooks/rerender";
 
 import { useValtio } from "./data/valtio";
 import { MilestoneCreationForm } from "./MilestoneCreationForm";
@@ -27,8 +28,18 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
   const milestones = useSnapshot(goalStore.milestones![goalId][view])
   const { id: userId } = useSnapshot(userStore.user)
 
+  // This is a hack to force a rerender on the client to solve a tough bug where
+  // deleted milestones remain in the DOM on the server render, causing them to flash
+  // on the client and throw a hydration mismatch error.
+  // TODO: Figure out where the state is being kept after deletion. It's not in the proxy or the prisma query results.
+  const isHydrated = useRerender()
+  if (!isHydrated) {
+    return null
+  }
+
   const clearCompletedMilestones = () => {
-    goalStore.deleteMilestones(milestones.filter(milestone => !milestone.completed))
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    goalStore.deleteMilestones(goalStore.milestones![goalId][view].filter(milestone => !milestone.completed))
   }
 
   return (

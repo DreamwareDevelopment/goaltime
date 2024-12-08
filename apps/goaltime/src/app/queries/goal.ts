@@ -8,7 +8,13 @@ export async function getGoals(profile: UserProfile): Promise<Goal[]> {
 
 export async function getMilestones(profile: UserProfile): Promise<Milestone[]> {
   const prisma = await getPrismaClient(profile.userId)
-  const result = await prisma.milestone.findMany({ where: { userId: profile.userId } })
+  const result = await prisma.milestone.findMany({ 
+    where: { userId: profile.userId },
+    orderBy: [
+      { completed: 'desc' },
+      { updatedAt: 'asc' }
+    ]
+  })
   return result ?? []
 }
 
