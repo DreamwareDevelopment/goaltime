@@ -1,21 +1,26 @@
 import { PrismaClient } from '@/libs/shared/type_gen/.prisma/client'
 
-let _instance: ExtendedPrismaClient | undefined
-let _nonRlsInstance: PrismaClient | undefined
+declare global {
+  // eslint-disable-next-line no-var
+  var _instance: ExtendedPrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var _nonRlsInstance: PrismaClient | undefined;
+}
+
 export async function getPrismaClient(userId?: string): Promise<ExtendedPrismaClient> {
   if (!userId) {
     console.warn('No user ID provided, using non-RLS client')
-    if (!_nonRlsInstance) {
-      _nonRlsInstance = newPrismaClient()
-      await _nonRlsInstance.$connect()
+    if (!globalThis._nonRlsInstance) {
+      globalThis._nonRlsInstance = newPrismaClient()
+      await globalThis._nonRlsInstance.$connect()
     }
-    return _nonRlsInstance as ExtendedPrismaClient
+    return globalThis._nonRlsInstance as ExtendedPrismaClient
   }
-  if (!_instance) {
-    _instance = extendClient(newPrismaClient(userId), userId)
-    await _instance.$connect()
+  if (!globalThis._instance) {
+    globalThis._instance = extendClient(newPrismaClient(userId), userId)
+    await globalThis._instance.$connect()
   }
-  return _instance as ExtendedPrismaClient
+  return globalThis._instance as ExtendedPrismaClient
 }
 
 export type ExtendedPrismaClient = Awaited<ReturnType<typeof extendClient>>
@@ -52,14 +57,14 @@ function extendClient(client: PrismaClient, userId: string) {
   return extendedClient
 }
 
- export function cleanup() {
+export function cleanup() {
   console.log('Prisma cleanup')
-  if (_instance) {
-    _instance.$disconnect()
-    _instance = undefined
+  if (globalThis._instance) {
+    globalThis._instance.$disconnect()
+    globalThis._instance = undefined
   }
-  if (_nonRlsInstance) {
-    _nonRlsInstance.$disconnect()
-    _nonRlsInstance = undefined
+  if (globalThis._nonRlsInstance) {
+    globalThis._nonRlsInstance.$disconnect()
+    globalThis._nonRlsInstance = undefined
   }
 }
