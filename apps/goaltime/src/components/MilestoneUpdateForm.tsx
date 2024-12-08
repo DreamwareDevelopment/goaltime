@@ -10,16 +10,18 @@ import { useValtio } from "./data/valtio"
 import { useState } from "react"
 import { Input } from "@/libs/ui-components/src/components/ui/input"
 import { useToast } from "@/libs/ui-components/src/hooks/use-toast"
+import { useSnapshot } from "valtio"
 
 
 export interface MilestoneUpdateFormProps extends React.HTMLAttributes<HTMLLIElement> {
-  milestone: MilestoneInput
+  milestoneProxy: MilestoneInput
 }
 
-export function MilestoneUpdateForm({ milestone, ...props }: MilestoneUpdateFormProps) {
+export function MilestoneUpdateForm({ milestoneProxy, ...props }: MilestoneUpdateFormProps) {
   const { goalStore } = useValtio()
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const milestone = useSnapshot(milestoneProxy)
   const { deleteMilestone, updateMilestone } = goalStore
   const form = useForm<MilestoneInput>({
     defaultValues: milestone

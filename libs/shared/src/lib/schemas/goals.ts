@@ -11,7 +11,7 @@ export const MilestoneSchema = z.object({
   id: z.string().uuid().optional(),
   goalId: z.string().uuid(),
   userId: z.string().uuid(),
-  text: z.string(),
+  text: z.string().min(1, { message: "Text is required" }),
   completed: z.boolean().default(false),
   view: MilestoneViewEnum,
   updatedAt: z.date().default(new Date()),

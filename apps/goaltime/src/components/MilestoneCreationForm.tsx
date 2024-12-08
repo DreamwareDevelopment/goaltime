@@ -9,7 +9,7 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { MilestoneInput, MilestoneViewEnum } from "@/shared/zod";
 import { useValtio } from "./data/valtio";
 import { useToast } from "@/ui-components/hooks/use-toast";
-import { Form, FormField } from "@/ui-components/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 
 export interface MilestoneCreationFormProps {
   goalId: string
@@ -28,9 +28,13 @@ export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreatio
       view,
     },
   })
-  const { handleSubmit } = form
+  const { handleSubmit, setError } = form
 
   const onSubmit = async (data: MilestoneInput) => {
+    if (!data.text) {
+      setError('text', { message: 'Text is required' })
+      return
+    }
     try {
       await goalStore.createMilestone(data)
     } catch (error) {
@@ -48,26 +52,30 @@ export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreatio
   return (
     <li>
       <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex items-center space-x-4 pt-4 pr-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-wrap items-start gap-4 pt-4 pr-3">
           <FormField
             control={form.control}
             name="text"
             render={({ field }) => (
-              <FloatingLabelInput
-                id={`new-milestone-${goalId}`}
-                className="flex-grow"
-                type="text"
-                label="I will..."
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSubmit(onSubmit)(e)}
-                {...field}
-              />
+              <FormItem className="flex-grow">
+                <FormControl>
+                  <FloatingLabelInput
+                    id={`new-milestone-${goalId}`}
+                    type="text"
+                    label="I will..."
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSubmit(onSubmit)(e)}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
           <ShinyButton
             variant="expandIcon"
             Icon={PlusIcon}
             iconPlacement="right"
-            className="h-[51px]"
+            className="h-[51px] flex-grow sm:flex-none"
             type="submit"
           >Add</ShinyButton>
         </form>

@@ -36,8 +36,9 @@ export default function MilestonesCard({ goalId, view, className }: MilestonesCa
     <Card className={cn(className, "border-none")}>
       <CardContent>
         <ul className="space-y-4 pt-4 px-1">
-          {milestones.map((milestone) => (
-            <MilestoneUpdateForm key={`${goalId}-${milestone.id}-${view}`} milestone={milestone} />
+          {milestones.map((milestone, index) => (
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            <MilestoneUpdateForm key={`${goalId}-${milestone.id}-${view}-${index}`} milestoneProxy={goalStore.milestones![goalId][view][index]} />
           ))}
           <MilestoneCreationForm key={`${goalId}-${view}-creation`} goalId={goalId} userId={userId} view={view} />
         </ul>
