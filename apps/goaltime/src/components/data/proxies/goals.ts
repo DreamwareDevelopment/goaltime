@@ -77,10 +77,11 @@ export const goalStore = proxy<{
   },
   async updateMilestone(input) {
     const updatedMilestone = await updateMilestoneAction(input)
+    console.log('updated milestone', updatedMilestone)
     if (!goalStore.milestones || !goalStore.milestones[input.goalId] || !goalStore.milestones[input.goalId][input.view]) {
       throw new Error('Milestones not initialized')
     }
-    const index = goalStore.milestones[input.goalId][input.view].findIndex(m => m.id === input.id)
+    const index = goalStore.milestones[input.goalId][input.view].findIndex(m => m.id === updatedMilestone.id)
     if (index >= 0) {
       goalStore.milestones[input.goalId][input.view][index] = updatedMilestone
     }
@@ -133,7 +134,12 @@ export const goalStore = proxy<{
       if (!goalStore.milestones[milestone.goalId][milestone.view]) {
         goalStore.milestones[milestone.goalId][milestone.view] = []
       }
-      goalStore.milestones[milestone.goalId][milestone.view].push(milestone)
+      const existingIndex = goalStore.milestones[milestone.goalId][milestone.view].findIndex(m => m.id === milestone.id)
+      if (existingIndex >= 0) {
+        goalStore.milestones[milestone.goalId][milestone.view][existingIndex] = milestone
+      } else {
+        goalStore.milestones[milestone.goalId][milestone.view].push(milestone)
+      }
     }
     for (const notification of notifications) {
       if (!goalStore.notifications) {

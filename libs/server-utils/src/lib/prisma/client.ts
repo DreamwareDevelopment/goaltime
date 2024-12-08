@@ -52,7 +52,7 @@ function extendClient(client: PrismaClient, userId: string) {
   return extendedClient
 }
 
-function cleanup() {
+ export function cleanup() {
   console.log('Prisma cleanup')
   if (_instance) {
     _instance.$disconnect()
@@ -63,8 +63,3 @@ function cleanup() {
     _nonRlsInstance = undefined
   }
 }
-
-process.on('beforeExit', cleanup)
-process.on('SIGINT', cleanup)
-process.on('SIGTERM', cleanup)
-process.on('SIGUSR2', cleanup)

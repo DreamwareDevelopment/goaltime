@@ -49,7 +49,7 @@ export function GoalSettingsCard({
   const { isSubmitting, isValidating } = formState
 
   if (Object.keys(formState.errors).length > 0) {
-    console.log(formState.errors)
+    console.log(`GoalSettingsCard form errors`, formState.errors)
   }
   
   const onSubmit: SubmitHandler<GoalInput> = async (data, event) => {

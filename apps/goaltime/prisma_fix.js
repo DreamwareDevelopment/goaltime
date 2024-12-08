@@ -8,7 +8,6 @@ const prismaDirRegex =
 
 async function getPrismaDir(from) {
   // First check in libs/shared/.type_gen
-  console.log(process.cwd())
   const sharedTypesPath = path.resolve(process.cwd(), 'libs/shared/type_gen/.prisma/client');
   if (await fs.stat(path.join(sharedTypesPath, 'schema.prisma')).catch(() => false)) {
     return sharedTypesPath;

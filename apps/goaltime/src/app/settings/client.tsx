@@ -41,7 +41,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
   const { isSubmitting, isValidating, isDirty } = formState
 
   if (Object.keys(formState.errors).length > 0) {
-    console.log('errors', formState.errors)
+    console.log('SettingsClient form errors', formState.errors)
   }
 
   // Unfortunately, it seems react-hook-form seems to be copying the proxy object, 

@@ -35,7 +35,7 @@ export const userStore = proxy<{
       console.error('error uploading profile image', error)
       throw error
     }
-    console.log('uploaded profile image')
+    console.log('Finished uploading profile image')
     return data.path
   }
 })

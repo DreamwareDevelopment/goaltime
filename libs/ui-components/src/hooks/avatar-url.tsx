@@ -12,7 +12,6 @@ export function useAvatarUrl(avatarUrl: string, supabase?: SupabaseClient): [str
     const fetchAvatar = async () => {
       if (avatarUrl) {
         try {
-          console.log('avatarUrl', avatarUrl)
           if (avatarUrl.startsWith('http') || avatarUrl.startsWith('blob')) {
             setAvatarSrc(avatarUrl)
           } else {

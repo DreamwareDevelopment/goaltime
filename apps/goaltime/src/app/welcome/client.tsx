@@ -59,7 +59,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   }, [setValue])
 
   if (Object.keys(formState.errors).length > 0) {
-    console.log('errors', formState.errors)
+    console.log('WelcomeFlowClient form errors', formState.errors)
   }
 
   const onSubmit: SubmitHandler<UserProfileInput> = async (profile, event) => {
@@ -79,10 +79,10 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     }
     try {
       await userStore.createUserProfile(profile)
-      console.log('done creating user profile')
+      console.log('Finished creating user profile')
       router.push('/dashboard')
     } catch (error) {
-      console.error('error creating user profile', error)
+      console.error('Error creating user profile', error)
       // TODO: Get better type checking on these error page params
       router.push(`/error?error=${error}&next=${encodeURIComponent('/login')}&solution=Please try again.`)
     }
