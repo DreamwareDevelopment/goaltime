@@ -1,20 +1,22 @@
 "use client"
 
-import z from "zod";
-import { cn } from "@/ui-components/utils"
-import { PlateEditor } from "@/plate-ui/plate-editor";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
-import { Separator } from "@/ui-components/separator";
-import { ScrollArea } from "@/ui-components/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
-import { GoalInput, MilestoneViewEnum, PreferredTimesEnum } from "@/shared/zod";
-
-import { MilestonesCard } from "./MilestonesCard";
-import { GoalSettingsCard } from "./GoalSettingsCard";
-import { useToast } from "@/ui-components/hooks/use-toast";
-import { useValtio } from "./data/valtio";
-import { Goal, NotificationSettings } from "@/shared/models";
+import dynamic from 'next/dynamic'
 import { useSnapshot } from "valtio";
+import z from "zod";
+
+import { PlateEditor } from "@/plate-ui/plate-editor";
+import { Goal, NotificationSettings } from "@/shared/models";
+import { GoalInput, MilestoneViewEnum, PreferredTimesEnum } from "@/shared/zod";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
+import { useToast } from "@/ui-components/hooks/use-toast";
+import { ScrollArea } from "@/ui-components/scroll-area";
+import { Separator } from "@/ui-components/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
+import { cn } from "@/ui-components/utils"
+
+const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.default), { ssr: false })
+import { GoalSettingsCard } from "./GoalSettingsCard";
+import { useValtio } from "./data/valtio";
 
 function getMutableGoal(goal: Goal, notifications: NotificationSettings): GoalInput {
   return {
