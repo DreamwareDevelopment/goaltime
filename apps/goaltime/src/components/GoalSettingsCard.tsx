@@ -1,5 +1,5 @@
 import { SubmitHandler, useForm } from 'react-hook-form'
-import React from 'react'
+import React, { useRef } from 'react'
 
 import { cn } from "@/ui-components/utils"
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
@@ -36,6 +36,8 @@ export function GoalSettingsCard({
   recommendation = null,
   setRecommendation,
 }: GoalSettingsCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const { goalStore: { deleteGoal } } = useValtio()
 
   // TODO: Calculate a globally unused color
@@ -62,6 +64,7 @@ export function GoalSettingsCard({
         }
       }
       setRecommendation?.(null)
+      cardRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [recommendation, form, setRecommendation])
 
@@ -93,7 +96,7 @@ export function GoalSettingsCard({
 
   return (
     <div onClick={close}>
-      <Card className={cn("border-none", className)} onClick={stopPropagation} onTouchMove={stopPropagation}>
+      <Card ref={cardRef} className={cn("border-none", className)} onClick={stopPropagation} onTouchMove={stopPropagation}>
         { showTitle && <CardHeader className="pb-5">
           <CardTitle className="text-2xl font-bold">Set Your Goal</CardTitle>
         </CardHeader> }
