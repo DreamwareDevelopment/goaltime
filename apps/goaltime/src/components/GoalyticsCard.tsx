@@ -58,7 +58,7 @@ export function GoalyticsCard({ className }: React.HTMLAttributes<HTMLDivElement
   return (
     <Card className={cn(className, "p-4")}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-        <CardTitle>Goal Progress</CardTitle>
+        <CardTitle>Goalytics</CardTitle>
         <Select value={timeRange} onValueChange={(value) => setTimeRange(value as keyof typeof chartData)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time range" />

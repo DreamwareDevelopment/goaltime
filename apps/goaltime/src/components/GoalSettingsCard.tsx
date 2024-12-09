@@ -15,6 +15,8 @@ import { CommitmentInput, DescriptionInput, TitleInput } from './Settings/Inputs
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
+import { getDistinctColor } from '@/libs/shared/src'
+import { useSnapshot } from 'valtio'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -37,11 +39,14 @@ export function GoalSettingsCard({
   setRecommendation,
 }: GoalSettingsCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-
-  const { goalStore: { deleteGoal } } = useValtio()
-
+  
+  const { goalStore } = useValtio()
+  const { deleteGoal } = goalStore
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const goals = useSnapshot(goalStore.goals!)
   // TODO: Calculate a globally unused color
-  const color = goal?.color ?? 'red';
+  const memoizedGetDistinctColor = React.useCallback(() => getDistinctColor((goals).map(g => g.color)), [goals]);
+  const color = goal?.color ?? memoizedGetDistinctColor() ?? '#007F30';
   const form = useForm<GoalInput>({
     resolver: getZodResolver(GoalSchema),
     defaultValues: {
