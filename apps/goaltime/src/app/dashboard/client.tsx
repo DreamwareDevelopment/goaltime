@@ -13,6 +13,7 @@ import { UserAvatar } from "../../components/UserAvatar";
 import { useValtio } from "../../components/data/valtio";
 import { Goal, NotificationSettings, Milestone, UserProfile } from "@/shared/models";
 import { SanitizedUser } from "../queries/user";
+import { WelcomeCard } from "../../components/WelcomeCard";
 
 export interface DashboardClientProps {
   goals: Goal[]
@@ -27,6 +28,9 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
   const { userStore, goalStore } = useValtio();
   userStore.init(user, profile);
   goalStore.init(goals, milestones, notifications);
+
+  const hasGoals = goals.length > 0;
+
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
@@ -34,22 +38,30 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
           <Clock className="h-6 w-6 mr-2" />
           <span className="font-bold">GoalTime</span>
         </Link>
-        <GoalCreationButton />
+        {hasGoals && <GoalCreationButton />}
         <UserAvatar />
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GoalProgressCard />
-        <ScheduleCard schedule={schedule} />
-        <GoalCarousel className="lg:col-span-2 overflow-hidden" />
-      </div>
+      {hasGoals ? (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <GoalProgressCard />
+            <ScheduleCard schedule={schedule} />
+            <GoalCarousel className="lg:col-span-2 overflow-hidden" />
+          </div>
 
-      <div className="grid grid-cols-1 gap-6 mt-6">
-        <GoalyticsCard />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <ActionsCard className="col-span-1" />
-      </div>
+          <div className="grid grid-cols-1 gap-6 mt-6">
+            <GoalyticsCard />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <ActionsCard className="col-span-1" />
+          </div>
+        </>
+      ) : (
+        <div className="mt-12">
+          <WelcomeCard />
+        </div>
+      )}
     </div>
   )
 }
