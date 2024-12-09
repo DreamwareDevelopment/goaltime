@@ -62,6 +62,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
                 </TabsList>
               </div>
               <TabsContent value="daily">
+                <span className="w-full pl-7 text-sm text-muted-foreground">*These milestones will reset to incomplete each day.</span>
                 <MilestonesCard goalId={goal.id} view={MilestoneViewEnum.Enum.daily} />
               </TabsContent>
               <TabsContent value="lifetime">
