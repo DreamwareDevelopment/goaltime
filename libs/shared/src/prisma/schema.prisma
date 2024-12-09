@@ -392,6 +392,7 @@ model UserProfile {
   preferredWakeUpTime DateTime? @default(dbgenerated("'07:00'::time")) @db.Time @map("preferred_wake_up_time")
   preferredSleepTime  DateTime? @default(dbgenerated("'23:00'::time")) @db.Time @map("preferred_sleep_time")
   timezone            String    @default("America/Los_Angeles") @db.VarChar(255)
+  hasOnboarded        Boolean   @default(false) @map("has_onboarded")
   goals               Goal[]
   notifications       NotificationSettings[]
   milestones          Milestone[]

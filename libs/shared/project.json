@@ -19,7 +19,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name notifications_schema_changes",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name user_has_onboarded",
         "cwd": "libs/shared"
       }
     },

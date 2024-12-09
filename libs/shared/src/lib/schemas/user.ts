@@ -24,6 +24,7 @@ export const UserProfileSchema = z.object({
   occupation: z.string().max(100, {
     message: 'Could you please be more concise?',
   }).nullable().optional().default(null),
+  hasOnboarded: z.boolean().default(false),
   worksRemotely: z.boolean().default(false),
   daysInOffice: z.array(daysOfTheWeek).default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
   leavesHomeAt: z.date({
