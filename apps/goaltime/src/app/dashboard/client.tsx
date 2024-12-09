@@ -51,8 +51,10 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
             <ScheduleCard schedule={schedule} />
             <GoalCarousel className="lg:col-span-2 overflow-hidden" />
           </div>
-
-          <div className="grid grid-cols-1 gap-6 mt-6">
+          <div className="flex justify-center py-10">
+            <GoalCreationButton className="md:min-w-[333px]" />
+          </div>
+          <div className="grid grid-cols-1 gap-6">
             <GoalyticsCard />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">

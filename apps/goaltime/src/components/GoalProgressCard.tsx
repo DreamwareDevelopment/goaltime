@@ -34,7 +34,7 @@ export function GoalProgressCard({ className }: React.HTMLAttributes<HTMLDivElem
         ))}
       </CardContent>
       <CardFooter className="flex justify-center">
-        <GoalCreationButton className="w-[67%]" />
+        <GoalCreationButton className="md:min-w-[333px]" />
       </CardFooter>
     </Card>
   )

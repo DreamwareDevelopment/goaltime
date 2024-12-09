@@ -75,7 +75,9 @@ export function GoalCard({ goal, className }: GoalCardProps) {
           <Separator />
         </div>
         <AccordionItem value="notes" className="border-none">
-          <AccordionTrigger className="text-xl font-bold px-8">Today&apos;s Notes</AccordionTrigger>
+          <AccordionTrigger className="text-xl font-bold px-8">
+            <span>Today&apos;s Notes</span>
+          </AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="h-full w-full" data-registry="plate">
               <PlateEditor key={goal.id} />
