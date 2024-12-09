@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { ThemeProviderProps } from "next-themes/dist/types";
+import { ThemeProviderProps } from "next-themes";
 import { Provider as JotaiProvider } from "jotai";
 
 export interface ProvidersProps {
