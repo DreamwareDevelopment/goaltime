@@ -6,7 +6,11 @@ import { Menu, X, Clock, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Separator } from '@/ui-components/separator'
 
-export function MobileMenu() {
+export interface MobileMenuProps {
+  isLoggedIn: boolean
+}
+
+export function MobileMenu({ isLoggedIn }: MobileMenuProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
 
@@ -65,7 +69,7 @@ export function MobileMenu() {
               <Separator/>
               <ShinyButton className="mt-[32px]" variant="expandIcon" Icon={ArrowRight} iconPlacement="right" onClick={() => {
                 setMobileMenuOpen(false)
-                router.push('/login?type=signup')
+                router.push(isLoggedIn ? '/dashboard' : '/login?type=signup')
               }}>
                 Set Goals
               </ShinyButton>

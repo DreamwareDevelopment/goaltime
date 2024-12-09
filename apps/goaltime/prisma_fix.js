@@ -1,3 +1,6 @@
+// https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-monorepo
+// https://github.com/prisma/prisma/discussions/19499
+// https://github.com/prisma/prisma/blob/main/packages/nextjs-monorepo-workaround-plugin/index.js
 const path = require('path')
 const fs = require('fs/promises')
 

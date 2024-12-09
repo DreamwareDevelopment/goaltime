@@ -1,5 +1,8 @@
 'use client'
 
+import { Clock } from "lucide-react";
+import Link from "next/link";
+
 import { ActionsCard } from "../../components/ActionsCard";
 import { GoalCarousel } from "../../components/GoalCarousel";
 import { GoalyticsCard } from "../../components/GoalyticsCard";
@@ -27,14 +30,17 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Goal Time</h1>
+        <Link className="hidden md:flex items-center justify-center" href="/">
+          <Clock className="h-6 w-6 mr-2" />
+          <span className="font-bold">GoalTime</span>
+        </Link>
         <GoalCreationButton />
         <UserAvatar />
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ScheduleCard schedule={schedule} />
         <GoalProgressCard />
+        <ScheduleCard schedule={schedule} />
         <GoalCarousel className="lg:col-span-2 overflow-hidden" />
       </div>
 

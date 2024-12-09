@@ -16,10 +16,10 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-4 lg:px-6 h-14 flex items-center">
-        <a className="flex items-center justify-center" href="#">
+        <Link className="flex items-center justify-center" href="/">
           <Clock className="h-6 w-6 mr-2" />
           <span className="font-bold">GoalTime</span>
-        </a>
+        </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <ShinyButton variant="linkHover2" className="hidden md:flex bg-background hover:bg-background/80 text-background-foreground" asChild>
             <a href="#features">Features</a>
@@ -30,10 +30,10 @@ export default async function LandingPage() {
           <ShinyButton variant="linkHover2" className="hidden md:flex bg-background hover:bg-background/80 text-background-foreground" asChild>
             <a href="#pricing">Pricing</a>
           </ShinyButton>
-          <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="min-w-[178px]">
+          <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="hidden md:flex min-w-[178px]">
             <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
           </ShinyButton>
-          <MobileMenu/>
+          <MobileMenu isLoggedIn={isLoggedIn} />
         </nav>
       </header>
       <main className="flex-1">
