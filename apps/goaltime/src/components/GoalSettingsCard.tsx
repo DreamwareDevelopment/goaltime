@@ -1,5 +1,5 @@
 import { SubmitHandler, useForm } from 'react-hook-form'
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 
 import { cn } from "@/ui-components/utils"
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
@@ -17,6 +17,16 @@ import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
 import { getDistinctColor } from '@/libs/shared/src'
 import { useSnapshot } from 'valtio'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogPortal,
+} from "@/ui-components/dialog"
+import { Button } from "@/ui-components/button"
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -86,21 +96,53 @@ export function GoalSettingsCard({
     close?.()
   }
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
   const handleDelete = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault()
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDelete = async () => {
     if (!goal || !goal.userId) {
       throw new Error('Invariant: goal or userId not defined in handleDelete')
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await deleteGoal(goal.id!, goal.userId)
+    setShowDeleteDialog(false)
+    close?.()
   }
 
   const stopPropagation = (event: React.MouseEvent | React.TouchEvent) => {
     event.stopPropagation();
   };
 
+  const deleteDialog = (
+    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <DialogPortal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Goal</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this goal? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
+  )
+
   return (
     <div onClick={close}>
+      {deleteDialog}
       <Card ref={cardRef} className={cn("border-none", className)} onClick={stopPropagation} onTouchMove={stopPropagation}>
         { showTitle && <CardHeader className="pb-5">
           <CardTitle className="text-2xl font-bold">Set Your Goal</CardTitle>
