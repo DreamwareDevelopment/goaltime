@@ -14,6 +14,7 @@ import { useValtio } from "../../components/data/valtio";
 import { Goal, NotificationSettings, Milestone, UserProfile } from "@/shared/models";
 import { SanitizedUser } from "../queries/user";
 import { WelcomeCard } from "../../components/WelcomeCard";
+import { useSnapshot } from "valtio";
 
 export interface DashboardClientProps {
   goals: Goal[]
@@ -29,8 +30,9 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
   userStore.init(user, profile);
   goalStore.init(goals, milestones, notifications);
 
-  const hasGoals = goals.length > 0;
-
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const localGoals = useSnapshot(goalStore.goals!)
+  const hasGoals = localGoals.length > 0;
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
