@@ -30,7 +30,7 @@ export default async function LandingPage() {
           <ShinyButton variant="linkHover2" className="hidden md:flex bg-background hover:bg-background/80 text-background-foreground" asChild>
             <a href="#pricing">Pricing</a>
           </ShinyButton>
-          <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="hidden md:flex min-w-[178px]">
+          <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="hidden md:flex md:min-w-[178px]">
             <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
           </ShinyButton>
           <MobileMenu isLoggedIn={isLoggedIn} />
@@ -39,8 +39,8 @@ export default async function LandingPage() {
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center gap-6 text-center">
-              <div className="flex flex-col gap-4">
+            <div className="flex flex-col justify-center items-center gap-6 text-center">
+              <div className="flex flex-col justify-center gap-4">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
                   Achieve Your Goals with GoalTime
                 </h1>
@@ -48,7 +48,7 @@ export default async function LandingPage() {
                   Manage your time effectively, set meaningful goals, and track your progress with our intuitive AI-powered platform.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-10">
+              <div className="flex flex-wrap items-center justify-center gap-6">
                 <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild>
                   <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Start Free Trial</Link>
                 </ShinyButton>
