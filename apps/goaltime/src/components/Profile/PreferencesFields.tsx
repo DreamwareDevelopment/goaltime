@@ -57,12 +57,12 @@ export function PreferencesFields({ form }: PreferencesFieldsProps) {
         </FormItem>
       )}
     />
-    <div className="flex flex-wrap gap-8">
+    <div className="flex flex-wrap gap-4">
       <FormField
         control={form.control}
         name="preferredWakeUpTime"
         render={({ field }) => (
-          <FormItem className="mb-4">
+          <FormItem>
             <FormLabel className="pl-2">
               Normal Wake Up Time
             </FormLabel>

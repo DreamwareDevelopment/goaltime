@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { User, X } from "lucide-react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/ui-components/form";
 import { getDefaultValue, UserProfileInput, UserProfileSchema } from "@/shared/zod";
 import { FileUploader, FileInput } from "@/ui-components/file-input";
@@ -7,7 +7,7 @@ import { UseFormReturn } from "react-hook-form";
 import { DropzoneOptions, FileError, ErrorCode } from "react-dropzone";
 import { useToast } from "@/ui-components/hooks/use-toast";
 import { useAvatarUrl } from "@/ui-components/hooks/avatar-url";
-
+import { Button as ShinyButton } from "@/ui-components/button-shiny";
 const FileSvgDraw = () => {
   return (
     <div className="flex flex-col items-center text-center justify-center p-2">
@@ -43,7 +43,7 @@ export interface AvatarUrlFieldProps {
 
 export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
   const { toast } = useToast();
-  const { setError, setValue } = form
+  const { setError, setValue, clearErrors } = form
   const dropzoneOptions = {
     accept: {
       "image/*": [".jpg", ".jpeg", ".png"],
@@ -83,6 +83,14 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
   } satisfies DropzoneOptions;
 
   const [avatarUrl, setAvatarUrl] = useAvatarUrl(form.watch("avatarUrl"))
+  
+  const handleReset = () => {
+    const defaultAvatarUrl = getDefaultValue(UserProfileSchema.shape.avatarUrl);
+    setAvatarUrl(defaultAvatarUrl);
+    setValue("avatarUrl", defaultAvatarUrl);
+    clearErrors("avatarUrl");
+    setImage(null);
+  };
   return (
     <FormField
       control={form.control}
@@ -97,12 +105,17 @@ export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
           </FormLabel>
           <FormControl>
             <div className="flex flex-col justify-center items-center gap-4">
-              <Avatar>
-                <AvatarImage src={avatarUrl ?? ''} />
-                <AvatarFallback>
-                  <User />
-                </AvatarFallback>
-              </Avatar>
+              <div className="flex items-center justify-center">
+                <ShinyButton variant="linkHover2" type="button" onClick={handleReset}>
+                  <X className="w-4 h-4" />
+                </ShinyButton>
+                <Avatar>
+                  <AvatarImage src={avatarUrl ?? ''} />
+                  <AvatarFallback>
+                    <User />
+                  </AvatarFallback>
+                </Avatar>
+              </div>
               <FileUploader
                 id="avatar-upload"
                 value={null}

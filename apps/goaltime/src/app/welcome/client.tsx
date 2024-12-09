@@ -112,7 +112,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   const currentStepFields = steps[currentStep].fields
 
   return (
-    <Card className="w-full my-auto max-w-lg mx-auto overflow-hidden">
+    <Card className="w-full max-w-lg mx-auto overflow-hidden">
       <CardHeader>
         <CardTitle className="flex justify-center gap-2 w-full">Welcome! Let&apos;s set up your profile</CardTitle>
       </CardHeader>
