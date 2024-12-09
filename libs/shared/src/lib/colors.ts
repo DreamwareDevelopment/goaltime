@@ -86,14 +86,24 @@ export function getDistinctColor(colors: string[], minDifference = 30) {
   const maxAttempts = 50;
 
   while (attempts < maxAttempts) {
-    // Add randomness to ensure contrast
-    const hueVariation = (Math.random() - 0.5) * 180; // Larger variation for contrast
+    // Add randomness to ensure contrast, avoiding green (90-150) and blue (190-270)
+    let hueVariation;
+    do {
+      hueVariation = (Math.random() - 0.5) * 180; // Larger variation for contrast
+    } while ((avgHue + hueVariation >= 90 && avgHue + hueVariation <= 150) ||
+             (avgHue + hueVariation >= 190 && avgHue + hueVariation <= 270));
+
     const saturationVariation = (Math.random() - 0.5) * 50; // Larger variation for contrast
     const lightnessVariation = (Math.random() - 0.5) * 50; // Larger variation for contrast
 
-    const newHue = (avgHue + hueVariation + 360) % 360;
+    let newHue = (avgHue + hueVariation + 360) % 360;
     const newSaturation = Math.min(100, Math.max(0, avgSaturation + saturationVariation));
     const newLightness = Math.min(100, Math.max(0, avgLightness + lightnessVariation));
+
+    // Manual adjustment if the hue still falls within the undesired range
+    if ((newHue >= 90 && newHue <= 150) || (newHue >= 190 && newHue <= 270)) {
+      newHue = (newHue + 180) % 360; // Shift hue by 180 degrees to move away from undesired range
+    }
 
     const newColor = [newHue, newSaturation, newLightness];
 
