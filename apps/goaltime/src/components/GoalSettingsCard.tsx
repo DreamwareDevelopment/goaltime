@@ -14,11 +14,14 @@ import { PrioritySelector } from './Settings/PrioritySelector'
 import { CommitmentInput, DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { useValtio } from './data/valtio'
+import { GoalRecommendation } from './GoalRecommendationsCard'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
   showTitle?: boolean;
   userId: string;
+  recommendation?: GoalRecommendation | null;
+  setRecommendation?: (recommendation: GoalRecommendation | null) => void;
   handleSubmit: (goal: GoalInput) => Promise<void>;
   close?: () => void;
 }
@@ -29,7 +32,9 @@ export function GoalSettingsCard({
   className,
   userId,
   handleSubmit,
-  close
+  close,
+  recommendation = null,
+  setRecommendation,
 }: GoalSettingsCardProps) {
   const { goalStore: { deleteGoal } } = useValtio()
 
@@ -45,6 +50,21 @@ export function GoalSettingsCard({
         getDefaults(NotificationSettingsSchema, { userId, goalId: goal?.id }),
     }
   })
+
+  // Move recommendation handling to useEffect
+  React.useEffect(() => {
+    if (recommendation) {
+      const fields = form.control._fields
+      for (const key in recommendation) {
+        if (key in fields) {
+          console.log(`Setting ${key} to ${recommendation[key as keyof GoalRecommendation]}`)
+          form.setValue(key as keyof GoalInput, recommendation[key as keyof GoalRecommendation])
+        }
+      }
+      setRecommendation?.(null)
+    }
+  }, [recommendation, form, setRecommendation])
+
   const { formState } = form
   const { isSubmitting, isValidating } = formState
 

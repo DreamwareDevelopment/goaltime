@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Button } from '@/ui-components/button'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Badge } from '@/ui-components/badge'
-import { Lightbulb, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Priority } from './Settings/PrioritySelector'
 
 export interface GoalRecommendation {
@@ -21,7 +21,12 @@ const recommendations: GoalRecommendation[] = [
   { title: "Work on Side Project", description: "Career", commitment: 4, priority: 'High' },
 ]
 
-export function GoalRecommendationsCard({ className }: React.HTMLAttributes<HTMLDivElement>) {
+export interface GoalRecommendationsCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  setRecommendation: (recommendation: GoalRecommendation) => void;
+}
+
+// TODO: Generate recommendations lazily
+export function GoalRecommendationsCard({ className, setRecommendation }: GoalRecommendationsCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   const toggleExpanded = () => setExpanded(!expanded)
@@ -31,9 +36,8 @@ export function GoalRecommendationsCard({ className }: React.HTMLAttributes<HTML
   return (
     <Card className="mt-0">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold flex items-center">
-          <Lightbulb className="mr-2 h-5 w-5" />
-          Goal Recommendations
+        <CardTitle className="text-xl md:text-2xl font-bold flex items-center">
+          Recommendations
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -51,7 +55,7 @@ export function GoalRecommendationsCard({ className }: React.HTMLAttributes<HTML
                   <Badge variant={goal.priority === 'High' ? 'destructive' : goal.priority === 'Medium' ? 'default' : 'secondary'}>
                     {goal.priority}
                   </Badge>
-                  <Button size="sm" variant="outline" onClick={() => {}}>
+                  <Button size="sm" variant="outline" onClick={() => setRecommendation(goal)}>
                     <Plus className="h-4 w-4" />
                     <span className="sr-only">Add goal</span>
                   </Button>

@@ -5,7 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { ResponsiveModal, ResponsiveModalContent, ResponsiveModalDescription, ResponsiveModalTitle, ResponsiveModalTrigger } from "@/ui-components/modal";
 
-import { GoalRecommendationsCard } from "./GoalRecommendationsCard";
+import { GoalRecommendation, GoalRecommendationsCard } from "./GoalRecommendationsCard";
 import { GoalSettingsCard } from "./GoalSettingsCard";
 import { GoalInput } from "@/libs/shared/src/lib/schemas/goals";
 import { useToast } from "@/ui-components/hooks/use-toast";
@@ -17,6 +17,7 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const { goalStore, userStore } = useValtio();
+  const [recommendation, setRecommendation] = useState<GoalRecommendation | null>(null);
   if (!userStore.profile) {
     throw new Error('Invariant: User profile not initialized before using GoalCreationButton')
   }
@@ -40,8 +41,15 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
       <ResponsiveModalContent>
         <ResponsiveModalTitle className="sr-only">Set Your Goal</ResponsiveModalTitle>
         <ResponsiveModalDescription className="sr-only">This modal allows you to set a new goal and view new goal recommendations.</ResponsiveModalDescription>
-        <GoalSettingsCard close={() => setIsOpen(false)} showTitle userId={profile.userId} handleSubmit={handleSubmit} />
-        <GoalRecommendationsCard />
+        <GoalSettingsCard
+          recommendation={recommendation}
+          setRecommendation={setRecommendation}
+          close={() => setIsOpen(false)}
+          showTitle
+          userId={profile.userId}
+          handleSubmit={handleSubmit}
+        />
+        <GoalRecommendationsCard setRecommendation={setRecommendation} />
       </ResponsiveModalContent>
     </ResponsiveModal>
   )
