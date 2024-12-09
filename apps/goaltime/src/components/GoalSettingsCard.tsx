@@ -67,39 +67,45 @@ export function GoalSettingsCard({
     await deleteGoal(goal.id!, goal.userId)
   }
 
+  const stopPropagation = (event: React.MouseEvent | React.TouchEvent) => {
+    event.stopPropagation();
+  };
+
   return (
-    <Card className={cn("border-none", className)}>
-      { showTitle && <CardHeader className="pb-5">
-        <CardTitle className="text-2xl font-bold">Set Your Goal</CardTitle>
-      </CardHeader> }
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-6">
-            <TitleInput form={form} />
-            <DescriptionInput form={form} />
-            <div className="flex flex-row flex-wrap w-full gap-5">
-              <CommitmentInput form={form} />
-              <PrioritySelector form={form} />
-              <ColorPicker form={form} />
-            </div>
-            <PreferredTimes form={form} />
-            <NotificationSettings form={form} />
-            <div className="flex flex-row gap-4">
-              <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
-                {isSubmitting || isValidating ? 
-                  <LoadingSpinner className="h-4 w-4" /> : 
-                  "Save Goal"
-                }
-              </ShinyButton>
-              { goal && (
-                <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
-                  Delete Goal
+    <div onClick={close}>
+      <Card className={cn("border-none", className)} onClick={stopPropagation} onTouchMove={stopPropagation}>
+        { showTitle && <CardHeader className="pb-5">
+          <CardTitle className="text-2xl font-bold">Set Your Goal</CardTitle>
+        </CardHeader> }
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="space-y-6">
+              <TitleInput form={form} />
+              <DescriptionInput form={form} />
+              <div className="flex flex-row flex-wrap w-full gap-5">
+                <CommitmentInput form={form} />
+                <PrioritySelector form={form} />
+                <ColorPicker form={form} />
+              </div>
+              <PreferredTimes form={form} />
+              <NotificationSettings form={form} />
+              <div className="flex flex-row gap-4">
+                <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
+                  {isSubmitting || isValidating ? 
+                    <LoadingSpinner className="h-4 w-4" /> : 
+                    "Save Goal"
+                  }
                 </ShinyButton>
-              )}
-            </div>
-          </CardContent>
-        </form>
-      </Form>
-    </Card>
+                { goal && (
+                  <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
+                    Delete Goal
+                  </ShinyButton>
+                )}
+              </div>
+            </CardContent>
+          </form>
+        </Form>
+      </Card>
+    </div>
   )
 }
