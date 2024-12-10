@@ -11,6 +11,7 @@ import { cn } from "@/ui-components/utils";
 import { useValtio } from "./data/valtio";
 import { MilestoneCreationForm } from "./MilestoneCreationForm";
 import { MilestoneUpdateForm } from "./MilestoneUpdateForm";
+import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
 
 export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goalId: string;
@@ -18,6 +19,7 @@ export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 export default function MilestonesCard({ goalId, view, className }: MilestonesCardProps) {
+  const { toast } = useToast()
   const { goalStore, userStore } = useValtio();
   if (!userStore.user) {
     throw new Error('User not initialized')
@@ -28,8 +30,15 @@ export default function MilestonesCard({ goalId, view, className }: MilestonesCa
   const { id: userId } = useSnapshot(userStore.user)
 
   const clearCompletedMilestones = () => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    goalStore.deleteMilestones(goalStore.milestones![goalId][view].filter(milestone => !milestone.completed))
+    goalStore.deleteMilestones(milestones.filter(milestone => milestone.completed))
+      .catch((error) => {
+        console.error(error)
+        toast({
+          title: 'Error',
+          description: 'Failed to clear completed milestones',
+          variant: 'destructive'
+        })
+      })
   }
 
   return (

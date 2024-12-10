@@ -77,8 +77,8 @@ export const goalStore = proxy<{
     }
   },
   async createMilestone(input) {
-    // Optimistically add the milestone to the store
     await goalStore.runInMutex(async () => {
+      console.log(`Creating milestone "${input.text}" for goal ${input.goalId} view ${input.view}`)
       const createdAt = new Date()
       if (!goalStore.milestones) {
         goalStore.milestones = {}
@@ -89,6 +89,7 @@ export const goalStore = proxy<{
       if (!goalStore.milestones[input.goalId][input.view]) {
         goalStore.milestones[input.goalId][input.view] = []
       }
+      // Optimistically add the milestone to the store
       const milestones = goalStore.milestones[input.goalId][input.view]
       milestones.push({
         ...input,
@@ -97,6 +98,7 @@ export const goalStore = proxy<{
       })
       const createdMilestone = await createMilestoneAction(input)
       milestones[milestones.length - 1] = createdMilestone
+      console.log(`Created milestone ${createdMilestone.id} for goal ${input.goalId} view ${input.view}`)
     })
   },
   async updateMilestone(input) {
@@ -131,13 +133,18 @@ export const goalStore = proxy<{
         throw new Error(`Milestone ${input.id} not found in goal ${input.goalId} view ${input.view}`)
       }
       await deleteMilestoneAction(input)
-      console.log('deleted milestone', input.id)
+      console.log('Deleted milestone', input.id)
     })
   },
   async deleteMilestones(milestones) {
     await goalStore.runInMutex(async () => {
-      if (!goalStore.milestones || !goalStore.milestones[milestones[0].goalId]) {
+      console.log(`Deleting ${milestones.length} milestones`)
+      if (!goalStore.milestones) {
         throw new Error('Milestones not initialized')
+      }
+      if (!milestones.length) {
+        console.log('No milestones to delete')
+        return
       }
       // Optimistically remove the milestones from the store
       for (const milestone of milestones) {
