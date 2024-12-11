@@ -41,6 +41,7 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
       <ResponsiveModalContent>
         <ResponsiveModalTitle className="sr-only">Set Your Goal</ResponsiveModalTitle>
         <ResponsiveModalDescription className="sr-only">This modal allows you to set a new goal and view new goal recommendations.</ResponsiveModalDescription>
+        <GoalRecommendationsCard setRecommendation={setRecommendation} />
         <GoalSettingsCard
           recommendation={recommendation}
           setRecommendation={setRecommendation}
@@ -49,7 +50,6 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
           userId={profile.userId}
           handleSubmit={handleSubmit}
         />
-        <GoalRecommendationsCard setRecommendation={setRecommendation} />
       </ResponsiveModalContent>
     </ResponsiveModal>
   )

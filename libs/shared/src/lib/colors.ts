@@ -1,4 +1,7 @@
 export function getDistinctColor(colors: string[], minDifference = 30) {
+  if (colors.length === 0) {
+    return '#007F30';
+  }
   // Convert hex to HSL
   function hexToHSL(hex: string) {
     // Remove # if present

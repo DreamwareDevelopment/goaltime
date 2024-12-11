@@ -34,7 +34,7 @@ export function GoalRecommendationsCard({ className, setRecommendation }: GoalRe
   const displayedRecommendations = expanded ? recommendations : recommendations.slice(0, 1)
 
   return (
-    <Card className="mt-0">
+    <Card className="mt-0 bg-accent">
       <CardHeader>
         <CardTitle className="text-xl md:text-2xl font-bold flex items-center">
           Recommendations

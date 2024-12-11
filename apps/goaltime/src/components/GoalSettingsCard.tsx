@@ -55,8 +55,8 @@ export function GoalSettingsCard({
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const goals = useSnapshot(goalStore.goals!)
   // TODO: Calculate a globally unused color
-  const memoizedGetDistinctColor = React.useCallback(() => getDistinctColor((goals).map(g => g.color)), [goals]);
-  const color = goal?.color ?? memoizedGetDistinctColor() ?? '#007F30';
+  const memoizedGetDistinctColor = React.useCallback(() => getDistinctColor(goals.map(g => g.color)), [goals]);
+  const color = goal?.color ?? memoizedGetDistinctColor();
   const form = useForm<GoalInput>({
     resolver: getZodResolver(GoalSchema),
     defaultValues: {
@@ -155,22 +155,24 @@ export function GoalSettingsCard({
               <div className="flex flex-row flex-wrap w-full gap-5">
                 <CommitmentInput form={form} />
                 <PrioritySelector form={form} />
-                <ColorPicker form={form} />
               </div>
               <PreferredTimes form={form} />
               <NotificationSettings form={form} />
-              <div className="flex flex-row gap-4">
-                <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
-                  {isSubmitting || isValidating ? 
-                    <LoadingSpinner className="h-4 w-4" /> : 
-                    "Save Goal"
-                  }
-                </ShinyButton>
-                { goal && (
-                  <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
-                    Delete Goal
+              <div className="flex flex-col justify-center items-center gap-4 w-full">
+                <div className="flex flex-row gap-4 w-full">
+                  <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
+                    {isSubmitting || isValidating ? 
+                      <LoadingSpinner className="h-4 w-4" /> : 
+                      "Save Goal"
+                    }
                   </ShinyButton>
-                )}
+                  { goal && (
+                    <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
+                      Delete Goal
+                    </ShinyButton>
+                  )}
+                </div>
+                <ColorPicker form={form} />
               </div>
             </CardContent>
           </form>
