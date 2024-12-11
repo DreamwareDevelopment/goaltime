@@ -7,11 +7,14 @@ import z from 'zod'
 import HCaptcha from '@hcaptcha/react-hcaptcha'
 
 import { LoginForm } from './LoginForm'
+import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
 import { SignUpForm } from './SignUpForm'
+import { loginWithGoogleAction } from '../../app/actions/auth'
+import { GoogleLogo } from '@/ui-components/svgs/logos/google'
 
 export type AuthTab = 'login' | 'signup'
 
@@ -20,6 +23,41 @@ export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
   signupAction: (formData: z.infer<typeof SignUpSchema>, captchaToken: string) => Promise<void>
   type?: AuthTab
   email?: string
+}
+
+function OAuthProviders() {
+  return (
+    <div className="flex flex-col pt-0 gap-4">
+      <div className="flex items-center justify-center gap-2 w-full">
+        <div className="border-b border-muted-foreground flex-1"></div>
+        <span className="text-sm text-muted-foreground">Or continue with</span>
+        <div className="border-b border-muted-foreground flex-1"></div>
+      </div>
+      <ShinyButton variant="ghost" className="bg-accent hover:bg-accent/70 flex items-center gap-2" onClick={loginWithGoogleAction}>
+        <GoogleLogo className="w-5 h-5" />
+        Sign in with Google
+      </ShinyButton>
+      <div className="text-center text-sm text-muted-foreground">
+        <p>
+          By clicking continue, you agree to our{' '}
+          <Link
+            href="/terms"
+            className="underline underline-offset-4 hover:text-primary"
+          >
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link
+            href="/privacy"
+            className="underline underline-offset-4 hover:text-primary"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
+      </div>
+    </div>
+  )
 }
 
 export function AuthCard({ loginAction, signupAction, type, email }: AuthCardProps) {
@@ -84,29 +122,13 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
               />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-0">
             <Suspense fallback={<LoadingSpinner />}>
               <LoginForm login={handleLogin} email={email} />
             </Suspense>
           </CardContent>
-          <CardFooter className="px-8 text-center text-sm text-muted-foreground">
-            <p>
-              By clicking continue, you agree to our{' '}
-              <Link
-                href="/terms"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link
-                href="/privacy"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p>
+          <CardFooter>
+            <OAuthProviders />
           </CardFooter>
         </Card>
       </TabsContent>
@@ -129,29 +151,13 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
               />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-0">
             <Suspense fallback={<LoadingSpinner />}>
               <SignUpForm signup={handleSignup} email={email} />
             </Suspense>
           </CardContent>
-          <CardFooter className="px-8 text-center text-sm text-muted-foreground">
-            <p>
-              By clicking continue, you agree to our{' '}
-              <Link
-                href="/terms"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link
-                href="/privacy"
-                className="underline underline-offset-4 hover:text-primary"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p>
+          <CardFooter>
+            <OAuthProviders />
           </CardFooter>
         </Card>
       </TabsContent>

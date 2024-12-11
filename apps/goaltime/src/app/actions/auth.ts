@@ -55,3 +55,33 @@ export async function resendVerificationAction(email: string) {
   const supabase = await createClient()
   await supabase.auth.resend({ email, type: 'signup' })
 }
+
+export async function loginWithGoogleAction() {
+  const host = process.env.NEXT_PUBLIC_HOST
+  if (!host) {
+    throw new Error('NEXT_PUBLIC_HOST is not set')
+  }
+  const redirectTo = `${host}/auth/callback`
+  console.log('OAuth redirect URL', redirectTo)
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo,
+      scopes: 'email profile openid https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events.readonly https://www.googleapis.com/auth/calendar.settings.readonly',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  })
+  if (error) {
+    console.error('Login with Google error', error)
+    const message = encodeURIComponent('Failed to login with Google')
+    const solution = encodeURIComponent('Please try again or contact support if the problem persists.')
+    const nextPath = encodeURIComponent('/login')
+    redirect(`/error?message=${message}&solution=${solution}&next=${nextPath}`)
+  }
+  redirect(data.url)
+}

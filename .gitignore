@@ -6,6 +6,10 @@ tmp
 /out-tsc
 type_gen
 
+# certs
+*.pem
+*.key
+
 # dependencies
 node_modules
 
