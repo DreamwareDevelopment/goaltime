@@ -22,6 +22,7 @@ export const TitleInput: React.FC<TitleInputProps> = ({ form }) => {
           <FormControl>
             <FloatingLabelInput
               label="Title"
+              className="w-full"
               {...field}
             />
           </FormControl>

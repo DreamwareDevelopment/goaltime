@@ -1,9 +1,9 @@
 "use client"
 
-import { PlusIcon, X } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
-import { Credenza, CredenzaContent, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaTrigger, CredenzaFooter, CredenzaClose, CredenzaBody } from "@/ui-components/credenza";
+import { Credenza, CredenzaContent, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaTrigger, CredenzaBody } from "@/ui-components/credenza";
 
 import { GoalRecommendation, GoalRecommendationsCard } from "./GoalRecommendationsCard";
 import { GoalSettingsCard } from "./GoalSettingsCard";
@@ -39,20 +39,20 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
           New Goal
         </ShinyButton>
       </CredenzaTrigger>
-      <CredenzaContent className="h-[90vh] md:h-[85vh] py-0 my-0">
-        <ScrollArea className="h-full w-full py-0 my-0">
-          <CredenzaHeader className="py-0 my-0">
+      <CredenzaContent className="h-[calc(100vh-100px)] md:h-[85vh]">
+        <ScrollArea className="h-full w-full">
+          <CredenzaHeader>
             <CredenzaTitle className="sr-only">Set Your Goal</CredenzaTitle>
             <CredenzaDescription className="sr-only">This modal allows you to set a new goal and view new goal recommendations.</CredenzaDescription>
             <GoalRecommendationsCard setRecommendation={setRecommendation} />
           </CredenzaHeader>
           <CredenzaBody className="pr-4">
             <GoalSettingsCard
-            recommendation={recommendation}
-            setRecommendation={setRecommendation}
-            close={() => setIsOpen(false)}
-            showTitle
-            userId={profile.userId}
+              recommendation={recommendation}
+              setRecommendation={setRecommendation}
+              close={() => setIsOpen(false)}
+              showTitle
+              userId={profile.userId}
               handleSubmit={handleSubmit}
             />
           </CredenzaBody>
