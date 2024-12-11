@@ -1,12 +1,13 @@
 "use client"
 
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, X } from "lucide-react";
 
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
-import { ResponsiveModal, ResponsiveModalContent, ResponsiveModalDescription, ResponsiveModalTitle, ResponsiveModalTrigger } from "@/ui-components/modal";
+import { Credenza, CredenzaContent, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaTrigger, CredenzaFooter, CredenzaClose, CredenzaBody } from "@/ui-components/credenza";
 
 import { GoalRecommendation, GoalRecommendationsCard } from "./GoalRecommendationsCard";
 import { GoalSettingsCard } from "./GoalSettingsCard";
+import { ScrollArea } from "@/ui-components/scroll-area";
 import { GoalInput } from "@/libs/shared/src/lib/schemas/goals";
 import { useToast } from "@/ui-components/hooks/use-toast";
 import { useValtio } from "./data/valtio";
@@ -32,26 +33,32 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
     }
   }
   return (
-    <ResponsiveModal open={isOpen} onOpenChange={setIsOpen}>
-      <ResponsiveModalTrigger asChild>
+    <Credenza open={isOpen} onOpenChange={setIsOpen}>
+      <CredenzaTrigger asChild>
         <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
           New Goal
         </ShinyButton>
-      </ResponsiveModalTrigger>
-      <ResponsiveModalContent>
-        <ResponsiveModalTitle className="sr-only">Set Your Goal</ResponsiveModalTitle>
-        <ResponsiveModalDescription className="sr-only">This modal allows you to set a new goal and view new goal recommendations.</ResponsiveModalDescription>
-        <GoalRecommendationsCard setRecommendation={setRecommendation} />
-        <GoalSettingsCard
-          recommendation={recommendation}
-          setRecommendation={setRecommendation}
-          close={() => setIsOpen(false)}
-          showTitle
-          userId={profile.userId}
-          handleSubmit={handleSubmit}
-        />
-      </ResponsiveModalContent>
-    </ResponsiveModal>
+      </CredenzaTrigger>
+      <CredenzaContent className="h-[90vh] md:h-[85vh] py-0 my-0">
+        <ScrollArea className="h-full w-full py-0 my-0">
+          <CredenzaHeader className="py-0 my-0">
+            <CredenzaTitle className="sr-only">Set Your Goal</CredenzaTitle>
+            <CredenzaDescription className="sr-only">This modal allows you to set a new goal and view new goal recommendations.</CredenzaDescription>
+            <GoalRecommendationsCard setRecommendation={setRecommendation} />
+          </CredenzaHeader>
+          <CredenzaBody className="pr-4">
+            <GoalSettingsCard
+            recommendation={recommendation}
+            setRecommendation={setRecommendation}
+            close={() => setIsOpen(false)}
+            showTitle
+            userId={profile.userId}
+              handleSubmit={handleSubmit}
+            />
+          </CredenzaBody>
+        </ScrollArea>
+      </CredenzaContent>
+    </Credenza>
   )
 }
 
