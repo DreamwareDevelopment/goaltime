@@ -5,7 +5,7 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import { Menu, X, Clock, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Separator } from '@/ui-components/separator'
-
+import Link from 'next/link'
 export interface MobileMenuProps {
   isLoggedIn: boolean
 }
@@ -36,10 +36,12 @@ export function MobileMenu({ isLoggedIn }: MobileMenuProps) {
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
           <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-background shadow-lg">
             <div className="flex items-center justify-between p-4 pb-0">
-              <a className="flex items-center justify-center" href="#">
-                <Clock className="h-6 w-6 mr-2" />
-                <span className="font-bold">GoalTime</span>
-              </a>
+              <Link href="/" className="flex items-center justify-center">
+                <Clock className="h-6 w-6" />
+                <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground">
+                  <span className="font-bold">GoalTime</span>
+                </ShinyButton>
+              </Link>
               <ShinyButton variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
                 <X />
                 <span className="sr-only">Close menu</span>

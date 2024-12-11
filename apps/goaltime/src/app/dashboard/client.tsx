@@ -15,6 +15,7 @@ import { Goal, NotificationSettings, Milestone, UserProfile } from "@/shared/mod
 import { SanitizedUser } from "../queries/user";
 import { WelcomeCard } from "../../components/WelcomeCard";
 import { useSnapshot } from "valtio";
+import { Button as ShinyButton } from "@/ui-components/button-shiny";
 
 export interface DashboardClientProps {
   goals: Goal[]
@@ -36,9 +37,11 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4">
       <header className="flex justify-between items-center mb-6">
-        <Link className="hidden md:flex items-center justify-center" href="/">
-          <Clock className="h-6 w-6 mr-2" />
-          <span className="font-bold">GoalTime</span>
+        <Link href="/" className="hidden md:flex items-center justify-center">
+          <Clock className="h-6 w-6" />
+          <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground">
+            <span className="font-bold">GoalTime</span>
+          </ShinyButton>
         </Link>
         {hasGoals && <GoalCreationButton />}
         <UserAvatar />
