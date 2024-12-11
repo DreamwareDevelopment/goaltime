@@ -71,6 +71,7 @@ export function GoalSettingsCard({
   // Move recommendation handling to useEffect
   React.useEffect(() => {
     if (recommendation) {
+      form.clearErrors()
       const fields = form.control._fields
       for (const key in recommendation) {
         if (key in fields) {
