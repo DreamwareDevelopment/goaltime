@@ -8,13 +8,15 @@ import HCaptcha from '@hcaptcha/react-hcaptcha'
 
 import { LoginForm } from './LoginForm'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui-components/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
 import { SignUpForm } from './SignUpForm'
 import { loginWithGoogleAction } from '../../app/actions/auth'
 import { GoogleLogo } from '@/ui-components/svgs/logos/google'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
+import { Separator } from '@/libs/ui-components/src/components/ui/separator'
 
 export type AuthTab = 'login' | 'signup'
 
@@ -28,29 +30,22 @@ export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
 function OAuthProviders() {
   return (
     <div className="flex flex-col pt-0 gap-4">
-      <div className="flex items-center justify-center gap-2 w-full">
-        <div className="border-b border-muted-foreground flex-1"></div>
-        <span className="text-sm text-muted-foreground">Or continue with</span>
-        <div className="border-b border-muted-foreground flex-1"></div>
-      </div>
-      <ShinyButton variant="ghost" className="bg-accent hover:bg-accent/70 flex items-center gap-2" onClick={loginWithGoogleAction}>
+      <ShinyButton 
+        variant="default"
+        className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 border shadow-sm" 
+        onClick={loginWithGoogleAction}
+      >
         <GoogleLogo className="w-5 h-5" />
-        Sign in with Google
+        Continue with Google
       </ShinyButton>
       <div className="text-center text-sm text-muted-foreground">
         <p>
-          By clicking continue, you agree to our{' '}
-          <Link
-            href="/terms"
-            className="underline underline-offset-4 hover:text-primary"
-          >
+          By continuing, you agree to our{' '}
+          <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link
-            href="/privacy"
-            className="underline underline-offset-4 hover:text-primary"
-          >
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
             Privacy Policy
           </Link>
           .
@@ -98,7 +93,7 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
     captcha.current?.resetCaptcha()
   }
   return (
-    <Tabs value={currentTab} onValueChange={setCurrentTab} className='flex flex-col w-full h-full gap-3 items-center justify-start pt-12'>
+    <Tabs value={currentTab} onValueChange={setCurrentTab} className='flex flex-col w-full h-full gap-3 items-center justify-start'>
       <TabsList>
         <TabsTrigger value="login">Login</TabsTrigger>
         <TabsTrigger value="signup">Signup</TabsTrigger>
@@ -109,27 +104,33 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
             <CardTitle className="text-2xl font-semibold tracking-tight">
               Login to your account
             </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              Enter your email and password below to login to your account
-            </CardDescription>
-            <div style={{ display: currentTab === 'login' ? 'flex' : 'none' }}>
-              <HCaptcha
-                ref={captcha}
-                sitekey={hCaptchaSiteKey}
-                onVerify={(token) => {
-                  setCaptchaToken(token)
-                }}
-              />
-            </div>
           </CardHeader>
           <CardContent className="pb-0">
-            <Suspense fallback={<LoadingSpinner />}>
-              <LoginForm login={handleLogin} email={email} />
-            </Suspense>
-          </CardContent>
-          <CardFooter>
             <OAuthProviders />
-          </CardFooter>
+            <Accordion type="single" collapsible className="w-full mt-4">
+              <AccordionItem value="email">
+                <Separator />
+                <AccordionTrigger>Use email instead</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-4">
+                  <span className="text-sm text-muted-foreground">We will ask you to login to your calendar later.</span>
+                  <div style={{ display: currentTab === 'login' ? 'flex' : 'none' }}>
+                    <HCaptcha
+                      ref={captcha}
+                      sitekey={hCaptchaSiteKey}
+                      onVerify={(token) => {
+                        setCaptchaToken(token)
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <LoginForm login={handleLogin} email={email} />
+                    </Suspense>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
         </Card>
       </TabsContent>
       <TabsContent forceMount value="signup" hidden={currentTab !== 'signup'}>
@@ -138,27 +139,33 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
             <CardTitle className="text-2xl font-semibold tracking-tight">
               Sign up for an account
             </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              Enter your email and password below to sign up for an account
-            </CardDescription>
-            <div style={{ display: currentTab === 'signup' ? 'flex' : 'none' }}>
-              <HCaptcha
-                ref={captcha}
-                sitekey={hCaptchaSiteKey}
-                onVerify={(token) => {
-                  setCaptchaToken(token)
-                }}
-              />
-            </div>
           </CardHeader>
           <CardContent className="pb-0">
-            <Suspense fallback={<LoadingSpinner />}>
-              <SignUpForm signup={handleSignup} email={email} />
-            </Suspense>
-          </CardContent>
-          <CardFooter>
             <OAuthProviders />
-          </CardFooter>
+            <Accordion type="single" collapsible className="w-full mt-4">
+              <AccordionItem value="email">
+                <Separator />
+                <AccordionTrigger>Use email instead</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-4">
+                  <span className="text-sm text-muted-foreground">We will ask you to login to your calendar later.</span>
+                  <div style={{ display: currentTab === 'signup' ? 'flex' : 'none' }}>
+                    <HCaptcha
+                      ref={captcha}
+                      sitekey={hCaptchaSiteKey}
+                      onVerify={(token) => {
+                        setCaptchaToken(token)
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SignUpForm signup={handleSignup} email={email} />
+                    </Suspense>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
         </Card>
       </TabsContent>
     </Tabs>
