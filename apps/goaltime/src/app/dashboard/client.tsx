@@ -2,20 +2,23 @@
 
 import { Clock } from "lucide-react";
 import Link from "next/link";
+import dynamic from 'next/dynamic'
 
-import { ActionsCard } from "../../components/ActionsCard";
-import { GoalCarousel } from "../../components/GoalCarousel";
-import { GoalyticsCard } from "../../components/GoalyticsCard";
+import { CalendarEvent } from "../../components/ScheduleCard";
 import { GoalCreationButton } from "../../components/GoalCreationButton";
-import { GoalProgressCard } from "../../components/GoalProgressCard";
-import { CalendarEvent, ScheduleCard } from "../../components/ScheduleCard";
 import { UserAvatar } from "../../components/UserAvatar";
 import { useValtio } from "../../components/data/valtio";
 import { Goal, NotificationSettings, Milestone, UserProfile } from "@/shared/models";
 import { SanitizedUser } from "../queries/user";
-import { WelcomeCard } from "../../components/WelcomeCard";
 import { useSnapshot } from "valtio";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
+
+const ActionsCard = dynamic(() => import('../../components/ActionsCard.tsx').then(mod => mod.ActionsCard))
+const GoalCarousel = dynamic(() => import('../../components/GoalCarousel.tsx').then(mod => mod.GoalCarousel))
+const GoalyticsCard = dynamic(() => import('../../components/GoalyticsCard.tsx').then(mod => mod.GoalyticsCard))
+const GoalProgressCard = dynamic(() => import('../../components/GoalProgressCard.tsx').then(mod => mod.GoalProgressCard))
+const ScheduleCard = dynamic(() => import('../../components/ScheduleCard.tsx').then(mod => mod.ScheduleCard))
+const WelcomeCard = dynamic(() => import('../../components/WelcomeCard.tsx').then(mod => mod.WelcomeCard))
 
 export interface DashboardClientProps {
   goals: Goal[]
