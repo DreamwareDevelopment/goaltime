@@ -23,6 +23,8 @@ export function LoginForm({ className, login, email, ...props }: LoginFormProps)
       email: email || '',
       password: '',
     },
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
   })
   const { handleSubmit, formState, setError } = form
   const { isSubmitting, isValidating } = formState

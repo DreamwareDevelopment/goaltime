@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Suspense, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import z from 'zod'
 
 import HCaptcha from '@hcaptcha/react-hcaptcha'
@@ -10,7 +10,6 @@ import { LoginForm } from './LoginForm'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
-import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
 import { SignUpForm } from './SignUpForm'
 import { loginWithGoogleAction } from '../../app/actions/auth'
@@ -58,6 +57,7 @@ function OAuthProviders() {
 export function AuthCard({ loginAction, signupAction, type, email }: AuthCardProps) {
   const [currentTab, setCurrentTab] = useState<string>(type || 'login')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [isEmailOpen, setIsEmailOpen] = useState(false)
   const captcha = useRef<HCaptcha | null>(null)
 
   const hCaptchaSiteKey = process.env.NEXT_PUBLIC_H_CAPTCHA_SITE_KEY
@@ -107,25 +107,32 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
           </CardHeader>
           <CardContent className="pb-0">
             <OAuthProviders />
-            <Accordion type="single" collapsible className="w-full mt-4">
+            <Accordion 
+              type="single" 
+              collapsible 
+              className="w-full mt-4"
+              onValueChange={(value) => setIsEmailOpen(!!value)}
+            >
               <AccordionItem value="email">
                 <Separator />
                 <AccordionTrigger>Use email instead</AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-4">
-                  <span className="text-sm text-muted-foreground">We will ask you to login to your calendar later.</span>
-                  <div style={{ display: currentTab === 'login' ? 'flex' : 'none' }}>
-                    <HCaptcha
-                      ref={captcha}
-                      sitekey={hCaptchaSiteKey}
-                      onVerify={(token) => {
-                        setCaptchaToken(token)
-                      }}
-                    />
-                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    We will ask you to login to your calendar later.
+                  </span>
+                  {isEmailOpen && (
+                    <div style={{ display: currentTab === 'login' ? 'flex' : 'none' }}>
+                      <HCaptcha
+                        ref={captcha}
+                        sitekey={hCaptchaSiteKey}
+                        onVerify={(token) => {
+                          setCaptchaToken(token)
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className="flex flex-col gap-4">
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <LoginForm login={handleLogin} email={email} />
-                    </Suspense>
+                    <LoginForm login={handleLogin} email={email} />
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -158,9 +165,7 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
                     />
                   </div>
                   <div className="flex flex-col gap-4">
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <SignUpForm signup={handleSignup} email={email} />
-                    </Suspense>
+                    <SignUpForm signup={handleSignup} email={email} />
                   </div>
                 </AccordionContent>
               </AccordionItem>

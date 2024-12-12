@@ -20,8 +20,7 @@ interface LoginPageProps {
   }>
 }
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { type, email } = await searchParams
+function validateType(type: string | undefined) {
   if (type && type !== 'login' && type !== 'signup') {
     const message = encodeURIComponent('Invalid login type')
     const solution = encodeURIComponent('Please go to the login page.')
@@ -29,6 +28,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     // TODO: Use a helper function to redirect to the error page to get type safety
     return redirect(`/error?error=${message}&next=${next}&solution=${solution}`)
   }
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const { type, email } = await searchParams
+  validateType(type)
 
   return (
     <div className="w-full 2xl:w-[67%] mx-auto p-4 h-screen">
