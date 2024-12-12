@@ -68,7 +68,7 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
           </div>
         </>
       ) : (
-        <div className="mt-12">
+        <div className="md:mt-8 lg:mt-12">
           <WelcomeCard />
         </div>
       )}
