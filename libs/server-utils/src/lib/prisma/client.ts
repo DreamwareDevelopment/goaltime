@@ -4,28 +4,31 @@ import { PrismaClient } from '@/libs/shared/type_gen/.prisma/client'
 // Also there is this Github discussion: https://github.com/vercel/next.js/discussions/26427
 declare global {
   // eslint-disable-next-line no-var
-  var _instance: ExtendedPrismaClient | undefined;
+  var _instance: PrismaClient | undefined;
   // eslint-disable-next-line no-var
   var _nonRlsInstance: PrismaClient | undefined;
 }
 
-export async function getPrismaClient(userId?: string): Promise<ExtendedPrismaClient> {
+// TODO: RLS is not supported at the moment without transactions on every query,
+// will actually use the userId when prisma / postgres supports it
+// https://github.com/prisma/prisma/issues/12735
+// https://github.com/prisma/prisma/issues/4303
+// https://github.com/prisma/prisma/issues/5128
+export async function getPrismaClient(userId?: string): Promise<PrismaClient> {
   if (!userId) {
     console.warn('No user ID provided, using non-RLS client')
     if (!globalThis._nonRlsInstance) {
       globalThis._nonRlsInstance = newPrismaClient()
       await globalThis._nonRlsInstance.$connect()
     }
-    return globalThis._nonRlsInstance as ExtendedPrismaClient
+    return globalThis._nonRlsInstance
   }
   if (!globalThis._instance) {
-    globalThis._instance = extendClient(newPrismaClient(userId), userId)
+    globalThis._instance = newPrismaClient(userId)
     await globalThis._instance.$connect()
   }
-  return globalThis._instance as ExtendedPrismaClient
+  return globalThis._instance
 }
-
-export type ExtendedPrismaClient = Awaited<ReturnType<typeof extendClient>>
 
 function newPrismaClient(userId?: string) {
   console.log('newPrismaClient', userId)
@@ -34,29 +37,6 @@ function newPrismaClient(userId?: string) {
     throw new Error('SUPABASE_PRISMA_URL is not set')
   }
   return new PrismaClient({ datasourceUrl })
-}
-
-function extendClient(client: PrismaClient, userId: string) {
-  const extendedClient = client.$extends({
-    name: 'SupabaseRowLevelSecurity',
-    query: {
-      $allModels: {
-        async $allOperations({ args, query }) {
-          try {
-            const [, result] = await client.$transaction([
-              client.$executeRaw`SELECT set_config('app.user_id', ${userId}, TRUE)`,
-              query(args),
-            ])
-            return result
-          } catch (e) {
-            console.error(e)
-            throw new Error('Not authorized')
-          }
-        },
-      },
-    },
-  })
-  return extendedClient
 }
 
 export function cleanup() {
