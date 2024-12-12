@@ -54,24 +54,24 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         <AccordionItem value="milestones" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
           <AccordionContent className="w-full h-full">
-            <Tabs defaultValue="daily" className="w-full">
-              <div className="w-full pl-6 pr-8">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="daily">Today</TabsTrigger>
+            <Tabs defaultValue="daily" className="w-full flex flex-col items-center">
+              <div className="w-full px-4 md:pl-6 md:pr-8">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="daily">Today</TabsTrigger>
                   <TabsTrigger value="lifetime">Lifetime</TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="daily">
-                <span className="w-full pl-7 text-sm text-muted-foreground">*These milestones will reset to incomplete each day.</span>
+              <TabsContent value="daily" className="w-full">
+                <p className="w-full text-center md:text-left px-4 md:px-7 text-xs md:text-sm text-muted-foreground">*These milestones will reset to incomplete each day.</p>
                 <MilestonesCard goalId={goal.id} view={MilestoneViewEnum.Enum.daily} />
               </TabsContent>
-              <TabsContent value="lifetime">
+              <TabsContent value="lifetime" className="w-full">
                 <MilestonesCard goalId={goal.id} view={MilestoneViewEnum.Enum.lifetime} />
               </TabsContent>
             </Tabs>
           </AccordionContent>
         </AccordionItem>
-        <div className="pl-6 pr-4">
+        <div className="px-4">
           <Separator />
         </div>
         <AccordionItem value="notes" className="border-none">
@@ -84,7 +84,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
             </div>
           </AccordionContent>
         </AccordionItem>
-        <div className="pl-6 pr-4">
+        <div className="px-4">
           <Separator />
         </div>
         <AccordionItem value="settings" className="border-none">

@@ -277,9 +277,21 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
             variant="outline"
             className={cn(
               "justify-start text-left font-normal",
+              "hidden md:inline-flex"
             )}
           >
             {format(date, "EEE do MMMM")}
+          </Button>
+        </PopoverTrigger>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "justify-start text-left font-normal",
+              "md:hidden"
+            )}
+          >
+            {format(date, "dd/MM")}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">

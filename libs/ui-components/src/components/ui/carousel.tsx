@@ -276,7 +276,7 @@ const SliderMainItem = forwardRef<
       {...props}
       ref={ref}
       className={cn(
-        `min-w-0 shrink-0 grow-0 basis-full bg-background p-1 ${
+        `min-w-0 shrink-0 grow-0 basis-full bg-background ${
           orientation === "vertical" ? "pb-1" : "pr-1"
         }`,
         className,

@@ -50,15 +50,15 @@ export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreatio
   }
 
   return (
-    <li>
+    <li className="w-full">
       <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-wrap items-start gap-4 pt-4 pr-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-wrap items-start gap-4 md:pt-4 md:pr-3">
           <FormField
             control={form.control}
             name="text"
             render={({ field }) => (
               <FormItem className="flex-grow">
-                <FormControl>
+                <FormControl className="w-full">
                   <FloatingLabelInput
                     id={`new-milestone-${goalId}`}
                     type="text"
@@ -75,7 +75,7 @@ export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreatio
             variant="expandIcon"
             Icon={PlusIcon}
             iconPlacement="right"
-            className="h-[51px] flex-grow sm:flex-none"
+            className="h-[51px] flex-grow md:flex-none"
             type="submit"
           >Add</ShinyButton>
         </form>

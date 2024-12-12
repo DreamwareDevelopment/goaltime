@@ -12,6 +12,7 @@ import { Goal, NotificationSettings, Milestone, UserProfile } from "@/shared/mod
 import { SanitizedUser } from "../queries/user";
 import { useSnapshot } from "valtio";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
+import { useMediaQuery } from "@/libs/ui-components/src/hooks/use-media-query";
 
 const ActionsCard = dynamic(() => import('../../components/ActionsCard.tsx').then(mod => mod.ActionsCard))
 const GoalCarousel = dynamic(() => import('../../components/GoalCarousel.tsx').then(mod => mod.GoalCarousel))
@@ -37,16 +38,19 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const localGoals = useSnapshot(goalStore.goals!)
   const hasGoals = localGoals.length > 0;
+  const isDesktop = useMediaQuery('(min-width: 768px)')
   return (
-    <div className="w-full 2xl:w-[67%] mx-auto p-4">
-      <header className="flex justify-between items-center mb-6">
+    <div className="w-full 2xl:w-[67%] mx-auto p-1 pt-4 sm:p-4">
+      <header className="flex justify-between items-center mb-5 px-4 sm:px-0">
         <Link href="/" className="hidden md:flex items-center justify-center">
           <Clock className="h-6 w-6" />
           <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground">
             <span className="font-bold">GoalTime</span>
           </ShinyButton>
         </Link>
-        {hasGoals && <GoalCreationButton />}
+        <div className="md:absolute md:left-1/2 md:-translate-x-1/2">
+          {hasGoals && <GoalCreationButton plusOnly={!isDesktop} />}
+        </div>
         <UserAvatar />
       </header>
 

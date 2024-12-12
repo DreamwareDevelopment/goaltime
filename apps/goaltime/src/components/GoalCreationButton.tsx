@@ -14,7 +14,14 @@ import { useValtio } from "./data/valtio";
 import { useSnapshot } from "valtio";
 import { useState } from "react";
 
-export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivElement>) {
+interface GoalCreationButtonProps extends React.HTMLAttributes<HTMLDivElement> {
+  plusOnly?: boolean
+}
+
+export function GoalCreationButton({
+  plusOnly = false,
+  className
+}: GoalCreationButtonProps) {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const { goalStore, userStore } = useValtio();
@@ -35,9 +42,14 @@ export function GoalCreationButton({ className }: React.HTMLAttributes<HTMLDivEl
   return (
     <Credenza open={isOpen} onOpenChange={setIsOpen}>
       <CredenzaTrigger asChild>
-        <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
-          New Goal
-        </ShinyButton>
+        { !plusOnly ?
+          <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
+            New Goal
+          </ShinyButton> :
+          <ShinyButton variant="gooeyLeft" className={className}>
+            <PlusIcon className="w-6 h-6" />
+          </ShinyButton>
+        }
       </CredenzaTrigger>
       <CredenzaContent className="h-[calc(100vh-100px)] md:h-[85vh]">
         <ScrollArea className="h-full w-full">
