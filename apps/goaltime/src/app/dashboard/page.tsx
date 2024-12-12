@@ -16,6 +16,8 @@ export default async function Dashboard() {
     redirect('/welcome')
   }
   const goalsPromise = getGoals(profile)
+  // TODO: Only fetch the milestones and notifications for the first goal
+  // Then use lazy loading to fetch the rest. This will require ts-rest.
   const milestonesPromise = getMilestones(profile)
   const notificationsPromise = getNotifications(profile)
   const [goals, milestones, notifications] = await Promise.all([goalsPromise, milestonesPromise, notificationsPromise])
