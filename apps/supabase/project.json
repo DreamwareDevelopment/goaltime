@@ -1,0 +1,38 @@
+{
+  "name": "supabase",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/supabase/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project supabase --web",
+  "targets": {
+    "db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx supabase@latest stop && npx supabase@latest start",
+        "cwd": "apps/supabase"
+      }
+    },
+    "db:stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx supabase@latest stop",
+        "cwd": "apps/supabase"
+      }
+    },
+    "functions": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx supabase@latest functions serve",
+        "cwd": "apps/supabase"
+      }
+    },
+    "functions:stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx supabase@latest functions stop",
+        "cwd": "apps/supabase"
+      }
+    }
+  }
+}
