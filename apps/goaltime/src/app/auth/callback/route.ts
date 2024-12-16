@@ -1,5 +1,22 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/server-utils/supabase'
+import { getPrismaClient } from '@/server-utils/prisma'
+import { Session, User } from '@supabase/supabase-js'
+
+async function saveGoogleAuthTokens(session: Session, user: User) {
+  const providerRefreshToken = session.provider_refresh_token
+  if (!providerRefreshToken) {
+    throw new Error('No refresh token provided')
+  }
+  // This will cause a postgres trigger to fire a background function to sync the calendar
+  const prisma = await getPrismaClient()
+  await prisma.googleAuth.create({
+    data: {
+      userId: user.id,
+      refreshToken: providerRefreshToken,
+    }
+  })
+}
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -10,7 +27,19 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (data?.session && data.user) {
+      try {
+        await saveGoogleAuthTokens(data.session, data.user)
+      } catch (e) {
+        const errorMessage = 'Error saving Google auth tokens'
+        const solutionMessage = 'Please try again or contact support if the problem persists.'
+        const nextPath = '/login'
+        console.error(errorMessage, e)
+        return NextResponse.redirect(`${origin}/error?message=${encodeURIComponent(errorMessage)}&solution=${encodeURIComponent(solutionMessage)}&next=${encodeURIComponent(nextPath)}`)
+      }
+    }
+
     if (!error) {
       if (forwardedHost) {
         return NextResponse.redirect(`https://${forwardedHost}${next}`)

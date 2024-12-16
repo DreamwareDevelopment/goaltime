@@ -1,5 +1,42 @@
 # GoalTime
 
+## Local Development
+
+1. Install Docker Desktop
+2. Get a copy of .env for the Next App and .env.local for Supabase and Prisma (they should always be in sync)
+3. Setup ngrok with the following config
+```ngrok.yml
+version: "3"
+agent:
+    authtoken: <your-token>
+tunnels:
+  first:
+    addr: 3000
+    proto: http
+    domain: <your-next-static-domain>
+  second:
+    addr: https://localhost:54321
+    proto: http
+    domain: <your-supabase-static-domain>
+```
+- Set the site_url to your next ngrok url in config.toml
+- Set the additional_redirect_urls to ["https://<your-next-ngrok-url>/auth/callback"] in config.toml
+- Request that your next ngrok url be added to HCaptcha and Google OAuth
+- Set FUNCTIONS_URL secret in Supabase Vault to your supabase ngrok url
+- Setup NEXT_PUBLIC_HOST to your next ngrok url in both .env and .env.local
+4. Run `ngrok start --all` or `npx nx@latest shared:local-proxy`
+5. Run `npx nx@latest shared:db` to start the local supabase containers
+6. Run `CREATE ROLE "service" WITH LOGIN PASSWORD '<password>';` in the supabase dashboard
+- Set the credentials for service in the SUPABASE_PRISMA_URL in both the .env .env.local files
+- You'll need to run `npx nx@latest shared:db` again for the changes to take effect
+7. Run `npx nx@latest shared:init` to initialize the database and apply schema migrations
+8. Run `npx nx@latest shared:functions` to start the supabase edge functions runtime
+9. Navigate to your next ngrok url in your browser to start using the app
+
+## On Prisma Migrations
+
+If any migration fails to apply you can go to the project.json for the shared project go to `npx nx@latest shared:rollback-failed-migration` and edit the command with the name of the failed migration. Afterwords running `npx nx@latest shared:migrate` should work if the migration is successful.
+
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.

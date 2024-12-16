@@ -6,6 +6,14 @@
   "tags": [],
   "// targets": "to see all targets run: nx show project shared --web",
   "targets": {
+    "init": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx prisma migrate resolve --applied 0_init --schema ./src/prisma/schema.prisma && npx nx run shared:migrate",
+        "cwd": "libs/shared"
+      }
+    },
     "type-gen": {
       "executor": "nx:run-commands",
       "outputs": [],
@@ -19,7 +27,15 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name user_has_onboarded",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_google_auth_model",
+        "cwd": "libs/shared"
+      }
+    },
+    "rollback-failed-migration": {
+      "executor": "nx:run-commands",
+      "outputs": [],
+      "options": {
+        "command": "npx prisma migrate resolve --schema ./src/prisma/schema.prisma --rolled-back '20241213213948_add_service_user_permissions'",
         "cwd": "libs/shared"
       }
     },

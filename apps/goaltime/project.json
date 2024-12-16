@@ -13,7 +13,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "ngrok http --url=minnow-shining-strangely.ngrok-free.app 3000"
+          "ngrok start --all"
         ]
       }
     },
