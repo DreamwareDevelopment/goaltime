@@ -12,8 +12,8 @@ declare const EdgeRuntime: {
   waitUntil: (promise: Promise<any>) => void;
 };
 
-async function initialDownsync(req: Request) {
-  const body = await req.json()
+async function initialDownsync(body: any) {
+  await new Promise((resolve) => setTimeout(resolve, 1000))
   console.log('Function request body', JSON.stringify(body, null, 2))
 }
 
@@ -22,11 +22,11 @@ addEventListener('beforeunload', (ev: BeforeUnloadEvent) => {
   // save state or log the current progress
 })
 
-// deno-lint-ignore require-await
 Deno.serve(async (req: Request) => {
   // Mark the longRunningTask's returned promise as a background task.
   // note: we are not using await because we don't want it to block.
   console.log('Starting initial downsync')
-  EdgeRuntime.waitUntil(initialDownsync(req))
+  const body = await req.json()
+  EdgeRuntime.waitUntil(initialDownsync(body))
   return new Response('ok')
 })
