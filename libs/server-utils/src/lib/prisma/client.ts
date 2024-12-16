@@ -32,9 +32,9 @@ export async function getPrismaClient(userId?: string): Promise<PrismaClient> {
 
 function newPrismaClient(userId?: string) {
   console.log('newPrismaClient', userId)
-  const datasourceUrl = process.env.SUPABASE_PRISMA_URL
+  const datasourceUrl = process.env.MY_PRISMA_URL
   if (!datasourceUrl) {
-    throw new Error('SUPABASE_PRISMA_URL is not set')
+    throw new Error('MY_PRISMA_URL is not set')
   }
   return new PrismaClient({ datasourceUrl })
 }

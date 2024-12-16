@@ -106,7 +106,6 @@ BEGIN
     END IF;
 
     BEGIN
-        RAISE LOG 'Issuing HTTP request';
         PERFORM private.http_request(
             full_url,
             'POST'::text,
@@ -117,7 +116,6 @@ BEGIN
             TG_RELID::bigint,
             TG_NAME::text
         );
-        RAISE LOG 'HTTP request completed';
     EXCEPTION
         WHEN OTHERS THEN
             RAISE LOG 'Error performing HTTP request: %', SQLERRM;

@@ -6,7 +6,8 @@ ALTER COLUMN "preferred_wake_up_time" SET DEFAULT '07:00'::time;
 CREATE TABLE "public"."google_auth" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "user_id" UUID NOT NULL,
-    "refresh_token" VARCHAR(255) NOT NULL,
+    "access_token" VARCHAR(2048) NOT NULL,
+    "refresh_token" VARCHAR(512) NOT NULL,
     "calendar_sync_token" VARCHAR(255),
 
     CONSTRAINT "google_auth_pkey" PRIMARY KEY ("id")

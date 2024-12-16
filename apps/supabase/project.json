@@ -27,9 +27,10 @@
       }
     },
     "functions": {
+      "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx supabase@latest functions serve --debug",
+        "command": "npx supabase@latest functions serve --debug --env-file=../../.env.edge.local",
         "cwd": "apps/supabase"
       }
     }

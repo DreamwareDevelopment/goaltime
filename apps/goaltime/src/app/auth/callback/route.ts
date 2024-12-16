@@ -6,8 +6,8 @@ import { Session, User } from '@supabase/supabase-js'
 async function saveGoogleAuthTokens(session: Session, user: User) {
   const accessToken = session.access_token
   const refreshToken = session.provider_refresh_token
-  if (!refreshToken) {
-    throw new Error('No refresh token provided')
+  if (!accessToken || !refreshToken) {
+    throw new Error('No access token or refresh token provided')
   }
   // This will cause a postgres trigger to fire a background function to sync the calendar
   const prisma = await getPrismaClient()

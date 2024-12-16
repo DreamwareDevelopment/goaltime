@@ -27,7 +27,7 @@ tunnels:
 4. Run `ngrok start --all` or `npx nx@latest shared:local-proxy`
 5. Run `npx nx@latest shared:db` to start the local supabase containers
 6. Run `CREATE ROLE "service" WITH LOGIN PASSWORD '<password>';` in the supabase dashboard
-- Set the credentials for service in the SUPABASE_PRISMA_URL in both the .env .env.local files
+- Set the credentials for service in the MY_PRISMA_URL in both the .env .env.local files
 - You'll need to run `npx nx@latest shared:db` again for the changes to take effect
 7. Run `npx nx@latest shared:init` to initialize the database and apply schema migrations
 8. Run `npx nx@latest shared:functions` to start the supabase edge functions runtime

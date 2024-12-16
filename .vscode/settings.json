@@ -1,7 +1,6 @@
 {
   "deno.enablePaths": [
-    "apps/supabase",
-    "libs/shared"
+    "apps/supabase/supabase"
   ],
   "deno.config": "./apps/supabase/deno.json",
   "deno.lint": true,
