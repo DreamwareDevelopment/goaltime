@@ -380,6 +380,7 @@ enum one_time_token_type {
 model GoogleAuth {
   id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId            String      @unique @db.Uuid @map("user_id")
+  accessToken       String      @db.VarChar(255) @map("access_token")
   refreshToken      String      @db.VarChar(255) @map("refresh_token")
   calendarSyncToken String?     @db.VarChar(255) @map("calendar_sync_token")
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)

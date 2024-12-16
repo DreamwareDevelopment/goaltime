@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_google_auth_model",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_google_access_token",
         "cwd": "libs/shared"
       }
     },
