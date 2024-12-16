@@ -40,6 +40,7 @@
     "embla-carousel": "^8.3.1",
     "embla-carousel-react": "^8.3.1",
     "framer-motion": "^11.11.10",
+    "inngest": "^3.28.0",
     "jotai": "^2.10.2",
     "lucide-react": "^0.456.0",
     "next": "15.0.4",
@@ -63,6 +64,7 @@
     "timescape": "^0.7.0",
     "valtio": "^2.1.2",
     "vaul": "^1.1.1",
+    "vite": "^6.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

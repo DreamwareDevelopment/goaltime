@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/server-utils/supabase'
 import { getPrismaClient } from '@/server-utils/prisma'
 import { Session, User } from '@supabase/supabase-js'
+import { inngest, InngestEvent } from '@/server-utils/inngest'
+
+// Opt out of caching; every request should send a new event
+export const dynamic = 'force-dynamic'
 
 async function saveGoogleAuthTokens(session: Session, user: User) {
   const accessToken = session.access_token
@@ -11,12 +15,16 @@ async function saveGoogleAuthTokens(session: Session, user: User) {
   }
   // This will cause a postgres trigger to fire a background function to sync the calendar
   const prisma = await getPrismaClient()
-  await prisma.googleAuth.create({
+  const googleAuth = await prisma.googleAuth.create({
     data: {
       userId: user.id,
       accessToken,
       refreshToken,
     }
+  })
+  await inngest.send({
+    name: InngestEvent.GoogleCalendarInit,
+    data: googleAuth,
   })
 }
 

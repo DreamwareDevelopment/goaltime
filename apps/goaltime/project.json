@@ -17,6 +17,14 @@
         ]
       }
     },
+    "local-inngest": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx inngest-cli@latest dev"
+        ]
+      }
+    },
     "dev": {
       "dependsOn": ["shared:type-gen"],
       "options": {
