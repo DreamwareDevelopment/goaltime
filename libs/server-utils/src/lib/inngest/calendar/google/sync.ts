@@ -3,8 +3,8 @@ import { OAuth2Client } from "google-auth-library";
 
 import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient } from "@prisma/client";
 
-import { getPrismaClient } from "../../../prisma/client.ts";
-import { inngest, InngestEvent } from "../../client.ts";
+import { getPrismaClient } from "../../../prisma/client";
+import { inngest, InngestEvent } from "../../client";
 
 interface CalendarEventResult {
   list: calendar_v3.Schema$Event[];
@@ -15,8 +15,6 @@ interface CalendarEventResult {
 interface CalendarEventsIterationResult {
   nextPageToken?: string | null | undefined;
   nextSyncToken?: string | null | undefined;
-  events: CalendarEvent[];
-  eventsToDelete: string[];
 }
 
 type CalendarSyncAction = "refresh" | "full-sync";
@@ -91,6 +89,50 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
   }
 }
 
+async function saveCalendarEvents(prisma: PrismaClient, googleAuth: GoogleAuth, isFullSync: boolean, nextSyncToken: string | null | undefined, eventsToDelete: string[], eventsToSave: CalendarEvent[]) {
+  await prisma.$transaction(async (tx) => {
+    console.log(`Updating google auth ${googleAuth.userId}`);
+    try {
+      await tx.googleAuth.update({
+        where: {
+          id: googleAuth.id,
+        },
+        data: {
+          calendarSyncToken: nextSyncToken,
+        },
+      });
+    } catch (error) {
+      console.error(`Failed to update google auth ${googleAuth.userId}:`, JSON.stringify(error, null, 2));
+      throw error;
+    }
+    if (isFullSync) {
+      console.log(`Creating ${eventsToSave.length} calendar events`);
+      try {
+        await tx.calendarEvent.createMany({
+          data: eventsToSave,
+        });
+      } catch (error) {
+        console.error('Failed to create calendar events:', JSON.stringify(error, null, 2));
+        throw error;
+      }
+    } else {
+      console.log(`Upserting ${eventsToSave.length} calendar events`);
+      for (const event of eventsToSave) {
+        try {
+          await tx.calendarEvent.upsert({
+            where: { id: event.id },
+            update: event,
+            create: event,
+          });
+        } catch (error) {
+          console.error(`Failed to upsert calendar event ${event.id}:`, JSON.stringify(error, null, 2));
+          throw error;
+        }
+      }
+    }
+  });
+}
+
 export const getGoogleOAuth2Client = (googleAuth: GoogleAuth) => {
   const apiKey = process.env.GOOGLE_CALENDAR_API_KEY;
   if (!apiKey) {
@@ -117,6 +159,24 @@ export const getGoogleOAuth2Client = (googleAuth: GoogleAuth) => {
   return oauth2Client;
 }
 
+async function deleteUserCalendarEvents(prisma: PrismaClient, googleAuth: GoogleAuth) {
+  await prisma.$transaction(async (tx) => {
+    await tx.googleAuth.update({
+      where: {
+        id: googleAuth.id,
+      },
+      data: {
+        calendarSyncToken: null,
+      },
+    });
+    await tx.calendarEvent.deleteMany({
+      where: {
+        userId: googleAuth.userId,
+      },
+    });
+  });
+}
+
 export const syncGoogleCalendar = inngest.createFunction(
   {
     id: 'google-calendar-init',
@@ -131,9 +191,7 @@ export const syncGoogleCalendar = inngest.createFunction(
     const prisma = await getPrismaClient(googleAuth.userId);
     const oauth2Client = getGoogleOAuth2Client(googleAuth);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-
-    const eventsToSave: CalendarEvent[] = [];
-    const eventsToDelete: string[] = [];
+  
     let cursor: string | null | undefined = undefined;
     let nextSyncToken: string | null | undefined = googleAuth.calendarSyncToken;
     let isFullSync = !nextSyncToken;
@@ -149,21 +207,7 @@ export const syncGoogleCalendar = inngest.createFunction(
           throw new Error(`Google access token refreshed`);
         }
         if (eventsResult === "full-sync") {
-          await prisma.$transaction(async (tx) => {
-            await tx.googleAuth.update({
-              where: {
-                id: googleAuth.id,
-              },
-              data: {
-                calendarSyncToken: null,
-              },
-            });
-            await tx.calendarEvent.deleteMany({
-              where: {
-                userId: googleAuth.userId,
-              },
-            });
-          });
+          await deleteUserCalendarEvents(prisma, googleAuth);
           isFullSync = true;
           return {
             nextPageToken: undefined,
@@ -180,6 +224,7 @@ export const syncGoogleCalendar = inngest.createFunction(
             events.push(transformCalendarEvent(event, googleAuth.userId));
           }
         }
+        await saveCalendarEvents(prisma, googleAuth, isFullSync, nextSyncToken, deletedEvents, events);
         return {
           nextPageToken: eventsResult.nextPageToken,
           nextSyncToken: eventsResult.nextSyncToken,
@@ -189,52 +234,6 @@ export const syncGoogleCalendar = inngest.createFunction(
       });
       cursor = eventsResult.nextPageToken;
       nextSyncToken = eventsResult.nextSyncToken;
-      eventsToSave.push(...eventsResult.events);
-      eventsToDelete.push(...eventsResult.eventsToDelete);
     } while (!nextSyncToken);
-
-    await step.run("save-calendar-events", async () => {
-      await prisma.$transaction(async (tx) => {
-        console.log(`Updating google auth ${googleAuth.userId}`);
-        try {
-          await tx.googleAuth.update({
-            where: {
-              id: googleAuth.id,
-            },
-            data: {
-              calendarSyncToken: nextSyncToken,
-            },
-          });
-        } catch (error) {
-          console.error(`Failed to update google auth ${googleAuth.userId}:`, JSON.stringify(error, null, 2));
-          throw error;
-        }
-        if (isFullSync) {
-          console.log(`Creating ${eventsToSave.length} calendar events`);
-          try {
-            await tx.calendarEvent.createMany({
-              data: eventsToSave,
-            });
-          } catch (error) {
-            console.error('Failed to create calendar events:', JSON.stringify(error, null, 2));
-            throw error;
-          }
-        } else {
-          console.log(`Upserting ${eventsToSave.length} calendar events`);
-          for (const event of eventsToSave) {
-            try {
-              await tx.calendarEvent.upsert({
-                where: { id: event.id },
-                update: event,
-                create: event,
-              });
-            } catch (error) {
-              console.error(`Failed to upsert calendar event ${event.id}:`, JSON.stringify(error, null, 2));
-              throw error;
-            }
-          }
-        }
-      });
-    });
   },
 );
