@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name extend_token_lengths",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_calendar_events",
         "cwd": "libs/shared"
       }
     },

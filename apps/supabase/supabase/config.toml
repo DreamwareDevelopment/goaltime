@@ -205,7 +205,7 @@ client_id = "1012242143050-lobjv7g4agt8cho4e0kuv1vuokq5h4bn.apps.googleuserconte
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 # Overrides the default auth redirectUrl.
-redirect_uri = "https://localhost:54321/auth/v1/callback"
+redirect_uri = "https://supabase.ngrok.dev/auth/v1/callback"
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
 # or any other third-party OIDC providers.
 url = ""

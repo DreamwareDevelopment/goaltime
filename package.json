@@ -40,6 +40,7 @@
     "embla-carousel": "^8.3.1",
     "embla-carousel-react": "^8.3.1",
     "framer-motion": "^11.11.10",
+    "googleapis": "^144.0.0",
     "inngest": "^3.28.0",
     "jotai": "^2.10.2",
     "lucide-react": "^0.456.0",

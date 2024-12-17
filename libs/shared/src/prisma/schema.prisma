@@ -3,7 +3,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  output          = "../../type_gen/.prisma/client"
+  output          = "../../../../node_modules/.prisma/client"
   previewFeatures = ["multiSchema"]
 }
 
@@ -487,6 +487,7 @@ model NotificationSettings {
   phoneAfter  Int? @map("phone_after")  // Store as minutes
 
   @@schema("public")
+  @@map("notification_settings")
 }
 
 model EmailSubscription {
@@ -499,5 +500,45 @@ model EmailSubscription {
   @@index([email])
   @@schema("public")
   @@map("email_subscriptions")
+}
+
+enum EventType {
+  birthday
+  default
+  focusTime
+  fromGmail
+  outOfOffice
+  workingLocation
+
+  @@schema("public")
+  @@map("event_types")
+}
+
+enum CalendarProvider {
+  google
+
+  @@schema("public")
+  @@map("calendar_providers")
+}
+
+// https://developers.google.com/calendar/api/v3/reference/events
+model CalendarEvent {
+  id          String    @id @db.VarChar(1024)
+  provider    CalendarProvider @default(google)
+  userId      String    @db.Uuid @map("user_id")
+  title       String
+  subtitle    String?
+  description String?
+  location    String?
+  locked      Boolean   @default(false)
+  startTime   String?   @map("start_time")
+  endTime     String?   @map("end_time")
+  timeZone    String?   @map("time_zone") // Required if recurrence is set, otherwise it indicates a custom timezone
+  eventType   EventType @default(default)
+  allDay      String?   @map("all_day")
+  color       String
+
+  @@schema("public")
+  @@map("calendar_events")
 }
 
