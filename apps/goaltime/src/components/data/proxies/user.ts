@@ -1,6 +1,6 @@
 import { proxy } from 'valtio'
 
-import { UserProfile } from "@/shared/models"
+import { UserProfile } from "@prisma/client"
 import { UserProfileInput } from "@/shared/zod"
 import { createUserProfileAction, updateUserProfileAction } from '../../../app/actions/user'
 import { createClient } from '@/ui-components/hooks/supabase'

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/libs/shared/type_gen/.prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 // See this answer for why we use globalThis: https://stackoverflow.com/questions/77198455/making-a-variable-globally-available-to-all-modules-in-next-js-application
 // Also there is this Github discussion: https://github.com/vercel/next.js/discussions/26427

@@ -8,7 +8,7 @@ import { CalendarEvent } from "../../components/ScheduleCard";
 import { GoalCreationButton } from "../../components/GoalCreationButton";
 import { UserAvatar } from "../../components/UserAvatar";
 import { useValtio } from "../../components/data/valtio";
-import { Goal, NotificationSettings, Milestone, UserProfile } from "@/shared/models";
+import { Goal, NotificationSettings, Milestone, UserProfile } from "@prisma/client";
 import { SanitizedUser } from "../queries/user";
 import { useSnapshot } from "valtio";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";

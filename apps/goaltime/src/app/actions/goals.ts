@@ -2,7 +2,7 @@
 
 import { GoalInput, MilestoneInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
-import { Goal, Milestone, Prisma } from '@/libs/shared/type_gen/.prisma/client'
+import { Goal, Milestone, Prisma } from '@prisma/client'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const goalWithNotifications = Prisma.validator<Prisma.GoalArgs>()({

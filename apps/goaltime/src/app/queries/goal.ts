@@ -1,4 +1,4 @@
-import { Goal, Milestone, NotificationSettings, UserProfile } from '@/shared/models'
+import { Goal, Milestone, NotificationSettings, UserProfile } from '@prisma/client'
 import { getPrismaClient } from '@/server-utils/prisma'
 
 export async function getGoals(profile: UserProfile): Promise<Goal[]> {

@@ -5,7 +5,7 @@ import { useSnapshot } from "valtio";
 import z from "zod";
 
 import { PlateEditor } from "@/plate-ui/plate-editor";
-import { Goal, NotificationSettings } from "@/shared/models";
+import { Goal, NotificationSettings } from "@prisma/client";
 import { GoalInput, MilestoneViewEnum, PreferredTimesEnum } from "@/shared/zod";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { useToast } from "@/ui-components/hooks/use-toast";

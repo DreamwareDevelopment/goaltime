@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '@/server-utils/supabase'
 import { User } from '@supabase/supabase-js'
-import { UserProfile } from '@/shared/models'
+import { UserProfile } from '@prisma/client'
 import { getPrismaClient } from '@/server-utils/prisma'
 
 async function getUser(): Promise<User> {

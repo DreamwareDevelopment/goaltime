@@ -1,5 +1,5 @@
 import { EventSchemas, Inngest } from "inngest";
-import { GoogleAuth } from "@/shared/models";
+import { GoogleAuth } from "@prisma/client";
 
 export enum InngestEvent {
   GoogleCalendarInit = "calendar/google/init",

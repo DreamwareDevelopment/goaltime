@@ -2,7 +2,7 @@ import { proxy } from 'valtio'
 
 import { GoalInput, MilestoneInput } from "@/shared/zod"
 import { createGoalAction, createMilestoneAction, deleteGoalAction, deleteMilestoneAction, deleteMilestonesAction, updateGoalAction, updateMilestoneAction } from '../../../app/actions/goals'
-import { Goal, Milestone, NotificationSettings } from '@/shared/models'
+import { Goal, Milestone, NotificationSettings } from '@prisma/client'
 import { MilestoneViewEnum } from '@/shared/zod'
 
 export const goalStore = proxy<{
