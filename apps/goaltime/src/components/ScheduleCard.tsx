@@ -16,18 +16,8 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
-import { binarySearchInsert } from "@/shared/utils";
-
-export interface CalendarEvent {
-  id: number;
-  title: string;
-  subtitle?: string;
-  description?: string;
-  startTime: string | null;
-  endTime: string | null;
-  isAllDay: boolean;
-  color: string;
-}
+import { binarySearchInsert, dayjs } from "@/shared/utils";
+import { CalendarEvent } from "@prisma/client";
 
 export interface ViewEvent extends CalendarEvent {
   top: number;
@@ -68,33 +58,32 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
 
   const HOUR_HEIGHT = 60; // pixels per hour
   
-  const getEventPosition = (startTime: string) => {
-    const [hours, minutes] = startTime.split(':').map(Number);
-    return (hours * HOUR_HEIGHT) + ((minutes / 60) * HOUR_HEIGHT);
+  const getEventPosition = (startTime: dayjs.Dayjs) => {
+    return (startTime.hour() * HOUR_HEIGHT) + ((startTime.minute() / 60) * HOUR_HEIGHT);
   };
 
-  const getEventHeight = (startTime: string, endTime: string) => {
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    const [endHours, endMinutes] = endTime.split(':').map(Number);
-    const startInMinutes = (startHours * 60) + startMinutes;
-    const endInMinutes = (endHours * 60) + endMinutes;
+  const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
+    const startInMinutes = (startTime.hour() * 60) + startTime.minute();
+    const endInMinutes = (endTime.hour() * 60) + endTime.minute();
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
 
   const allDayEvents: CalendarEvent[] = [];
   const events: ViewEvent[] = [];
   for (const event of schedule) {
-    if (!event.isAllDay && event.startTime && event.endTime) {
+    if (!event.allDay && event.startTime && event.endTime) {
+      const startTime = dayjs(event.startTime);
+      const endTime = dayjs(event.endTime);
       const newEvent = {
         ...event,
-        hours: event.startTime ? parseInt(event.startTime?.split(':')[0]) : null,
-        minutes: event.startTime ? parseInt(event.startTime?.split(':')[1]) : null,
-        top: getEventPosition(event.startTime || ''),
-        height: getEventHeight(event.startTime || '', event.endTime || ''),
+        hours: startTime.hour(),
+        minutes: startTime.minute(),
+        top: getEventPosition(startTime),
+        height: getEventHeight(startTime, endTime),
         left: 0
       };
       binarySearchInsert(events, newEvent, (a, b) => a.top - b.top);
-    } else if (event.isAllDay) {
+    } else if (event.allDay) {
       allDayEvents.push(event);
     }
   }
@@ -251,12 +240,12 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
           <div className="font-medium">{event.title}</div>
           {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
           {event.description && <div className="text-sm">{event.description}</div>}
-          {!event.isAllDay && (
+          {!event.allDay && (
             <div className="text-sm mt-1">
               {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}
             </div>
           )}
-          {event.isAllDay && <div className="text-sm mt-1">All Day</div>}
+          {event.allDay && <div className="text-sm mt-1">All Day</div>}
         </div>
       ))}
     </ScrollArea>
