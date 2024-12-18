@@ -32,9 +32,10 @@ async function incrementalSyncCalendarEvents(
   if (!googleAuth.lastFullSyncAt) {
     throw new Error(`Invariant error: Google auth ${googleAuth.userId} has no last full sync date during incremental sync`);
   }
+  const lastFullSyncAt = new Date(googleAuth.lastFullSyncAt);
   try {
     // Schedule a full sync 6 days in the future
-    if ((new Date().getTime() - googleAuth.lastFullSyncAt.getTime()) > 6 * 24 * 60 * 60 * 1000) {
+    if ((new Date().getTime() - lastFullSyncAt.getTime()) > 6 * 24 * 60 * 60 * 1000) {
       return "full-sync";
     }
     const res = await calendar.events.list({
@@ -58,7 +59,7 @@ async function incrementalSyncCalendarEvents(
       nextSyncToken: res.data.nextSyncToken,
     };
   } catch (error) {
-    console.error('Failed to get calendar events:', JSON.stringify(error, null, 2));
+    logError("Failed to get calendar events during incremental sync", error);
     return "refresh";
   }
 }
@@ -85,7 +86,7 @@ async function fullSyncCalendarEvents(
       nextSyncToken: res.data.nextSyncToken,
     };
   } catch (error) {
-    console.error('Failed to get calendar events:', JSON.stringify(error, null, 2));
+    logError("Failed to get calendar events during full sync", error);
     return "refresh";
   }
 }
@@ -105,7 +106,7 @@ async function saveFullSync(prisma: PrismaClient, googleAuth: GoogleAuth, nextSy
         },
       });
     } catch (error) {
-      console.log(`Failed to update google auth ${googleAuth.userId} for full sync:`, JSON.stringify(error, null, 2));
+      logError(`Failed to update google auth ${googleAuth.userId} for full sync`, error);
       throw error;
     }
     console.log(`Creating ${eventsToSave.length} calendar events`);
@@ -114,7 +115,7 @@ async function saveFullSync(prisma: PrismaClient, googleAuth: GoogleAuth, nextSy
         data: eventsToSave,
       });
     } catch (error) {
-      console.error('Failed to create calendar events:', JSON.stringify(error, null, 2));
+      logError("Failed to create calendar events", error);
       throw error;
     }
   });
@@ -133,7 +134,7 @@ async function saveIncrementalSync(prisma: PrismaClient, googleAuth: GoogleAuth,
         },
       });
     } catch (error) {
-      console.log(`Failed to update google auth ${googleAuth.userId} during incremental sync:`, JSON.stringify(error, null, 2));
+      logError(`Failed to update google auth ${googleAuth.userId} during incremental sync`, error);
       throw error;
     }
     console.log(`Upserting ${eventsToSave.length} calendar events`);
@@ -145,7 +146,7 @@ async function saveIncrementalSync(prisma: PrismaClient, googleAuth: GoogleAuth,
           create: event,
         });
       } catch (error) {
-        console.error(`Failed to upsert calendar event ${event.id}:`, JSON.stringify(error, null, 2));
+        logError(`Failed to upsert calendar event ${event.id}`, error);
         throw error;
       }
     }
@@ -154,7 +155,7 @@ async function saveIncrementalSync(prisma: PrismaClient, googleAuth: GoogleAuth,
         where: { id: { in: eventsToDelete } },
       });
     } catch (error) {
-      console.error('Failed to delete calendar events:', JSON.stringify(error, null, 2));
+      logError("Failed to delete calendar events", error);
       throw error;
     }
   });
@@ -177,9 +178,13 @@ export async function refreshGoogleAccessToken(prisma: PrismaClient, googleAuth:
       },
     });
   } catch (error) {
-    console.error('Failed to refresh Google access token:', JSON.stringify(error, null, 2));
+    logError("Failed to refresh Google access token", error);
     throw error;
   }
+}
+
+function logError(message: string, error: unknown) {
+  console.error(`${message}: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}`);
 }
 
 function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string): CalendarEvent {
@@ -264,9 +269,11 @@ export const syncGoogleCalendar = inngest.createFunction(
     }],
     retries: 1,
   },
-  {
+  [{
     event: InngestEvent.GoogleCalendarSync,
-  },
+  }, {
+    event: InngestEvent.GoogleCalendarCronSync,
+  }],
   async ({ step, event }) => {
     const googleAuth = event.data;
     const prisma = await getPrismaClient(googleAuth.userId);
@@ -342,5 +349,29 @@ export const syncGoogleCalendar = inngest.createFunction(
       cursor = stepResult.nextPageToken;
       nextSyncToken = stepResult.nextSyncToken;
     } while (!nextSyncToken);
+  },
+);
+
+export const syncCalendars = inngest.createFunction(
+  {
+    id: "sync-all-calendars",
+    concurrency: [{
+      scope: "account",
+      key: "sync-all-calendars",
+      limit: 1,
+    }],
+  },
+  {
+    // sync every 60 minutes from 6am to 10pm EST
+    cron: 'TZ=America/New_York 0/60 6-22 * * *',
+  },
+  async ({ step }) => {
+    const prisma = await getPrismaClient();
+    const googleAuths = await prisma.googleAuth.findMany();
+    const events = googleAuths.map(googleAuth => ({
+      name: InngestEvent.GoogleCalendarCronSync,
+      data: googleAuth,
+    }));
+    await step.sendEvent("sync-all-calendars", events);
   },
 );
