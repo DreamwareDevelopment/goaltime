@@ -12,6 +12,8 @@ export default async function WelcomeFlowServer() {
     redirect(`/error?error=${error}&next=${next}&solution=Please go to the dashboard.`)
   }
   return (
-    <WelcomeFlowClient userId={user.id} />
+    <div className="h-screen flex items-center justify-center">
+      <WelcomeFlowClient userId={user.id} />
+    </div>
   )
 }
