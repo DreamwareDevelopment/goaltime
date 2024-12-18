@@ -1,5 +1,6 @@
 import { Goal, Milestone, NotificationSettings, UserProfile } from '@prisma/client'
-import { getPrismaClient } from '@/server-utils/prisma'
+
+import { getPrismaClient } from '../lib/prisma/client'
 
 export async function getGoals(profile: UserProfile): Promise<Goal[]> {
   const prisma = await getPrismaClient(profile.userId)

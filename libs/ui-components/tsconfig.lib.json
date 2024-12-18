@@ -13,6 +13,7 @@
       "@/ui-components/svgs/*": ["libs/ui-components/src/svgs/*"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
       "@/shared/zod": ["libs/shared/src/lib/schemas/index.ts"],
+      "@/shared/contracts": ["libs/shared/src/lib/contracts/index.ts"],
     }
   },
   "files": [

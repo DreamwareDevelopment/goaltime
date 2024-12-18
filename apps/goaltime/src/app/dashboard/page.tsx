@@ -1,10 +1,9 @@
 import React from 'react'
 
-import { getProfile, getSanitizedUser } from '../queries/user'
+import { getProfile, getSanitizedUser } from '@/server-utils/queries/user'
 import { redirect } from 'next/navigation'
-import { getGoals, getMilestones, getNotifications } from '../queries/goal'
+import { getGoals, getMilestones, getNotifications } from '@/server-utils/queries/goal'
 import DashboardClient from './client'
-import { schedule } from './schedule_dummy_data'
 
 
 export const dynamic = 'force-dynamic'
@@ -21,5 +20,5 @@ export default async function Dashboard() {
   const milestonesPromise = getMilestones(profile)
   const notificationsPromise = getNotifications(profile)
   const [goals, milestones, notifications] = await Promise.all([goalsPromise, milestonesPromise, notificationsPromise])
-  return <DashboardClient goals={goals} profile={profile} schedule={schedule} user={user} milestones={milestones} notifications={notifications} />
+  return <DashboardClient goals={goals} profile={profile} user={user} milestones={milestones} notifications={notifications} />
 }

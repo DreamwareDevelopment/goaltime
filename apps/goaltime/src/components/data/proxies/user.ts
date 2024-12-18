@@ -4,7 +4,7 @@ import { UserProfile } from "@prisma/client"
 import { UserProfileInput } from "@/shared/zod"
 import { createUserProfileAction, updateUserProfileAction } from '../../../app/actions/user'
 import { createClient } from '@/ui-components/hooks/supabase'
-import { SanitizedUser } from '../../../app/queries/user'
+import { SanitizedUser } from '@/server-utils/queries/user'
 
 export const userStore = proxy<{
   user: SanitizedUser | null,

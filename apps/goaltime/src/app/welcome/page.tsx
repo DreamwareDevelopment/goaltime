@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSanitizedUser, getProfile } from '../queries/user'
+import { getSanitizedUser, getProfile } from '@/server-utils/queries/user'
 import WelcomeFlowClient from './client'
 
 export default async function WelcomeFlowServer() {

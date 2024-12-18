@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
-
-import { createClient } from '@/server-utils/supabase'
 import { User } from '@supabase/supabase-js'
+
 import { UserProfile } from '@prisma/client'
-import { getPrismaClient } from '@/server-utils/prisma'
+
+import { createClient } from '../lib/supabase'
+import { getPrismaClient } from '../lib/prisma/client'
 
 async function getUser(): Promise<User> {
   const supabase = await createClient()

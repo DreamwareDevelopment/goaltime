@@ -4,12 +4,11 @@ import { Clock } from "lucide-react";
 import Link from "next/link";
 import dynamic from 'next/dynamic'
 
-import { CalendarEvent } from "../../components/ScheduleCard";
 import { GoalCreationButton } from "../../components/GoalCreationButton";
 import { UserAvatar } from "../../components/UserAvatar";
 import { useValtio } from "../../components/data/valtio";
 import { Goal, NotificationSettings, Milestone, UserProfile } from "@prisma/client";
-import { SanitizedUser } from "../queries/user";
+import { SanitizedUser } from "@/server-utils/queries/user";
 import { useSnapshot } from "valtio";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { useMediaQuery } from "@/libs/ui-components/src/hooks/use-media-query";
@@ -24,13 +23,12 @@ const WelcomeCard = dynamic(() => import('../../components/WelcomeCard.tsx').the
 export interface DashboardClientProps {
   goals: Goal[]
   profile: UserProfile
-  schedule: CalendarEvent[]
   user: SanitizedUser
   milestones: Milestone[]
   notifications: NotificationSettings[]
 }
 
-export default function DashboardClient({ goals, profile, schedule, user, milestones, notifications }: DashboardClientProps) {
+export default function DashboardClient({ goals, profile, user, milestones, notifications }: DashboardClientProps) {
   const { userStore, goalStore } = useValtio();
   userStore.init(user, profile);
   goalStore.init(goals, milestones, notifications);
@@ -58,7 +56,7 @@ export default function DashboardClient({ goals, profile, schedule, user, milest
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <GoalProgressCard />
-            <ScheduleCard schedule={schedule} />
+            <ScheduleCard />
             <GoalCarousel className="lg:col-span-2 overflow-hidden" />
           </div>
           <div className="flex justify-center py-10">
