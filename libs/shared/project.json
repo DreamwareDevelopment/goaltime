@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_calendar_events",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_last_full_sync_at",
         "cwd": "libs/shared"
       }
     },
