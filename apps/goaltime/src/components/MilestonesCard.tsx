@@ -29,7 +29,6 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
   milestoneDynamicStore.ensureMilestones(goalId, view)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const milestones = useSnapshot(milestoneDynamicStore.milestones![goalId][view])
-  console.log('MilestonesCard milestones', milestones)
   const { id: userId } = useSnapshot(userStore.user)
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { proxy } from 'valtio'
 
 import { MilestoneViewEnum, MilestoneInput } from "@/shared/zod"
-import { createMilestoneAction, deleteMilestoneAction, deleteMilestonesAction, updateMilestoneAction } from '../../../app/actions/goals'
+import { createMilestoneAction, deleteMilestoneAction, deleteMilestonesAction, updateMilestoneAction } from '../../../app/actions/milestones'
 import { Milestone } from '@prisma/client'
 import { z } from 'zod'
 import { getTsRestClient } from '@/ui-components/hooks/ts-rest'
