@@ -16,6 +16,7 @@ import { loginWithGoogleAction } from '../../app/actions/auth'
 import { GoogleLogo } from '@/ui-components/svgs/logos/google'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
 import { Separator } from '@/libs/ui-components/src/components/ui/separator'
+import { useToast } from '@/libs/ui-components/src/hooks/use-toast'
 
 export type AuthTab = 'login' | 'signup'
 
@@ -27,12 +28,19 @@ export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 function OAuthProviders() {
+  const { toast } = useToast()
   return (
     <div className="flex flex-col pt-0 gap-4">
       <ShinyButton 
         variant="default"
         className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 border shadow-sm" 
-        onClick={loginWithGoogleAction}
+        onClick={() => loginWithGoogleAction().catch((error) => {
+          console.error('Error logging in with Google', error)
+          toast({
+            title: 'Login with Google failed',
+            description: error.message,
+          })
+        })}
       >
         <GoogleLogo className="w-5 h-5" />
         Continue with Google
