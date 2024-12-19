@@ -55,13 +55,13 @@ export default function DashboardClient({ goals, profile, user, milestones, noti
       {hasGoals ? (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <GoalProgressCard />
+            <GoalProgressCard className="min-h-[679px]" />
             <ScheduleCard />
             <GoalCarousel className="lg:col-span-2 overflow-hidden" />
           </div>
-          <div className="flex justify-center py-10">
+          {/* <div className="flex justify-center py-10">
             <GoalCreationButton className="md:min-w-[333px]" />
-          </div>
+          </div> */}
           {/* <div className="grid grid-cols-1 gap-6">
             <GoalyticsCard />
           </div>

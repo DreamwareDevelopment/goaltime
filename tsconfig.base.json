@@ -28,7 +28,6 @@
       "@/ui-components/utils": ["libs/ui-components/src/utils.ts"],
       "@/ui-components/svgs/*": ["libs/ui-components/src/svgs/*"],
       "@/ui-components/hooks/*": ["libs/ui-components/src/hooks/*"],
-      "@/plate-ui/*": ["libs/ui-components/src/components/plate-ui/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

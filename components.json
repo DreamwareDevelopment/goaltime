@@ -20,7 +20,7 @@
     "plate": {
       "style": "default",
       "aliases": {
-        "ui": "@/libs/ui-components/src/components/plate-ui"
+        "ui": "@/apps/goaltime/src/components/plate-ui"
       },
       "url": "https://platejs.org/r"
     }

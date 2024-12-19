@@ -4,19 +4,26 @@ import dynamic from 'next/dynamic'
 import { useSnapshot } from "valtio";
 import z from "zod";
 
-import { PlateEditor } from "@/plate-ui/plate-editor";
 import { Goal, NotificationSettings } from "@prisma/client";
 import { GoalInput, MilestoneViewEnum, PreferredTimesEnum } from "@/shared/zod";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { useToast } from "@/ui-components/hooks/use-toast";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Separator } from "@/ui-components/separator";
+import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
 import { cn } from "@/ui-components/utils"
-
-const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.default), { ssr: false })
-import { GoalSettingsCard } from "./GoalSettingsCard";
 import { useValtio } from "./data/valtio";
+
+const PlateEditor = dynamic(() => import('./plate-ui/plate-editor.tsx').then(mod => mod.PlateEditor), {
+  loading: () => <LoadingSpinner />
+})
+const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.MilestonesCard), {
+  loading: () => <LoadingSpinner />
+})
+const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod => mod.GoalSettingsCard), {
+  loading: () => <LoadingSpinner />
+})
 
 function getMutableGoal(goal: Goal, notifications: NotificationSettings): GoalInput {
   return {

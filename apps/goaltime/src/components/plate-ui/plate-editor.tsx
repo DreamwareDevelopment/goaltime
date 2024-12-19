@@ -2,9 +2,9 @@ import { useAtomCallback } from 'jotai/utils';
 
 import { Plate } from '@udecode/plate-common/react';
 
-import { useCreateEditor } from './use-create-editor';
-import { Editor, EditorContainer } from './editor';
-import { editorFocusedAtom } from '../../state/atoms';
+import { useCreateEditor } from './use-create-editor.tsx';
+import { Editor, EditorContainer } from './editor.tsx';
+import { editorFocusedAtom } from '../../../../../libs/ui-components/src/state/atoms.ts';
 
 export function PlateEditor() {
   const editor = useCreateEditor();

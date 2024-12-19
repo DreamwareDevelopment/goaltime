@@ -18,7 +18,7 @@ export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement
   view: z.infer<typeof MilestoneViewEnum>;
 }
 
-export default function MilestonesCard({ goalId, view, className }: MilestonesCardProps) {
+export function MilestonesCard({ goalId, view, className }: MilestonesCardProps) {
   const { toast } = useToast()
   const { goalStore, userStore } = useValtio();
   if (!userStore.user) {
