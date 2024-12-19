@@ -1,4 +1,4 @@
-export const binarySearchInsert = <T>(array: T[], item: T, compareFn: (a: T, b: T) => number) => {
+export const binarySearchInsert = <T>(array: T[], item: T, compareFn: (a: T, b: T) => number): number => {
   let low = 0;
   let high = array.length;
 
@@ -11,4 +11,5 @@ export const binarySearchInsert = <T>(array: T[], item: T, compareFn: (a: T, b: 
     }
   }
   array.splice(low, 0, item);
+  return low
 };

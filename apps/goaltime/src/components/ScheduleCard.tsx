@@ -16,7 +16,7 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
-import { binarySearchInsert, dayjs } from "@/shared/utils";
+import { binarySearchInsert, dayjs, debounce } from "@/shared/utils";
 import { CalendarEvent } from "@prisma/client";
 import { getTsRestClient } from "@/ui-components/hooks/ts-rest";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
@@ -31,8 +31,6 @@ export interface ViewEvent extends CalendarEvent {
   hours: number | null;
   minutes: number | null;
 }
-
-const DEBOUNCE_DELAY = 300;
 
 export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [date, setDate] = useState(new Date());
@@ -52,14 +50,15 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const [timezone, setTimezone] = useState<string>(profile.timezone);
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      const client = getTsRestClient();
-      client.calendar.getSchedule({
-        query: {
-          date: date,
-          timezone,
-        }
-      }).then(response => {
+    const clearDebounce = debounce(async () => {
+      try {
+        const client = getTsRestClient();
+        const response = await client.calendar.getSchedule({
+          query: {
+            date: date,
+            timezone,
+          }
+        })
         const { body, status } = response;
         if (status === 200) {
           setSchedule(body);
@@ -70,18 +69,15 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
             description: errorMessage,
           });
         }
-      }).catch(error => {
+      } catch (error) {
         console.error(error);
         toast({
           title: 'Failed to load schedule',
           description: 'Please try again',
         });
-      });
-    }, DEBOUNCE_DELAY);
-  
-    return () => {
-      clearTimeout(handler);
-    };
+      }
+    })
+    return clearDebounce;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, timezone]);
 

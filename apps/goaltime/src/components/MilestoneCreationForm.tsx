@@ -18,7 +18,7 @@ export interface MilestoneCreationFormProps {
 }
 
 export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreationFormProps) {
-  const { goalStore } = useValtio()
+  const { milestoneDynamicStore } = useValtio()
   const { toast } = useToast()
   const form = useForm<MilestoneInput>({
     defaultValues: {
@@ -36,7 +36,7 @@ export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreatio
       return
     }
     try {
-      await goalStore.createMilestone(data)
+      await milestoneDynamicStore.createMilestone(data)
     } catch (error) {
       console.error(error)
       toast({

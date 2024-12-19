@@ -44,7 +44,6 @@ export function GoalCard({ goal, className }: GoalCardProps) {
     throw new Error('Notifications not initialized')
   }
   const notifications = useSnapshot(goalStore.notifications[goal.id])
-  goalStore.ensureMilestones(goal.id)
 
   const handleSubmit = async (input: GoalInput) => {
     try {

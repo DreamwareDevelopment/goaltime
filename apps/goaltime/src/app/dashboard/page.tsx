@@ -1,7 +1,7 @@
 import React from 'react'
 import { getProfile, getSanitizedUser } from '@/server-utils/queries/user'
 import { redirect } from 'next/navigation'
-import { getGoals, getMilestones, getNotifications } from '@/server-utils/queries/goal'
+import { getGoals, getNotifications } from '@/server-utils/queries/goal'
 
 import { Card } from "@/ui-components/card"
 import { GoalCarousel } from '../../components/GoalCarousel'
@@ -24,15 +24,14 @@ export default async function Dashboard() {
     redirect('/welcome')
   }
 
-  const [goals, milestones, notifications] = await Promise.all([
+  const [goals, notifications] = await Promise.all([
     getGoals(profile),
-    getMilestones(profile),
     getNotifications(profile)
   ])
   const hasGoals = goals.length > 0;
   return (
     <ValtioProvider 
-      dashboardData={{ goals, profile, user, milestones, notifications }}
+      dashboardData={{ goals, profile, user, notifications }}
     >
       <div className="w-full 2xl:w-[67%] mx-auto p-1 pt-4 sm:p-4">
         <header className="flex justify-between items-center mb-5 px-4 sm:px-0">

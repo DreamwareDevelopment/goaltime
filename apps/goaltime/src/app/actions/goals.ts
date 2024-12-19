@@ -56,15 +56,18 @@ export async function deleteGoalAction(goalId: string, userId: string): Promise<
 
 export async function createMilestoneAction(milestone: MilestoneInput): Promise<Milestone> {
   const prisma = await getPrismaClient(milestone.userId)
+  const updatedAt = new Date()
   const newMilestone = await prisma.milestone.create({
-    data: milestone,
+    data: {
+      ...milestone,
+      updatedAt,
+    },
   })
   return newMilestone
 }
 
 export async function updateMilestoneAction(milestone: MilestoneInput): Promise<Milestone> {
   const prisma = await getPrismaClient(milestone.userId)
-  milestone.updatedAt = new Date()
   const updatedMilestone = await prisma.milestone.update({
     where: { id: milestone.id, userId: milestone.userId },
     data: milestone,

@@ -31,3 +31,19 @@ export function parseDuration(duration: string): number {
     default: throw new Error("Invalid duration unit");
   }
 }
+
+const DEFAULT_DEBOUNCE_DELAY = 300;
+
+export function debounce(func: () => Promise<void>, delay: number = DEFAULT_DEBOUNCE_DELAY) {
+  const handler = setTimeout(async () => {
+    await func()
+  }, delay)
+
+  const clear = () => {
+    if (handler) {
+      clearTimeout(handler);
+    }
+  };
+
+  return clear;
+}

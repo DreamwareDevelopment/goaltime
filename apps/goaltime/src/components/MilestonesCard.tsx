@@ -12,6 +12,8 @@ import { useValtio } from "./data/valtio";
 import { MilestoneCreationForm } from "./MilestoneCreationForm";
 import { MilestoneUpdateForm } from "./MilestoneUpdateForm";
 import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
+import { useEffect } from "react";
+import { debounce } from "@/libs/shared/src/lib/utils";
 
 export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goalId: string;
@@ -20,25 +22,44 @@ export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement
 
 export function MilestonesCard({ goalId, view, className }: MilestonesCardProps) {
   const { toast } = useToast()
-  const { goalStore, userStore } = useValtio();
+  const { userStore, milestoneDynamicStore } = useValtio();
   if (!userStore.user) {
     throw new Error('User not initialized')
   }
-  goalStore.ensureMilestones(goalId)
+  milestoneDynamicStore.ensureMilestones(goalId, view)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const milestones = useSnapshot(goalStore.milestones![goalId][view])
+  const milestones = useSnapshot(milestoneDynamicStore.milestones![goalId][view])
+  console.log('MilestonesCard milestones', milestones)
   const { id: userId } = useSnapshot(userStore.user)
 
-  const clearCompletedMilestones = () => {
-    goalStore.deleteMilestones(milestones.filter(milestone => milestone.completed))
-      .catch((error) => {
+  useEffect(() => {
+    const loadMilestones = async () => {
+      try {
+        await milestoneDynamicStore.loadMilestones(goalId, userId, view)
+      } catch (error) {
         console.error(error)
         toast({
           title: 'Error',
-          description: 'Failed to clear completed milestones',
+          description: 'Failed to load milestones',
           variant: 'destructive'
         })
+      }
+    }
+    return debounce(loadMilestones)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goalId, view, userId])
+
+  const clearCompletedMilestones = async () => {
+    try {
+      await milestoneDynamicStore.deleteMilestones(milestones.filter(milestone => milestone.completed))
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Error',
+        description: 'Failed to clear completed milestones',
+        variant: 'destructive'
       })
+    }
   }
 
   return (
@@ -47,7 +68,7 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
         <ul className="space-y-4 pt-4 w-full">
           {milestones.map((milestone, index) => (
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            <MilestoneUpdateForm key={`${goalId}-${milestone.id}-${index}`} milestoneProxy={goalStore.milestones![goalId][view][index]} />
+            <MilestoneUpdateForm key={`${goalId}-${milestone.id}-${index}`} milestoneProxy={milestoneDynamicStore.milestones![goalId][view][index]} />
           ))}
           <MilestoneCreationForm key={`${goalId}-${view}-creation`} goalId={goalId} userId={userId} view={view} />
         </ul>

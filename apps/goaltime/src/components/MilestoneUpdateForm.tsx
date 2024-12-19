@@ -18,11 +18,11 @@ export interface MilestoneUpdateFormProps extends React.HTMLAttributes<HTMLLIEle
 }
 
 export function MilestoneUpdateForm({ milestoneProxy, ...props }: MilestoneUpdateFormProps) {
-  const { goalStore } = useValtio()
+  const { milestoneDynamicStore } = useValtio()
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const milestone = useSnapshot(milestoneProxy)
-  const { deleteMilestone, updateMilestone } = goalStore
+  const { deleteMilestone, updateMilestone } = milestoneDynamicStore
   const form = useForm<MilestoneInput>({
     defaultValues: milestone
   })

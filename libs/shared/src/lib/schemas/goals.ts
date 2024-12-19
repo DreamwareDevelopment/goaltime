@@ -14,7 +14,6 @@ export const MilestoneSchema = z.object({
   text: z.string().min(1, { message: "Text is required" }),
   completed: z.boolean().default(false),
   view: MilestoneViewEnum,
-  updatedAt: z.date().default(new Date()),
 });
 export type MilestoneInput = z.infer<typeof MilestoneSchema>
 
