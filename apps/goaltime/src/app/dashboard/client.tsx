@@ -13,9 +13,9 @@ import { useSnapshot } from "valtio";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { useMediaQuery } from "@/libs/ui-components/src/hooks/use-media-query";
 
-const ActionsCard = dynamic(() => import('../../components/ActionsCard.tsx').then(mod => mod.ActionsCard))
+// const ActionsCard = dynamic(() => import('../../components/ActionsCard.tsx').then(mod => mod.ActionsCard))
+// const GoalyticsCard = dynamic(() => import('../../components/GoalyticsCard.tsx').then(mod => mod.GoalyticsCard))
 const GoalCarousel = dynamic(() => import('../../components/GoalCarousel.tsx').then(mod => mod.GoalCarousel))
-const GoalyticsCard = dynamic(() => import('../../components/GoalyticsCard.tsx').then(mod => mod.GoalyticsCard))
 const GoalProgressCard = dynamic(() => import('../../components/GoalProgressCard.tsx').then(mod => mod.GoalProgressCard))
 const ScheduleCard = dynamic(() => import('../../components/ScheduleCard.tsx').then(mod => mod.ScheduleCard))
 const WelcomeCard = dynamic(() => import('../../components/WelcomeCard.tsx').then(mod => mod.WelcomeCard))
@@ -62,12 +62,12 @@ export default function DashboardClient({ goals, profile, user, milestones, noti
           <div className="flex justify-center py-10">
             <GoalCreationButton className="md:min-w-[333px]" />
           </div>
-          <div className="grid grid-cols-1 gap-6">
+          {/* <div className="grid grid-cols-1 gap-6">
             <GoalyticsCard />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             <ActionsCard className="col-span-1" />
-          </div>
+          </div> */}
         </>
       ) : (
         <div className="md:mt-8 lg:mt-12">
