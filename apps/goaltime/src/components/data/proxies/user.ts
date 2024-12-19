@@ -10,7 +10,7 @@ export const userStore = proxy<{
   user: SanitizedUser | null,
   profile: UserProfile | null,
   createUserProfile(profile: UserProfileInput): Promise<void>,
-  updateUserProfile(profile: UserProfileInput): Promise<void>,
+  updateUserProfile(profile: Partial<UserProfileInput>): Promise<void>,
   uploadProfileImage(userId: string, image: File): Promise<string>,
   init(user: SanitizedUser, profile: UserProfile): void,
 }>({

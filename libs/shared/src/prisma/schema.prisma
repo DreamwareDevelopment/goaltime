@@ -449,6 +449,7 @@ model Goal {
   updatedAt       DateTime          @updatedAt @map("updated_at")
   userId          String            @db.Uuid @map("user_id")
   userProfile     UserProfile       @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+  calendarEvents  CalendarEvent[]
 
   @@schema("public")
   @@map("goals")
@@ -525,6 +526,7 @@ enum CalendarProvider {
 // https://developers.google.com/calendar/api/v3/reference/events
 model CalendarEvent {
   id          String    @id @db.VarChar(1024)
+  goalId      String?   @db.Uuid @map("goal_id")
   provider    CalendarProvider @default(google)
   userId      String    @db.Uuid @map("user_id")
   title       String
@@ -532,12 +534,13 @@ model CalendarEvent {
   description String?
   location    String?
   locked      Boolean   @default(false)
-  startTime   String?   @map("start_time")
-  endTime     String?   @map("end_time")
+  startTime   DateTime? @map("start_time")
+  endTime     DateTime? @map("end_time")
   timeZone    String?   @map("time_zone") // Required if recurrence is set, otherwise it indicates a custom timezone
   eventType   EventType @default(default)
-  allDay      String?   @map("all_day")
+  allDay      DateTime? @map("all_day")
   color       String
+  goal        Goal?     @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
   @@map("calendar_events")

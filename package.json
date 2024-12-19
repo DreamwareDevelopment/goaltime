@@ -28,7 +28,7 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.46.1",
     "@ts-rest/core": "^3.51.0",
-    "@ts-rest/next": "^3.51.0",
+    "@ts-rest/serverless": "^3.51.0",
     "@udecode/cn": "^39.0.0",
     "@udecode/plate-basic-elements": "^40.0.2",
     "@udecode/plate-basic-marks": "^40.0.0",

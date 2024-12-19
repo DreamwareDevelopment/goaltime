@@ -18,6 +18,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
 import { binarySearchInsert, dayjs } from "@/shared/utils";
 import { CalendarEvent } from "@prisma/client";
+import { getTsRestClient } from "@/ui-components/hooks/ts-rest";
+import { LoadingSpinner } from "@/ui-components/svgs/spinner";
+import { useValtio } from "./data/valtio";
+import { useSnapshot } from "valtio";
+import { useToast } from "@/ui-components/hooks/use-toast";
 
 export interface ViewEvent extends CalendarEvent {
   top: number;
@@ -27,23 +32,79 @@ export interface ViewEvent extends CalendarEvent {
   minutes: number | null;
 }
 
-interface ScheduleCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  schedule: CalendarEvent[];
-}
+const DEBOUNCE_DELAY = 300;
 
-export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
+export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [date, setDate] = useState(new Date());
   const now = new Date();
+  const [schedule, setSchedule] = useState<CalendarEvent[] | null>(null);
+  const { userStore } = useValtio();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const profile = useSnapshot(userStore.profile!);
+  const { toast } = useToast();
   const isToday = now.toDateString() === date.toDateString();
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(true);
+  const [timezone, setTimezone] = useState<string>(profile.timezone);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      const client = getTsRestClient();
+      client.calendar.getSchedule({
+        query: {
+          date: date,
+          timezone,
+        }
+      }).then(response => {
+        const { body, status } = response;
+        if (status === 200) {
+          setSchedule(body);
+        } else if (status === 404) {
+          const errorMessage = response.body.error;
+          toast({
+            title: 'Failed to load schedule',
+            description: errorMessage,
+          });
+        }
+      }).catch(error => {
+        console.error(error);
+        toast({
+          title: 'Failed to load schedule',
+          description: 'Please try again',
+        });
+      });
+    }, DEBOUNCE_DELAY);
+  
+    return () => {
+      clearTimeout(handler);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, timezone]);
 
   const navigateDay = (direction: number) => {
     const newDate = new Date(date);
     newDate.setDate(date.getDate() + direction);
     setDate(newDate);
+  };
+
+  const changeTimezone = () => {
+    userStore.updateUserProfile({
+      userId: profile.userId,
+      timezone: clientTimezone
+    }).then(() => {
+      setTimezone(clientTimezone);
+      setShowTimezoneWarning(false);
+    }).catch(error => {
+      console.error(error);
+      toast({
+        title: 'Failed to change timezone',
+        description: 'Please try again',
+      });
+    });
   };
 
   const formatTime = (time: string) => {
@@ -70,10 +131,10 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
 
   const allDayEvents: CalendarEvent[] = [];
   const events: ViewEvent[] = [];
-  for (const event of schedule) {
+  for (const event of schedule ?? []) {
     if (!event.allDay && event.startTime && event.endTime) {
-      const startTime = dayjs(event.startTime);
-      const endTime = dayjs(event.endTime);
+      const startTime = dayjs.utc(event.startTime).tz(timezone);
+      const endTime = dayjs.utc(event.endTime).tz(timezone);
       const newEvent = {
         ...event,
         hours: startTime.hour(),
@@ -135,121 +196,142 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events, date, is24Hour, view]);
 
-  const TimelineView = () => (
-    <div className="h-full w-full">
-      {allDayEvents.length > 0 && (
-        <Accordion type="single" defaultValue="allDayEvents" collapsible className="pb-3">
-          <AccordionItem value="allDayEvents">
-            <AccordionTrigger>
-              <h3 className="font-medium mb-1 ml-2">All-Day Events</h3>
-            </AccordionTrigger>
-            <AccordionContent>
-              {allDayEvents.map(event => (
-                <div
-                  key={event.id}
-                  className={cn(
-                    "px-2 mb-2 rounded-md",
-                    "text-white"
-                  )}
-                  style={{
-                    backgroundColor: event.color
-                  }}
-                >
-                  <div className="font-medium">{event.title}</div>
-                  {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
-                  {event.description && <div className="text-sm">{event.description}</div>}
+  const TimelineView = () => {
+    if (!schedule) return (
+      <div className="flex items-center justify-center h-[500px]">
+        <LoadingSpinner />
+      </div>
+    );
+    return (
+      <div className="h-full w-full">
+        {allDayEvents.length > 0 && (
+          <Accordion type="single" defaultValue="allDayEvents" collapsible className="pb-3">
+            <AccordionItem value="allDayEvents">
+              <AccordionTrigger>
+                <h3 className="font-medium mb-1 ml-2">All-Day Events</h3>
+              </AccordionTrigger>
+              <AccordionContent>
+                {allDayEvents.map(event => (
+                  <div
+                    key={event.id}
+                    className={cn(
+                      "px-2 mb-2 rounded-md",
+                      "text-white"
+                    )}
+                    style={{
+                      backgroundColor: event.color
+                    }}
+                  >
+                    <div className="font-medium">{event.title}</div>
+                    {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
+                    {event.description && <div className="text-sm">{event.description}</div>}
+                  </div>
+                ))}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
+  
+        {/* Scrollable Timeline */}
+        <ScrollArea className="h-[500px] pr-4" scrollRef={scrollRef}>
+          <div className="relative" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
+            {/* Hour markers and separators */}
+            {Array.from({ length: 24 }, (_, i) => (
+              <div 
+                key={i} 
+                className="absolute w-full"
+                style={{ top: `${i * HOUR_HEIGHT}px` }}
+              >
+                <div className="grid grid-cols-[72px_1fr] lg:grid-cols-[84px_1fr] gap-2">
+                  <div className="text-sm text-muted-foreground text-nowrap sticky left-0">
+                    {formatTime(`${String(i).padStart(2, '0')}:00`)}
+                  </div>
+                  <Separator className="mt-2" />
                 </div>
-              ))}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      )}
-
-      {/* Scrollable Timeline */}
-      <ScrollArea className="h-[500px] pr-4" scrollRef={scrollRef}>
-        <div className="relative" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
-          {/* Hour markers and separators */}
-          {Array.from({ length: 24 }, (_, i) => (
-            <div 
-              key={i} 
-              className="absolute w-full"
-              style={{ top: `${i * HOUR_HEIGHT}px` }}
-            >
-              <div className="grid grid-cols-[72px_1fr] lg:grid-cols-[84px_1fr] gap-2">
-                <div className="text-sm text-muted-foreground text-nowrap sticky left-0">
-                  {formatTime(`${String(i).padStart(2, '0')}:00`)}
-                </div>
-                <Separator className="mt-2" />
               </div>
-            </div>
-          ))}
-
-          {/* Events */}
-          <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
-            {events.map((event, index) => {
-              return (
-                <div
-                  key={event.id}
-                  className={cn(
-                    "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                    "text-white"
-                  )}
-                  style={{
-                    backgroundColor: event.color,
-                    top: `${event.top}px`,
-                    height: `${event.height}px`,
-                    minHeight: '20px',
-                    left: event.left
-                  }}
-                >
-                  <div className="text-sm">
-                    {event.title}
-                    {event.height < 45 && (
-                      <span>, {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}</span>
+            ))}
+  
+            {/* Events */}
+            <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
+              {events.map((event, index) => {
+                const startTime = dayjs.utc(event.startTime).tz(timezone);
+                const endTime = dayjs.utc(event.endTime).tz(timezone);
+                return (
+                  <div
+                    key={event.id}
+                    className={cn(
+                      "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
+                      event.goalId ? "text-foreground" : "text-background"
+                    )}
+                    style={{
+                      backgroundColor: event.color,
+                      top: `${event.top}px`,
+                      height: `${event.height}px`,
+                      minHeight: '20px',
+                      left: event.left
+                    }}
+                  >
+                    <div className="text-sm">
+                      {event.title}
+                      {event.height < 45 && (
+                        <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
+                      )}
+                    </div>
+                    {/* Show time on second row only if event is more than 45px */}
+                    {event.height >= 45 && (
+                      <div className="text-sm">
+                        {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
+                      </div>
                     )}
                   </div>
-                  {/* Show time on second row only if event is more than 45px */}
-                  {event.height >= 45 && (
-                    <div className="text-sm">
-                      {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </ScrollArea>
-    </div>
-  );
-
-  const ListView = () => (
-    <ScrollArea className="h-[576px] pt-4 pr-4 w-full">
-      {schedule.map(event => (
-        <div
-          key={event.id}
-          className={cn(
-            "flex-shrink-0",
-            "p-3 mb-2 rounded-md",
-            "text-white"
-          )}
-          style={{
-            backgroundColor: event.color
-          }}
-        >
-          <div className="font-medium">{event.title}</div>
-          {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
-          {event.description && <div className="text-sm">{event.description}</div>}
-          {!event.allDay && (
-            <div className="text-sm mt-1">
-              {formatTime(event.startTime || '')} - {formatTime(event.endTime || '')}
+                );
+              })}
             </div>
-          )}
-          {event.allDay && <div className="text-sm mt-1">All Day</div>}
-        </div>
-      ))}
-    </ScrollArea>
-  );
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  };
+
+  const ListView = () => {
+    if (!schedule) return (
+      <div className="flex items-center justify-center h-[500px]">
+        <LoadingSpinner />
+      </div>
+    );
+    return (
+      <ScrollArea className="h-[576px] pt-4 pr-4 w-full">
+        {schedule.map(event => {
+          const startTime = dayjs(event.startTime);
+          const endTime = dayjs(event.endTime);
+          console.log(startTime.toISOString(), endTime.toISOString());
+          return (
+            <div
+              key={event.id}
+              className={cn(
+                "flex-shrink-0",
+                "p-3 mb-2 rounded-md",
+                event.color === "#f8fafc" ? "text-background" : "text-foreground"
+              )}
+              style={{
+                backgroundColor: event.color
+              }}
+            >
+              <div className="font-medium">{event.title}</div>
+              {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
+              {event.description && <div className="text-sm">{event.description}</div>}
+              {!event.allDay && (
+                <div className="text-sm mt-1">
+                  {formatTime(startTime.toISOString())} - {formatTime(endTime.toISOString())}
+                </div>
+              )}
+              {event.allDay && <div className="text-sm mt-1">All Day</div>}
+            </div>
+          )
+        })}
+      </ScrollArea>
+    );
+  };
 
   const DateToolbar = ({ className }: { className?: string }) => (
     <div className={className}>
@@ -336,6 +418,33 @@ export const ScheduleCard = ({ schedule, className }: ScheduleCardProps) => {
     </div>
   )
 
+  if (timezone !== clientTimezone && showTimezoneWarning) {
+    return (
+      <Card className={cn("h-full w-full", className)}>
+        <CardContent className="flex flex-col items-center justify-center gap-4 pt-6 h-full">
+          <p className="text-center text-sm text-muted-foreground">
+            Warning: Your profile&apos;s timezone <span className="text-foreground font-bold">({timezone})</span> is different from your current timezone <span className="text-foreground font-bold">({clientTimezone})</span>.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={changeTimezone}
+          >
+            Change Timezone
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setShowTimezoneWarning(false);
+            }}
+          >
+            No, don&apos;t change it
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className={cn("h-full w-full", className)}>
       <CardHeader className="flex flex-col items-center gap-2 pt-2 pb-0">

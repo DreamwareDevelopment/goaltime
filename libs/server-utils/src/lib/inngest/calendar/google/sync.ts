@@ -6,6 +6,7 @@ import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient } 
 import { getPrismaClient } from "../../../prisma/client";
 import { inngest, InngestEvent } from "../../client";
 import { Logger } from "inngest/middleware/logger";
+import { dayjs } from "@/shared/utils";
 
 // Relevant docs:
 // https://developers.google.com/calendar/api/guides/sync
@@ -198,14 +199,15 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
     subtitle: null,
     description: event.description ?? null,
     location: event.location ?? null,
-    startTime: event.start?.dateTime ?? null,
-    endTime: event.end?.dateTime ?? null,
+    startTime: event.start?.dateTime ? dayjs.utc(event.start.dateTime).toDate() : null,
+    endTime: event.end?.dateTime ? dayjs.utc(event.end.dateTime).toDate() : null,
     timeZone: event.start?.timeZone ?? null,
     eventType: event.eventType as EventType | undefined ?? EventType.default,
     locked: Boolean(event.locked),
-    allDay: event.start?.date ?? event.end?.date ?? null,
+    allDay: event.start?.date ? dayjs.utc(event.start.date).toDate() : event.end?.date ? dayjs.utc(event.end.date).toDate() : null,
     color: "#f8fafc",
     provider: CalendarProvider.google,
+    goalId: null,
   }
 }
 

@@ -24,6 +24,18 @@ ALTER COLUMN "preferred_wake_up_time" SET DEFAULT '07:00'::time;
 DROP TABLE "public"."NotificationSettings";
 
 -- CreateTable
+CREATE TABLE "public"."google_auth" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "user_id" UUID NOT NULL,
+    "access_token" VARCHAR(2048) NOT NULL,
+    "refresh_token" VARCHAR(512) NOT NULL,
+    "calendar_sync_token" VARCHAR(255) NULL DEFAULT NULL,
+    "last_full_sync_at" TIMESTAMP(3) NULL DEFAULT NULL,
+
+    CONSTRAINT "google_auth_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."notification_settings" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "goal_id" UUID NOT NULL,
@@ -42,6 +54,7 @@ CREATE TABLE "public"."notification_settings" (
 -- CreateTable
 CREATE TABLE "public"."calendar_events" (
     "id" VARCHAR(1024) NOT NULL,
+    "goal_id" UUID,
     "provider" "public"."calendar_providers" NOT NULL DEFAULT 'google',
     "user_id" UUID NOT NULL,
     "title" TEXT NOT NULL,
@@ -49,21 +62,30 @@ CREATE TABLE "public"."calendar_events" (
     "description" TEXT,
     "location" TEXT,
     "locked" BOOLEAN NOT NULL DEFAULT false,
-    "start_time" TEXT,
-    "end_time" TEXT,
-    "time_zone" TEXT,
+    "start_time" TIMESTAMP(3) NULL DEFAULT NULL,
+    "end_time" TIMESTAMP(3) NULL DEFAULT NULL,
+    "time_zone" TEXT NULL DEFAULT NULL,
     "eventType" "public"."event_types" NOT NULL DEFAULT 'default',
-    "all_day" TEXT,
+    "all_day" TIMESTAMP(3) NULL DEFAULT NULL,
     "color" TEXT NOT NULL,
 
     CONSTRAINT "calendar_events_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "google_auth_user_id_key" ON "public"."google_auth"("user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "notification_settings_goal_id_key" ON "public"."notification_settings"("goal_id");
+
+-- AddForeignKey
+ALTER TABLE "public"."google_auth" ADD CONSTRAINT "google_auth_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "public"."notification_settings" ADD CONSTRAINT "notification_settings_goal_id_fkey" FOREIGN KEY ("goal_id") REFERENCES "public"."goals"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "public"."notification_settings" ADD CONSTRAINT "notification_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user_profiles"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "public"."calendar_events" ADD CONSTRAINT "calendar_events_goal_id_fkey" FOREIGN KEY ("goal_id") REFERENCES "public"."goals"("id") ON DELETE CASCADE ON UPDATE NO ACTION;

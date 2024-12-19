@@ -11,7 +11,7 @@ export async function createUserProfileAction(profile: UserProfileInput) {
   return userProfile
 }
 
-export async function updateUserProfileAction(profile: UserProfileInput) {
+export async function updateUserProfileAction(profile: Partial<UserProfileInput>) {
   const prisma = await getPrismaClient(profile.userId)
   return prisma.userProfile.update({
     where: { userId: profile.userId },

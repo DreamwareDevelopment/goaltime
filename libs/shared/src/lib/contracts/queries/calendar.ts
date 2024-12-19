@@ -16,6 +16,7 @@ export const calendarContract = c.router({
     }),
     responses: {
       200: c.type<CalendarEvent[]>(),
+      404: c.type<{ error: string }>(),
     },
     summary: 'Get the schedule for a user at a given date',
   },
