@@ -121,10 +121,10 @@ export function GoalSettingsCard({
   const deleteDialog = (
     <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <DialogPortal>
-        <DialogContent>
+        <DialogContent className="p-4">
           <DialogHeader>
             <DialogTitle>Delete Goal</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="mt-2">
               Are you sure you want to delete this goal? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

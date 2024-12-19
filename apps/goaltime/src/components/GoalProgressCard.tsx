@@ -1,21 +1,21 @@
 "use client"
 
-import { cn } from "@/ui-components/utils"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/ui-components/card"
+import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/ui-components/card"
 import { Progress } from "@/ui-components/progress"
-
-import { GoalCreationButton } from "./GoalCreationButton";
+import { GoalCreationButton } from "./GoalCreationButton"
 import { useValtio } from "./data/valtio"
-import { useSnapshot } from "valtio";
+import { useSnapshot } from "valtio"
+import { ScrollArea } from "@/ui-components/scroll-area"
 
-export function GoalProgressCard({ className }: React.HTMLAttributes<HTMLDivElement>) {
-  const { goalStore } = useValtio();
+export function GoalProgressCard() {
+  const { goalStore } = useValtio()
   if (!goalStore.goals) {
     throw new Error('Invariant: Goals not initialized before using GoalProgressCard')
   }
-  const goals = useSnapshot(goalStore.goals);
+  const goals = useSnapshot(goalStore.goals)
+  
   return (
-    <Card className={cn(className)}>
+    <ScrollArea className="h-full w-full">
       <CardHeader>
         <CardTitle>Goals</CardTitle>
         <CardDescription>Your current goals and progress</CardDescription>
@@ -37,8 +37,8 @@ export function GoalProgressCard({ className }: React.HTMLAttributes<HTMLDivElem
         ))}
       </CardContent>
       <CardFooter className="flex justify-center">
-        <GoalCreationButton className="md:min-w-[333px]" />
+        <GoalCreationButton className="md:min-w-[258px]" />
       </CardFooter>
-    </Card>
+    </ScrollArea>
   )
 }

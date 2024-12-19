@@ -2,8 +2,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/ui-components/card"
 import { GoalCreationButton } from "./GoalCreationButton"
+import { useRouter } from "next/navigation";
 
-export function WelcomeCard({ className }: React.HTMLAttributes<HTMLDivElement>) {
+export function WelcomeCard({ className }: React.HTMLAttributes<HTMLDivElement> & { onDidCreate?: () => void }) {
+  const router = useRouter();
+  const onDidCreate = () => {
+    router.refresh();
+  }
   return (
     <Card className={className}>
       <CardHeader>
@@ -16,7 +21,7 @@ export function WelcomeCard({ className }: React.HTMLAttributes<HTMLDivElement>)
         <p className="text-center mb-8 text-muted-foreground">
           Create your first goal to begin your journey towards achieving your aspirations
         </p>
-        <GoalCreationButton className="w-[250px]" />
+        <GoalCreationButton className="w-[250px]" onDidCreate={onDidCreate} />
       </CardContent>
     </Card>
   )

@@ -1,25 +1,30 @@
 "use client"
 
 import { PlusIcon } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useState } from "react";
+import { useSnapshot } from "valtio";
 
+import { GoalInput } from "@/shared/zod";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { Credenza, CredenzaContent, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaTrigger, CredenzaBody } from "@/ui-components/credenza";
+import { useToast } from "@/ui-components/hooks/use-toast";
+import { ScrollArea } from "@/ui-components/scroll-area";
+import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 
 import { GoalRecommendation, GoalRecommendationsCard } from "./GoalRecommendationsCard";
-import { GoalSettingsCard } from "./GoalSettingsCard";
-import { ScrollArea } from "@/ui-components/scroll-area";
-import { GoalInput } from "@/libs/shared/src/lib/schemas/goals";
-import { useToast } from "@/ui-components/hooks/use-toast";
 import { useValtio } from "./data/valtio";
-import { useSnapshot } from "valtio";
-import { useState } from "react";
+
+const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod => mod.GoalSettingsCard), {
+  loading: () => <LoadingSpinner />
+});
 
 interface GoalCreationButtonProps extends React.HTMLAttributes<HTMLDivElement> {
-  plusOnly?: boolean
+  onDidCreate?: () => void
 }
 
 export function GoalCreationButton({
-  plusOnly = false,
+  onDidCreate,
   className
 }: GoalCreationButtonProps) {
   const { toast } = useToast();
@@ -35,6 +40,7 @@ export function GoalCreationButton({
     try {
       await goalStore.createGoal(goal);
       toast({ title: 'Goal created', description: 'Your goal has been created successfully', variant: 'default' })
+      onDidCreate?.();
     } catch (error) {
       toast({ title: 'Error creating goal', description: (error as Error).message, variant: 'destructive' })
     }
@@ -42,14 +48,10 @@ export function GoalCreationButton({
   return (
     <Credenza open={isOpen} onOpenChange={setIsOpen}>
       <CredenzaTrigger asChild>
-        { !plusOnly ?
-          <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
-            New Goal
-          </ShinyButton> :
-          <ShinyButton variant="gooeyLeft" className={className}>
-            <PlusIcon className="w-6 h-6" />
-          </ShinyButton>
-        }
+        <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
+          <span className="hidden sm:block">New Goal</span>
+          <span className="block sm:hidden"><PlusIcon className="w-6 h-6" /></span>
+        </ShinyButton>
       </CredenzaTrigger>
       <CredenzaContent className="h-[calc(100vh-100px)] md:h-[85vh]">
         <ScrollArea className="h-full w-full">

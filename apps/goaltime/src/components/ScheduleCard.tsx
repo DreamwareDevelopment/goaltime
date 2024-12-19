@@ -449,7 +449,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     <Card className={cn("h-full w-full", className)}>
       <CardHeader className="flex flex-col items-center gap-2 pt-2 pb-0">
         <CardTitle className="sr-only">Schedule</CardTitle>
-        <div className="flex flex-wrap items-center justify-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-4 pb-4">
           <DateToolbar className="flex items-center justify-between space-x-2" />
           <ViewToolbar className="flex items-center justify-between space-x-2" />
         </div>

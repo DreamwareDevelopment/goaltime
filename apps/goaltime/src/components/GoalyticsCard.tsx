@@ -2,14 +2,13 @@
 
 import { useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { useSnapshot } from "valtio"
 
-import { cn } from "@/ui-components/utils"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/ui-components/card"
+import { CardHeader, CardTitle, CardContent, CardFooter } from "@/ui-components/card"
 import { MultiSelect, Option } from "@/ui-components/multi-select"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/ui-components/select"
 
 import { useValtio } from "./data/valtio"
-import { useSnapshot } from "valtio"
 
 const chartData = {
   week: [
@@ -43,7 +42,7 @@ const chartData = {
   ],
 }
 
-export function GoalyticsCard({ className }: React.HTMLAttributes<HTMLDivElement>) {
+export function GoalyticsCard() {
   const { goalStore } = useValtio()
   if (!goalStore.goals) {
     throw new Error('Invariant: goals not initialized before using GoalyticsCard')
@@ -55,12 +54,13 @@ export function GoalyticsCard({ className }: React.HTMLAttributes<HTMLDivElement
 
   const allGoals: Option[] = goals.map((goal) => ({ value: goal.id, label: goal.title, color: goal.color }))
   const filteredGoals = selectedGoals.length > 0 ? goals.filter(goal => selectedGoals.findIndex(sg => sg.value === goal.id) > -1) : goals
+
   return (
-    <Card className={cn(className, "p-4")}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0">
-        <CardTitle>Goalytics</CardTitle>
+    <>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pt-4">
+        <CardTitle className="pl-4">Goalytics</CardTitle>
         <Select value={timeRange} onValueChange={(value) => setTimeRange(value as keyof typeof chartData)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] mr-4">
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
           <SelectContent>
@@ -82,20 +82,20 @@ export function GoalyticsCard({ className }: React.HTMLAttributes<HTMLDivElement
             ))}
           </BarChart>
         </ResponsiveContainer>
-        <CardFooter className="p-0 mt-4">
-          <MultiSelect
-            className="w-full"
-            defaultOptions={allGoals}
-            placeholder="Select goals to track"
-            hidePlaceholderWhenSelected
-            hideClearAllButton
-            value={selectedGoals.length > 0 ? selectedGoals : allGoals}
-            onChange={(value) => {
-              setSelectedGoals(value)
-            }}
-          />
-        </CardFooter>
       </CardContent>
-    </Card>
+      <CardFooter className="p-0 mt-4">
+        <MultiSelect
+          className="w-full"
+          defaultOptions={allGoals}
+          placeholder="Select goals to track"
+          hidePlaceholderWhenSelected
+          hideClearAllButton
+          value={selectedGoals.length > 0 ? selectedGoals : allGoals}
+          onChange={(value) => {
+            setSelectedGoals(value)
+          }}
+        />
+      </CardFooter>
+    </>
   )
 }
