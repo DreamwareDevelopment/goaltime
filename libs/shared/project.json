@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_events_models",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_phone",
         "cwd": "libs/shared"
       }
     },

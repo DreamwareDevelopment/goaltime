@@ -395,6 +395,7 @@ model UserProfile {
   userId              String    @unique @db.Uuid @map("user_id")
   avatarUrl           String    @db.VarChar(255) @map("avatar_url")
   name                String    @default("GT User") @db.VarChar(100)
+  phone               String    @unique
   birthday            DateTime?
   occupation          String?   @db.VarChar(100)
   worksRemotely       Boolean   @default(false) @map("works_remotely")
@@ -476,7 +477,8 @@ model NotificationSettings {
   goalId      String      @db.Uuid @unique @map("goal_id")
   goal        Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   userId      String      @db.Uuid @map("user_id")
-  userProfile UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+  phone       String
+  userProfile UserProfile @relation(fields: [phone], references: [phone], onDelete: Cascade, onUpdate: Cascade)
   // Push Notifications
   pushBefore  Int? @map("push_before") // Store as minutes
   pushAfter   Int? @map("push_after")  // Store as minutes

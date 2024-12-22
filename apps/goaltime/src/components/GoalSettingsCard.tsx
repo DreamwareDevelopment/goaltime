@@ -31,7 +31,6 @@ import { Button } from "@/ui-components/button"
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
   showTitle?: boolean;
-  userId: string;
   recommendation?: GoalRecommendation | null;
   setRecommendation?: (recommendation: GoalRecommendation | null) => void;
   handleSubmit: (goal: GoalInput) => Promise<void>;
@@ -42,7 +41,6 @@ export function GoalSettingsCard({
   goal,
   showTitle = false,
   className,
-  userId,
   handleSubmit,
   close,
   recommendation = null,
@@ -50,8 +48,10 @@ export function GoalSettingsCard({
 }: GoalSettingsCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   
-  const { goalStore } = useValtio()
+  const { goalStore, userStore } = useValtio()
   const { deleteGoal } = goalStore
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const profile = useSnapshot(userStore.profile!)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const goals = useSnapshot(goalStore.goals!)
   // TODO: Calculate a globally unused color
@@ -60,11 +60,11 @@ export function GoalSettingsCard({
   const form = useForm<GoalInput>({
     resolver: getZodResolver(GoalSchema),
     defaultValues: {
-      ...getDefaults(GoalSchema, { userId, color }),
+      ...getDefaults(GoalSchema, { userId: profile.userId, color }),
       ...goal,
       notifications: goal?.notifications ?
-        goal.notifications :
-        getDefaults(NotificationSettingsSchema, { userId, goalId: goal?.id }),
+        { ...goal.notifications, phone: profile.phone } :
+        getDefaults(NotificationSettingsSchema, { userId: profile.userId, goalId: goal?.id, phone: profile.phone }),
     }
   })
 

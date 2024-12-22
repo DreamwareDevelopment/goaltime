@@ -45,9 +45,18 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(true);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
+  const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(false);
+
+  useEffect(() => {
+    const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timezone !== clientTimezone) {
+      setShowTimezoneWarning(true);
+    }
+    setTimezone(clientTimezone);
+  // We only want to run this once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const clearDebounce = debounce(async () => {
@@ -90,9 +99,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const changeTimezone = () => {
     userStore.updateUserProfile({
       userId: profile.userId,
-      timezone: clientTimezone
+      timezone: timezone
     }).then(() => {
-      setTimezone(clientTimezone);
+      setTimezone(timezone);
       setShowTimezoneWarning(false);
     }).catch(error => {
       console.error(error);
@@ -414,12 +423,12 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     </div>
   )
 
-  if (timezone !== clientTimezone && showTimezoneWarning) {
+  if (timezone !== profile.timezone && showTimezoneWarning) {
     return (
       <Card className={cn("h-full w-full", className)}>
         <CardContent className="flex flex-col items-center justify-center gap-4 pt-6 h-full">
           <p className="text-center text-sm text-muted-foreground">
-            Warning: Your profile&apos;s timezone <span className="text-foreground font-bold">({timezone})</span> is different from your current timezone <span className="text-foreground font-bold">({clientTimezone})</span>.
+            Warning: Your profile&apos;s timezone <span className="text-foreground font-bold">({profile.timezone})</span> is different from your current timezone <span className="text-foreground font-bold">({timezone})</span>.
           </p>
           <Button
             size="sm"
@@ -432,6 +441,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
             size="sm"
             variant="outline"
             onClick={() => {
+              setTimezone(profile.timezone);
               setShowTimezoneWarning(false);
             }}
           >

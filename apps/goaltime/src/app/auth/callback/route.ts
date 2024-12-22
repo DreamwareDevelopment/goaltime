@@ -15,6 +15,14 @@ async function saveGoogleAuthTokens(session: Session, user: User) {
   }
   // This will cause a postgres trigger to fire a background function to sync the calendar
   const prisma = await getPrismaClient()
+  const existingGoogleAuth = await prisma.googleAuth.findFirst({
+    where: {
+      userId: user.id,
+    }
+  })
+  if (existingGoogleAuth) {
+    return
+  }
   const googleAuth = await prisma.googleAuth.create({
     data: {
       userId: user.id,

@@ -21,6 +21,9 @@ export type MilestoneInput = z.infer<typeof MilestoneSchema>
 export const NotificationSettingsSchema = z.object({
   id: z.string().uuid().optional(),
   userId: z.string().uuid(),
+  phone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/, {
+    message: 'Please provide a valid phone number',
+  }),
   pushBefore: z.number().int().min(0).optional().nullable().default(0),
   pushAfter: z.number().int().min(0).optional().nullable().default(2),
   textBefore: z.number().int().min(0).optional().nullable().default(null),

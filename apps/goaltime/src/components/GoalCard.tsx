@@ -98,7 +98,6 @@ export function GoalCard({ goal, className }: GoalCardProps) {
           <AccordionContent className="p-6 pt-0">
             <GoalSettingsCard
               goal={getMutableGoal(goal, notifications)}
-              userId={goal.userId}
               handleSubmit={handleSubmit}
             />
           </AccordionContent>

@@ -14,6 +14,10 @@ export const UserProfileSchema = z.object({
   name: z.string().max(100, {
     message: 'Could you please be more concise?',
   }),
+  phone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/, {
+    message: 'Please provide a valid phone number',
+  }),
+  otp: z.string().optional(),
   birthday: z.date({
     message: 'Please provide a valid birthday',
   }).min(new Date('1900-01-01'), {

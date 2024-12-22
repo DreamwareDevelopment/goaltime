@@ -4,7 +4,7 @@ import { OAuth2Client } from "google-auth-library";
 import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient } from "@prisma/client";
 
 import { getPrismaClient } from "../../../prisma/client";
-import { inngest, InngestEvent } from "../../client";
+import { inngest, InngestEvent, InngestEventData } from "../../client";
 import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 
@@ -76,7 +76,7 @@ async function fullSyncCalendarEvents(
     // Sync events for the next 7 days
     const res = await calendar.events.list({
       calendarId: 'primary',
-      timeMin: new Date().toISOString(),
+      timeMin: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
       timeMax: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       singleEvents: true,
       pageToken: pageToken ?? undefined,
@@ -382,7 +382,7 @@ export const syncCalendars = inngest.createFunction(
   async ({ step }) => {
     const prisma = await getPrismaClient();
     const googleAuths = await prisma.googleAuth.findMany();
-    const events = googleAuths.map(googleAuth => ({
+    const events: InngestEventData[InngestEvent.GoogleCalendarCronSync][] = googleAuths.map(googleAuth => ({
       name: InngestEvent.GoogleCalendarCronSync,
       data: googleAuth,
     }));

@@ -1,4 +1,4 @@
-import { EventSchemas, Inngest } from "inngest";
+import { EventSchemas, GetEvents, Inngest } from "inngest";
 import { GoogleAuth } from "@prisma/client";
 
 import type { AccountabilityEvent } from "./agents";
@@ -32,3 +32,5 @@ export const inngest = new Inngest({
     };
   }>()
 });
+
+export type InngestEventData = GetEvents<typeof inngest>

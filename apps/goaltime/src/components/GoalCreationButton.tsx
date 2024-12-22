@@ -3,7 +3,6 @@
 import { PlusIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { useSnapshot } from "valtio";
 
 import { GoalInput } from "@/shared/zod";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
@@ -34,8 +33,6 @@ export function GoalCreationButton({
   if (!userStore.profile) {
     throw new Error('Invariant: User profile not initialized before using GoalCreationButton')
   }
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const profile = useSnapshot(userStore.profile!);
   const handleSubmit = async (goal: GoalInput) => {
     try {
       await goalStore.createGoal(goal);
@@ -66,7 +63,6 @@ export function GoalCreationButton({
               setRecommendation={setRecommendation}
               close={() => setIsOpen(false)}
               showTitle
-              userId={profile.userId}
               handleSubmit={handleSubmit}
             />
           </CredenzaBody>
