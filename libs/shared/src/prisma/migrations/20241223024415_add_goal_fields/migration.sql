@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "public"."goals" ADD COLUMN     "deadline" TIMESTAMP(3) NULL DEFAULT NULL,
+ADD COLUMN     "estimate" DOUBLE PRECISION NULL DEFAULT NULL,
+ALTER COLUMN "commitment" DROP NOT NULL;

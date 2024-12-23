@@ -438,7 +438,9 @@ model Goal {
   id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title           String
   description     String?
-  commitment      Float
+  deadline        DateTime?          @map("deadline")
+  commitment      Float?
+  estimate        Float?
   completed       Float              @default(0.0)
   priority        Priority           @default(Medium)
   preferredTimes  Json

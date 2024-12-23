@@ -16,13 +16,25 @@ import { cn } from "@/ui-components/utils"
 import { useValtio } from "./data/valtio";
 
 const PlateEditor = dynamic(() => import('./plate-ui/plate-editor.tsx').then(mod => mod.PlateEditor), {
-  loading: () => <LoadingSpinner />
+  loading: () => (
+    <div className="w-full h-full flex justify-center items-center">
+      <LoadingSpinner />
+    </div>
+  )
 })
 const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.MilestonesCard), {
-  loading: () => <LoadingSpinner />
+  loading: () => (
+    <div className="w-full h-full flex justify-center items-center">
+      <LoadingSpinner />
+    </div>
+  )
 })
 const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod => mod.GoalSettingsCard), {
-  loading: () => <LoadingSpinner />
+  loading: () => (
+    <div className="w-full h-full flex justify-center items-center">
+      <LoadingSpinner />
+    </div>
+  )
 })
 
 function getMutableGoal(goal: Goal, notifications: NotificationSettings): GoalInput {

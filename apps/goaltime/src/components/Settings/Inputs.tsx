@@ -6,13 +6,14 @@ import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/f
 import { Input } from "@/ui-components/input";
 import { Label } from "@/ui-components/label";
 import { GoalInput } from "@/shared/zod";
+import { DatetimePicker } from "@/ui-components/datetime-picker";
 
 
-export interface TitleInputProps {
+export interface FormInputProps {
   form: UseFormReturn<GoalInput>;
 }
 
-export const TitleInput: React.FC<TitleInputProps> = ({ form }) => {
+export const TitleInput: React.FC<FormInputProps> = ({ form }) => {
   return (
     <FormField
       control={form.control}
@@ -33,11 +34,7 @@ export const TitleInput: React.FC<TitleInputProps> = ({ form }) => {
   )
 }
 
-export interface DescriptionInputProps {
-  form: UseFormReturn<GoalInput>;
-}
-
-export const DescriptionInput: React.FC<DescriptionInputProps> = ({ form }) => {
+export const DescriptionInput: React.FC<FormInputProps> = ({ form }) => {
   return (
     <FormField
       control={form.control}
@@ -60,17 +57,13 @@ export const DescriptionInput: React.FC<DescriptionInputProps> = ({ form }) => {
   )
 }
 
-export interface CommitmentInputProps {
-  form: UseFormReturn<GoalInput>;
-}
-
-export const CommitmentInput: React.FC<CommitmentInputProps> = ({ form }) => {
+export const CommitmentInput: React.FC<FormInputProps> = ({ form }) => {
   return (
     <FormField
       control={form.control}
       name="commitment"
       render={({ field }) => (
-        <FormItem className="space-y-2">
+        <FormItem className="space-y-2 w-[200px] mt-2">
           <Label className="ml-2 text-nowrap" htmlFor="commitment">Weekly Commitment</Label>
           <FormControl>
             <div className="relative">
@@ -81,6 +74,7 @@ export const CommitmentInput: React.FC<CommitmentInputProps> = ({ form }) => {
                 min={1}
                 max={100}
                 {...field}
+                value={field.value ?? ''}
                 onChange={(e) => field.onChange(Number(e.target.value))}
               />
               <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground">
@@ -88,7 +82,66 @@ export const CommitmentInput: React.FC<CommitmentInputProps> = ({ form }) => {
               </span>
             </div>
           </FormControl>
-          <FormMessage className="ml-2" />
+          <FormMessage className="ml-2 text-center" />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export const EstimateInput: React.FC<FormInputProps> = ({ form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="estimate"
+      render={({ field }) => (
+        <FormItem className="space-y-2 w-[200px]">
+          <Label className="ml-2 text-nowrap" htmlFor="estimate">Estimate</Label>
+          <FormControl>
+            <div className="relative">
+              <Input
+                placeholder="Enter..."
+                className="pr-10"
+                type="number"
+                min={1}
+                {...field}
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(Number(e.target.value))}
+              />
+              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                hrs
+              </span>
+            </div>
+          </FormControl>
+          <FormMessage className="ml-2 text-center" />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export const DeadlineInput: React.FC<FormInputProps> = ({ form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="deadline"
+      render={({ field }) => (
+        <FormItem>
+          <Label className="pl-2">
+            Deadline
+          </Label>
+          <FormControl>
+            <DatetimePicker
+              {...field}
+              format={[
+                ["months", "days", "years"],
+                []
+              ]}
+              value={field.value}
+              onChange={field.onChange}
+            />
+          </FormControl>
+          <FormMessage className="pl-2 text-center" />
         </FormItem>
       )}
     />

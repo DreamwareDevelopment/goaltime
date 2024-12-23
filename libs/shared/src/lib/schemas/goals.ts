@@ -45,11 +45,20 @@ export const GoalSchema = z.object({
   description: z.string()
     .max(1000, { message: "Description must be less than 1000 characters" })
     .optional().nullable().default(null),
+  estimate: z.number()
+    .positive()
+    .min(1.0, { message: "Estimate must be at least 1 hour" })
+    .optional()
+    .nullable()
+    .default(null),
+  deadline: z.date().optional().nullable().default(null),
   commitment: z.number()
     .positive()
     .min(1.0, { message: "Commitment must be at least 1 hour" })
     .max(100.0, { message: "That's a lot of hours, try breaking it up into component goals." })
-    .default(1.0),
+    .optional()
+    .nullable()
+    .default(null),
   completed: z.number()
     .min(0.0, { message: "Completed must be at least 0 hours" })
     .max(100.0, { message: "Completed must be less than 100 hours" })

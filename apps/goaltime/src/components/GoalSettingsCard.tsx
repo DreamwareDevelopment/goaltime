@@ -1,4 +1,4 @@
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
 import React, { useRef, useState } from 'react'
 
 import { cn } from "@/ui-components/utils"
@@ -11,7 +11,7 @@ import { NotificationSettings } from './Settings/Notifications'
 import { PreferredTimes } from './Settings/PreferredTimes'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
-import { CommitmentInput, DescriptionInput, TitleInput } from './Settings/Inputs'
+import { DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
@@ -27,6 +27,8 @@ import {
   DialogPortal,
 } from "@/ui-components/dialog"
 import { Button } from "@/ui-components/button"
+import { GoalTypeInput } from './GoalTypeInput'
+import { Separator } from '@/ui-components/separator'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -58,7 +60,39 @@ export function GoalSettingsCard({
   const memoizedGetDistinctColor = React.useCallback(() => getDistinctColor(goals.map(g => g.color)), [goals]);
   const color = goal?.color ?? memoizedGetDistinctColor();
   const form = useForm<GoalInput>({
-    resolver: getZodResolver(GoalSchema),
+    resolver: getZodResolver(GoalSchema, async (data) => {
+      const errors: FieldErrors<GoalInput> = {}
+      if (!data.commitment && !data.estimate && !data.deadline) {
+        errors.commitment = {
+          type: 'validate',
+          message: 'Must set either commitment or deadline w/ estimate',
+        }
+        errors.estimate = {
+          type: 'validate',
+          message: 'Must set either commitment or deadline w/ estimate',
+        }
+      } else if (data.commitment && (data.estimate || data.deadline)) {
+        errors.commitment = {
+          type: 'validate',
+          message: 'Cannot set both commitment and deadline / estimate',
+        }
+        errors.estimate = {
+          type: 'validate',
+          message: 'Cannot set both commitment and deadline / estimate',
+        }
+      } else if (data.deadline && !data.estimate) {
+        errors.deadline = {
+          type: 'validate',
+          message: 'Deadline requires an estimate',
+        }
+      } else if (!data.deadline && data.estimate) {
+        errors.estimate = {
+          type: 'validate',
+          message: 'Estimate requires a deadline',
+        }
+      }
+      return errors
+    }),
     defaultValues: {
       ...getDefaults(GoalSchema, { userId: profile.userId, color }),
       ...goal,
@@ -153,10 +187,9 @@ export function GoalSettingsCard({
             <CardContent className="space-y-6">
               <TitleInput form={form} />
               <DescriptionInput form={form} />
-              <div className="flex flex-row flex-wrap w-full gap-5">
-                <CommitmentInput form={form} />
-                <PrioritySelector form={form} />
-              </div>
+              <GoalTypeInput form={form} goal={goal} />
+              <Separator />
+              <PrioritySelector form={form} />
               <PreferredTimes form={form} />
               <NotificationSettings form={form} />
               <div className="flex flex-col justify-center items-center gap-4 w-full">

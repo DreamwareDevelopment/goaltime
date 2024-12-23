@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_phone",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_goal_fields",
         "cwd": "libs/shared"
       }
     },
