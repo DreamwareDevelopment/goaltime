@@ -1,7 +1,10 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/libs/ui-components/src/components/ui/tabs'
 import { UseFormReturn } from 'react-hook-form'
-import { CommitmentInput, DeadlineInput, EstimateInput } from './Settings/Inputs'
-import { GoalInput } from '@/libs/shared/src/lib/schemas'
+
+import { GoalInput } from '@/shared/zod'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs'
+
+import { DeadlineInput } from './TimeInputs.tsx'
+import { CommitmentInput, EstimateInput } from './Inputs.tsx'
 
 interface GoalTypeInputProps {
   form: UseFormReturn<GoalInput>

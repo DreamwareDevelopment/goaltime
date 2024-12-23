@@ -119,31 +119,3 @@ export const EstimateInput: React.FC<FormInputProps> = ({ form }) => {
     />
   )
 }
-
-export const DeadlineInput: React.FC<FormInputProps> = ({ form }) => {
-  return (
-    <FormField
-      control={form.control}
-      name="deadline"
-      render={({ field }) => (
-        <FormItem>
-          <Label className="pl-2">
-            Deadline
-          </Label>
-          <FormControl>
-            <DatetimePicker
-              {...field}
-              format={[
-                ["months", "days", "years"],
-                []
-              ]}
-              value={field.value}
-              onChange={field.onChange}
-            />
-          </FormControl>
-          <FormMessage className="pl-2 text-center" />
-        </FormItem>
-      )}
-    />
-  )
-}

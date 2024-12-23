@@ -1,9 +1,38 @@
-import { UseFormReturn } from "react-hook-form";
-import { Label } from "@/ui-components/label";
 import { Button } from "@/ui-components/button";
+import { DatetimePicker } from "@/ui-components/datetime-picker"
+import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form"
+import { Label } from "@/ui-components/label"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui-components/tooltip'
-import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
-import { GoalInput } from "@/shared/zod";
+
+import { FormInputProps } from "./Inputs.tsx"
+
+export const DeadlineInput: React.FC<FormInputProps> = ({ form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="deadline"
+      render={({ field }) => (
+        <FormItem>
+          <Label className="pl-2">
+            Deadline
+          </Label>
+          <FormControl>
+            <DatetimePicker
+              {...field}
+              format={[
+                ["months", "days", "years"],
+                []
+              ]}
+              value={field.value}
+              onChange={field.onChange}
+            />
+          </FormControl>
+          <FormMessage className="pl-2 text-center" />
+        </FormItem>
+      )}
+    />
+  )
+}
 
 export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
 
@@ -16,11 +45,7 @@ const timeSlots: { [key in TimeSlot]: string } = {
   'Night': '8-11PM',
 }
 
-interface PreferredTimesProps {
-  form: UseFormReturn<GoalInput>;
-}
-
-export const PreferredTimes = ({ form }: PreferredTimesProps) => {
+export const PreferredTimes = ({ form }: FormInputProps) => {
   return (
     <FormField
       control={form.control}

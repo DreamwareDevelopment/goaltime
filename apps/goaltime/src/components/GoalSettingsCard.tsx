@@ -8,7 +8,7 @@ import { Form } from '@/ui-components/form'
 import { getDefaults, getZodResolver, GoalInput, GoalSchema, NotificationSettingsSchema } from '@/shared/zod'
 
 import { NotificationSettings } from './Settings/Notifications'
-import { PreferredTimes } from './Settings/PreferredTimes'
+import { PreferredTimes } from './Settings/TimeInputs.tsx'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
 import { DescriptionInput, TitleInput } from './Settings/Inputs'
@@ -27,7 +27,7 @@ import {
   DialogPortal,
 } from "@/ui-components/dialog"
 import { Button } from "@/ui-components/button"
-import { GoalTypeInput } from './GoalTypeInput'
+import { GoalTypeInput } from './Settings/GoalTypeInput'
 import { Separator } from '@/ui-components/separator'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
