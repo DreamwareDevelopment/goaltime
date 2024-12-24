@@ -8,7 +8,7 @@ import { Form } from '@/ui-components/form'
 import { getDefaults, getZodResolver, GoalInput, GoalSchema, NotificationSettingsSchema } from '@/shared/zod'
 
 import { NotificationSettings } from './Settings/Notifications'
-import { PreferredTimes } from './Settings/TimeInputs.tsx'
+import { MaximumTimeInput, MinimumTimeInput, PreferredTimes } from './Settings/TimeInputs.tsx'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
 import { DescriptionInput, TitleInput } from './Settings/Inputs'
@@ -190,6 +190,8 @@ export function GoalSettingsCard({
               <GoalTypeInput form={form} goal={goal} />
               <Separator />
               <PrioritySelector form={form} />
+              <MinimumTimeInput form={form} />
+              <MaximumTimeInput form={form} />
               <PreferredTimes form={form} />
               <NotificationSettings form={form} />
               <div className="flex flex-col justify-center items-center gap-4 w-full">

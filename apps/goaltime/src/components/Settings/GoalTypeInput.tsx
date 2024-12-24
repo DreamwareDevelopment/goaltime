@@ -3,8 +3,8 @@ import { UseFormReturn } from 'react-hook-form'
 import { GoalInput } from '@/shared/zod'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs'
 
-import { DeadlineInput } from './TimeInputs.tsx'
-import { CommitmentInput, EstimateInput } from './Inputs.tsx'
+import { CommitmentInput, DeadlineInput } from './TimeInputs.tsx'
+import { EstimateInput } from './TimeInputs.tsx'
 
 interface GoalTypeInputProps {
   form: UseFormReturn<GoalInput>
@@ -15,7 +15,7 @@ export const GoalTypeInput = ({ form, goal }: GoalTypeInputProps) => {
   const goalType = goal?.estimate ? 'one-time' : 'recurring'
   return (
     <Tabs defaultValue={goalType}>
-      <TabsList className="w-full">
+      <TabsList className="w-full mb-1">
         <TabsTrigger className="w-full" value="recurring">Weekly</TabsTrigger>
         <TabsTrigger className="w-full" value="one-time">One Time</TabsTrigger>
       </TabsList>
@@ -26,8 +26,8 @@ export const GoalTypeInput = ({ form, goal }: GoalTypeInputProps) => {
       </TabsContent>
       <TabsContent value="one-time">
         <div className="flex flex-wrap justify-around gap-4">
-          <EstimateInput form={form} />
           <DeadlineInput form={form} />
+          <EstimateInput form={form} />
         </div>
       </TabsContent>
     </Tabs>

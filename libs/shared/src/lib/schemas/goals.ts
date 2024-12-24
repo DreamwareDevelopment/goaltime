@@ -67,6 +67,9 @@ export const GoalSchema = z.object({
   preferredTimes: z.array(PreferredTimesEnum)
     .default([])
     .refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  minimumTime: z.number().int().positive().default(30),
+  maximumTime: z.number().int().positive().default(120),
+  breakReminders: z.boolean().default(true),
   canDoDuringWork: z.boolean().default(false),
   color: z.string().refine((color) => isValidHexColor(color), { message: "Invalid color" }),
   notifications: NotificationSettingsSchema,

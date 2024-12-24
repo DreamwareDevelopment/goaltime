@@ -441,6 +441,9 @@ model Goal {
   deadline        DateTime?          @map("deadline")
   commitment      Float?
   estimate        Float?
+  minimumTime     Int?               @map("minimum_time")
+  maximumTime     Int?               @map("maximum_time")
+  breakReminders  Boolean            @map("break_reminders")
   completed       Float              @default(0.0)
   priority        Priority           @default(Medium)
   preferredTimes  Json

@@ -1,4 +1,7 @@
 -- AlterTable
 ALTER TABLE "public"."goals" ADD COLUMN     "deadline" TIMESTAMP(3) NULL DEFAULT NULL,
 ADD COLUMN     "estimate" DOUBLE PRECISION NULL DEFAULT NULL,
+ADD COLUMN     "minimum_time" INTEGER NOT NULL,
+ADD COLUMN     "maximum_time" INTEGER NOT NULL,
+ADD COLUMN     "break_reminders" BOOLEAN NOT NULL,
 ALTER COLUMN "commitment" DROP NOT NULL;
