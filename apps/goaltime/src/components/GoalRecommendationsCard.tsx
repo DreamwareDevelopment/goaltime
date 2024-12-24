@@ -1,9 +1,7 @@
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
-import { Button } from '@/ui-components/button'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Badge } from '@/ui-components/badge'
-import { Plus } from 'lucide-react'
 import { Priority } from './Settings/PrioritySelector'
 
 export interface GoalRecommendation {

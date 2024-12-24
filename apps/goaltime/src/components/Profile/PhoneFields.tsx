@@ -25,6 +25,9 @@ export function PhoneField({ form, className }: PhoneFieldProps) {
                 onChange={field.onChange}
               />
             </FormControl>
+            <p className="text-xs text-muted-foreground mt-1 ml-2">
+              By providing your phone number, you consent to receive SMS messages from us.
+            </p>
             <FormMessage className="pl-2" />
           </FormItem>
         )}
