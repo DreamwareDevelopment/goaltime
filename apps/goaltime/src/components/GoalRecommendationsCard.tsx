@@ -43,7 +43,7 @@ export function GoalRecommendationsCard({ className, setRecommendation }: GoalRe
       <CardContent>
         <div className="space-y-4">
           {displayedRecommendations.map((goal, index) => (
-            <Card key={index}>
+            <Card key={index} role="button" tabIndex={0} onClick={() => setRecommendation(goal)} className="shadow-secondary shadow-lg hover:scale-105 transition-all duration-100 cursor-pointer">
               <CardContent className="flex flex-wrap items-center justify-between p-4">
                 <div>
                   <h3 className="font-semibold">{goal.title}</h3>
@@ -55,10 +55,6 @@ export function GoalRecommendationsCard({ className, setRecommendation }: GoalRe
                   <Badge variant={goal.priority === 'High' ? 'destructive' : goal.priority === 'Medium' ? 'default' : 'secondary'}>
                     {goal.priority}
                   </Badge>
-                  <Button size="sm" variant="outline" onClick={() => setRecommendation(goal)}>
-                    <Plus className="h-4 w-4" />
-                    <span className="sr-only">Add goal</span>
-                  </Button>
                 </div>
               </CardContent>
             </Card>

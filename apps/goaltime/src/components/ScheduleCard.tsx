@@ -403,7 +403,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       <Button
         variant="outline"
         style={{
-          backgroundColor: isToday ? "hsl(var(--accent))" : "hsl(var(--background))",
+          backgroundColor: isToday ? "hsl(var(--secondary))" : "hsl(var(--background))",
         }}
         onClick={() => setDate(new Date())}
       >
