@@ -144,7 +144,7 @@ export const PreferredTimes = ({ form }: FormInputProps) => {
                       <TooltipTrigger asChild>
                         <Button
                           type="button"
-                          variant={isSelected ? "default" : "outline"}
+                          variant={isSelected ? "default" : "secondary"}
                           size="sm"
                           onClick={() => {
                             const newPreferredTimes = isSelected
@@ -187,10 +187,12 @@ export const CommitmentInput: React.FC<FormInputProps> = ({ form }) => {
                 className="pr-10 w-[200px]"
                 type="number"
                 min={1}
-                max={100}
                 {...field}
-                value={field.value ?? ''}
-                onChange={(e) => field.onChange(Number(e.target.value))}
+                value={field.value ?? undefined}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  field.onChange(inputValue === "" ? null : Number(inputValue));
+                }}
               />
               <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
                 hrs
@@ -220,8 +222,11 @@ export const EstimateInput: React.FC<FormInputProps> = ({ form }) => {
                 type="number"
                 min={1}
                 {...field}
-                value={field.value ?? ''}
-                onChange={(e) => field.onChange(Number(e.target.value))}
+                value={field.value ?? undefined}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  field.onChange(inputValue === "" ? null : Number(inputValue));
+                }}
               />
               <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
                 hrs

@@ -11,7 +11,7 @@ import { NotificationSettings } from './Settings/Notifications'
 import { MaximumTimeInput, MinimumTimeInput, PreferredTimes } from './Settings/TimeInputs.tsx'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
-import { BreakRemindersCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
+import { AllowMultiplePerDayCheckbox, BreakRemindersCheckbox, CanDoDuringWorkCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
@@ -90,6 +90,12 @@ export function GoalSettingsCard({
         errors.estimate = {
           type: 'validate',
           message: 'Estimate requires a deadline',
+        }
+      }
+      if (data.minimumTime > data.maximumTime) {
+        errors.minimumTime = {
+          type: 'validate',
+          message: 'Minimum time cannot be greater than maximum time',
         }
       }
       return errors
@@ -194,10 +200,14 @@ export function GoalSettingsCard({
                 <AccordionItem value="schedule">
                   <AccordionTrigger className="text-lg font-bold">Scheduling Settings</AccordionTrigger>
                   <AccordionContent className="space-y-4">
+                    <PreferredTimes form={form} />
                     <PrioritySelector form={form} />
+                    <div className="flex flex-wrap gap-4">
+                      <AllowMultiplePerDayCheckbox form={form} />
+                      <CanDoDuringWorkCheckbox form={form} />
+                    </div>
                     <MinimumTimeInput form={form} />
                     <MaximumTimeInput form={form} />
-                    <PreferredTimes form={form} />
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="notifications">

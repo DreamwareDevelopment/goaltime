@@ -443,14 +443,15 @@ model Goal {
   estimate        Float?
   minimumTime     Int                @map("minimum_time")
   maximumTime     Int                @map("maximum_time")
-  breakReminders  Boolean            @map("break_reminders")
   completed       Float              @default(0.0)
   priority        Priority           @default(Medium)
   preferredTimes  Json
   color           String
   milestones      Milestone[]
   notifications   NotificationSettings?
-  canDoDuringWork Boolean           @default(false) @map("can_do_during_work")
+  breakReminders  Boolean           @map("break_reminders")
+  canDoDuringWork Boolean           @map("can_do_during_work")
+  allowMultiplePerDay Boolean       @map("allow_multiple_per_day")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime          @updatedAt @map("updated_at")
   userId          String            @db.Uuid @map("user_id")

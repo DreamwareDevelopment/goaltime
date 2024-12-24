@@ -76,3 +76,47 @@ export const BreakRemindersCheckbox: React.FC<FormInputProps> = ({ form }) => {
     />
   )
 }
+
+export const CanDoDuringWorkCheckbox: React.FC<FormInputProps> = ({ form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="canDoDuringWork"
+      render={({ field }) => (
+        <FormItem className="flex gap-4 h-6 pl-2 items-center">
+          <Label>Can Do During Work</Label>
+          <FormControl>
+            <Checkbox
+              id="canDoDuringWork"
+              style={{ marginTop: '2px' }}
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export const AllowMultiplePerDayCheckbox: React.FC<FormInputProps> = ({ form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="allowMultiplePerDay"
+      render={({ field }) => (
+        <FormItem className="flex gap-4 h-6 pl-2 items-center">
+          <Label>Allow Multiple Per Day</Label>
+          <FormControl>
+            <Checkbox
+              id="allowMultiplePerDay"
+              style={{ marginTop: '2px' }}
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+  )
+}
