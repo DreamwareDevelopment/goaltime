@@ -4,6 +4,8 @@ import { AutosizeTextarea } from "@/ui-components/text-area";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 import { GoalInput } from "@/shared/zod";
+import { Checkbox } from "@/ui-components/checkbox";
+import { Label } from "@/ui-components/label";
 
 export interface FormInputProps {
   form: UseFormReturn<GoalInput>;
@@ -47,6 +49,28 @@ export const DescriptionInput: React.FC<FormInputProps> = ({ form }) => {
             />
           </FormControl>
           <FormMessage className="ml-2" />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export const BreakRemindersCheckbox: React.FC<FormInputProps> = ({ form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="breakReminders"
+      render={({ field }) => (
+        <FormItem className="flex gap-4 h-6 pl-2 items-center">
+          <Label>Break Reminders</Label>
+          <FormControl>
+            <Checkbox
+              id="breakReminders"
+              style={{ marginTop: '2px' }}
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </FormControl>
         </FormItem>
       )}
     />

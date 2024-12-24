@@ -44,6 +44,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ form }) => {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
+                      type="button"
                       className="justify-start text-left font-normal"
                     >
                       <div 
@@ -77,7 +78,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ form }) => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
-                    variant="outline"  
+                    variant="outline"
+                    type="button"
                     onClick={newColorGen}
                   >
                     <RefreshCcw className="h-4 w-4" />

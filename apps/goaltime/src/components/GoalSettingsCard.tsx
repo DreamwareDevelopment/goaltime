@@ -11,7 +11,7 @@ import { NotificationSettings } from './Settings/Notifications'
 import { MaximumTimeInput, MinimumTimeInput, PreferredTimes } from './Settings/TimeInputs.tsx'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
-import { DescriptionInput, TitleInput } from './Settings/Inputs'
+import { BreakRemindersCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
@@ -184,7 +184,7 @@ export function GoalSettingsCard({
         </CardHeader> }
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <TitleInput form={form} />
               <DescriptionInput form={form} />
               <GoalTypeInput form={form} goal={goal} />
@@ -193,6 +193,7 @@ export function GoalSettingsCard({
               <MinimumTimeInput form={form} />
               <MaximumTimeInput form={form} />
               <PreferredTimes form={form} />
+              <BreakRemindersCheckbox form={form} />
               <NotificationSettings form={form} />
               <div className="flex flex-col justify-center items-center gap-4 w-full">
                 <div className="flex flex-row gap-4 w-full">
