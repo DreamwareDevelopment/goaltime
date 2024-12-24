@@ -29,6 +29,7 @@ import {
 import { Button } from "@/ui-components/button"
 import { GoalTypeInput } from './Settings/GoalTypeInput'
 import { Separator } from '@/ui-components/separator'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -184,18 +185,30 @@ export function GoalSettingsCard({
         </CardHeader> }
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
+            <CardContent>
               <TitleInput form={form} />
               <DescriptionInput form={form} />
               <GoalTypeInput form={form} goal={goal} />
-              <Separator />
-              <PrioritySelector form={form} />
-              <MinimumTimeInput form={form} />
-              <MaximumTimeInput form={form} />
-              <PreferredTimes form={form} />
-              <BreakRemindersCheckbox form={form} />
-              <NotificationSettings form={form} />
-              <div className="flex flex-col justify-center items-center gap-4 w-full">
+              <Separator className="mt-4" />
+              <Accordion type="multiple" defaultValue={['schedule']} className="w-full h-full">
+                <AccordionItem value="schedule">
+                  <AccordionTrigger className="text-lg font-bold">Scheduling Settings</AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <PrioritySelector form={form} />
+                    <MinimumTimeInput form={form} />
+                    <MaximumTimeInput form={form} />
+                    <PreferredTimes form={form} />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="notifications">
+                  <AccordionTrigger className="text-lg font-bold">Notification Settings</AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <BreakRemindersCheckbox form={form} />
+                    <NotificationSettings form={form} />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <div className="flex flex-col justify-center items-center mt-4 gap-4 w-full">
                 <div className="flex flex-row gap-4 w-full">
                   <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
                     {isSubmitting || isValidating ? 

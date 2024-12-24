@@ -38,7 +38,7 @@ export const DescriptionInput: React.FC<FormInputProps> = ({ form }) => {
       control={form.control}
       name="description"
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="mt-4">
           <FormControl>
             <AutosizeTextarea
               id="description"

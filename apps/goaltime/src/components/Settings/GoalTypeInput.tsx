@@ -14,7 +14,7 @@ interface GoalTypeInputProps {
 export const GoalTypeInput = ({ form, goal }: GoalTypeInputProps) => {
   const goalType = goal?.estimate ? 'one-time' : 'recurring'
   return (
-    <Tabs defaultValue={goalType}>
+    <Tabs defaultValue={goalType} className="mt-4">
       <TabsList className="w-full mb-1">
         <TabsTrigger className="w-full" value="recurring">Weekly</TabsTrigger>
         <TabsTrigger className="w-full" value="one-time">One Time</TabsTrigger>
