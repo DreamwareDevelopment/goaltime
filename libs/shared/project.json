@@ -35,7 +35,7 @@
       "executor": "nx:run-commands",
       "outputs": [],
       "options": {
-        "command": "npx prisma migrate resolve --schema ./src/prisma/schema.prisma --rolled-back '20241213213948_add_service_user_permissions'",
+        "command": "npx prisma migrate resolve --schema ./src/prisma/schema.prisma --rolled-back '20241222034009_add_phone'",
         "cwd": "libs/shared"
       }
     },

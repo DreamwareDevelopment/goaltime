@@ -26,12 +26,15 @@ export function GoalProgressCard() {
             <div className="flex justify-between items-center mb-2">
               <span className="font-medium">{goal.title}</span>
               <span className="hidden md:block text-sm text-muted-foreground">
-                {goal.completed}/{goal.commitment} hours
+                {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+                {goal.completed}/{goal.commitment ?? goal.estimate!} hours
               </span>
             </div>
-            <Progress value={(goal.completed / goal.commitment) * 100} className="h-2" color={goal.color} />
+            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+            <Progress value={(goal.completed / (goal.commitment ?? goal.estimate!)) * 100} className="h-2" color={goal.color} />
             <span className="block md:hidden text-sm text-center text-muted-foreground">
-              {goal.completed}/{goal.commitment} hours
+              {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+              {goal.completed}/{goal.commitment ?? goal.estimate!} hours
             </span>
           </div>
         ))}
