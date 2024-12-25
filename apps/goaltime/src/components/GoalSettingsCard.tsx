@@ -53,6 +53,7 @@ export function GoalSettingsCard({
   
   const { goalStore, userStore } = useValtio()
   const { deleteGoal } = goalStore
+  const [isDeleting, setIsDeleting] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -149,8 +150,11 @@ export function GoalSettingsCard({
     if (!goal || !goal.userId) {
       throw new Error('Invariant: goal or userId not defined in handleDelete')
     }
+    setIsDeleting(true)
+    // TODO: Disable button while deleting
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await deleteGoal(goal.id!, goal.userId)
+    setIsDeleting(false)
     setShowDeleteDialog(false)
     close?.()
   }
@@ -173,8 +177,8 @@ export function GoalSettingsCard({
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Delete
+            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>
+              {isDeleting ? <LoadingSpinner className="h-4 w-4" /> : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
