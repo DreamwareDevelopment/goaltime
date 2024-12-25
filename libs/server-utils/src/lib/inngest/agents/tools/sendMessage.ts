@@ -18,13 +18,11 @@ export function getTwilioMessageService() {
 
 export async function sendSMS(phone: string, message: string) {
   const { service, serviceSid } = getTwilioMessageService();
-  console.log('serviceSid', serviceSid)
   await service.create({
     to: phone,
     body: message,
     messagingServiceSid: serviceSid,
   });
-  console.log('message sent')
 }
 
 export const sendSMSTool = createTool({
