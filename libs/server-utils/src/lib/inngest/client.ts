@@ -6,6 +6,7 @@ import type { AccountabilityEvent } from "./agents";
 export enum InngestEvent {
   GoogleCalendarSync = "calendar/google/sync",
   GoogleCalendarCronSync = "calendar/google/sync/cron",
+  ScheduleGoalEvents = "calendar/scheduling",
   CheckIn = "agents/accountability/check-in",
   PreEvent = "agents/accountability/pre-event",
   PostEvent = "agents/accountability/post-event",
@@ -29,6 +30,11 @@ export const inngest = new Inngest({
     };
     [InngestEvent.PostEvent]: {
       data: AccountabilityEvent;
+    };
+    [InngestEvent.ScheduleGoalEvents]: {
+      data: {
+        userId: string;
+      };
     };
   }>()
 });

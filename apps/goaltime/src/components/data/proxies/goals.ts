@@ -7,7 +7,7 @@ import { Goal, NotificationSettings } from '@prisma/client'
 export const goalStore = proxy<{
   goals: Goal[] | null,
   notifications: Record<string, NotificationSettings> | null,
-  updateGoal(input: GoalInput): Promise<void>,
+  updateGoal(goal: Goal, input: GoalInput): Promise<void>,
   createGoal(input: GoalInput): Promise<void>,
   deleteGoal(goalId: string, userId: string): Promise<void>,
   init(goals: Goal[], notifications: NotificationSettings[]): void,
@@ -27,13 +27,13 @@ export const goalStore = proxy<{
       goalStore.notifications[newGoal.id] = newGoal.notifications
     }
   },
-  async updateGoal(input) {
+  async updateGoal(original, input) {
     if (!goalStore.goals) {
       throw new Error('Invariant: goals not initialized in goalStore')
     }
     const index = goalStore.goals.findIndex(g => g.id === input.id)
     if (index >= 0) {
-      const result = await updateGoalAction(input)
+      const result = await updateGoalAction(original, input)
       goalStore.goals[index] = result
     }
   },

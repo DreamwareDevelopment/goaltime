@@ -296,7 +296,8 @@ export const syncGoogleCalendar = inngest.createFunction(
   
     let cursor: string | null | undefined = undefined;
     let nextSyncToken: string | null | undefined = googleAuth.calendarSyncToken;
-    let isFullSync = !nextSyncToken;
+    const initialSync = !nextSyncToken;
+    let isFullSync = initialSync;
     let index = 0;
     do {
       // eslint-disable-next-line no-loop-func
@@ -363,6 +364,21 @@ export const syncGoogleCalendar = inngest.createFunction(
       cursor = stepResult.nextPageToken;
       nextSyncToken = stepResult.nextSyncToken;
     } while (!nextSyncToken);
+
+    if (initialSync) {
+      // If it's initial sync, there are no goals yet, so we can skip scheduling
+      return;
+    }
+    if (isFullSync) {
+      await step.sendEvent("full-sync-goal-scheduling", {
+        name: InngestEvent.ScheduleGoalEvents,
+        data: {
+          userId: googleAuth.userId,
+        },
+      });
+    } else {
+      // TODO: If the events have changed or there are new events, we need to schedule goal events again
+    }
   },
 );
 

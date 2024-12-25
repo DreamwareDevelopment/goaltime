@@ -59,7 +59,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
 
   const handleSubmit = async (input: GoalInput) => {
     try {
-      await goalStore.updateGoal(input)
+      await goalStore.updateGoal(goal, input)
       toast({ title: 'Goal updated', variant: 'default' })
     } catch (error) {
       toast({ title: 'Error updating goal', description: (error as Error).message, variant: 'destructive' })
