@@ -25,7 +25,7 @@ import { useToast } from '@/libs/ui-components/src/hooks/use-toast'
 const steps = [
   { title: "Profile Setup", fields: ['name', 'avatarUrl', 'birthday', 'timezone', 'phone'] },
   { title: 'Verify Phone Number', fields: ['otp'] },
-  { title: 'Work Details', fields: ['occupation', 'worksRemotely', 'daysInOffice', 'leavesHomeAt', 'returnsHomeAt'] },
+  { title: 'Work Details', fields: ['occupation', 'unemployed', 'workDays', 'startsWorkAt', 'endsWorkAt'] },
   { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime'] },
 ]
 
@@ -64,8 +64,8 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     setValue('timezone', clientTimezone)
     setValue('preferredWakeUpTime', getTime('07:00', clientTimezone).toDate())
     setValue('preferredSleepTime', getTime('23:00', clientTimezone).toDate())
-    setValue('leavesHomeAt', getTime('08:30', clientTimezone).toDate())
-    setValue('returnsHomeAt', getTime('17:30', clientTimezone).toDate())
+    setValue('startsWorkAt', getTime('08:30', clientTimezone).toDate())
+    setValue('endsWorkAt', getTime('17:30', clientTimezone).toDate())
   }, [setValue])
 
   if (Object.keys(formState.errors).length > 0) {

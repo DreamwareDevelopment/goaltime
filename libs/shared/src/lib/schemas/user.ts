@@ -29,13 +29,13 @@ export const UserProfileSchema = z.object({
     message: 'Could you please be more concise?',
   }).nullable().optional().default(null),
   hasOnboarded: z.boolean().default(false),
-  worksRemotely: z.boolean().default(false),
-  daysInOffice: z.array(daysOfTheWeek).default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
-  leavesHomeAt: z.date({
-    message: 'Please provide a valid date and time for leavesHomeAt',
+  unemployed: z.boolean().default(false),
+  workDays: z.array(daysOfTheWeek).default(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
+  startsWorkAt: z.date({
+    message: 'Please provide a valid date and time for startsWorkAt',
   }).nullable().optional().default(null), // Default to 8:30 AM after timezone is applied by client
-  returnsHomeAt: z.date({
-    message: 'Please provide a valid date and time for returnsHomeAt',
+  endsWorkAt: z.date({
+    message: 'Please provide a valid date and time for endsWorkAt',
   }).nullable().optional().default(null), // Default to 5:30 PM after timezone is applied by client
   preferredLanguage: z.enum(['en'], {
     message: 'Please select a supported language',
@@ -58,27 +58,27 @@ export type UserProfileInput = z.infer<typeof UserProfileSchema>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const refineUserProfileSchema: ZodSchemaResolver<UserProfileInput, any> = async (input: UserProfileInput) => {
   const errors: FieldErrors<UserProfileInput> = {}
-  if (!input.worksRemotely) {
-    if (!input.leavesHomeAt) {
-      errors.leavesHomeAt = {
+  if (!input.unemployed) {
+    if (!input.startsWorkAt) {
+      errors.startsWorkAt = {
         type: 'validate',
-        message: 'You must specify the time you normally leave home if you are not working remotely',
+        message: 'You must specify the time you normally start work if you have a job',
       }
     }
-    if (!input.returnsHomeAt) {
-      errors.returnsHomeAt = {
+    if (!input.endsWorkAt) {
+      errors.endsWorkAt = {
         type: 'validate',
-        message: 'You must specify the time you normally return home if you are not working remotely',
+        message: 'You must specify the time you normally end work if you have a job',
       }
     }
-    if (input.leavesHomeAt && input.returnsHomeAt && input.leavesHomeAt >= input.returnsHomeAt) {
-      errors.returnsHomeAt = {
+    if (input.startsWorkAt && input.endsWorkAt && input.startsWorkAt >= input.endsWorkAt) {
+      errors.endsWorkAt = {
         type: 'validate',
         message: 'You cannot return home before you leave home',
       }
     }
-    if (input.daysInOffice.length === 0) {
-      errors.daysInOffice = {
+    if (input.workDays.length === 0) {
+      errors.workDays = {
         type: 'validate',
         message: 'Must have at least one day in office if not working remotely',
       }

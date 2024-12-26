@@ -56,7 +56,7 @@ function getFreeIntervals(logger: Logger, profile: UserProfile, timeframe: Inter
   const daysBetween = end.diff(start, 'days');
   logger.info(`Days between: ${daysBetween}`);
   // TODO: Take holidays into account
-  const workdays = Array.isArray(profile.daysInOffice) ? profile.daysInOffice : [];
+  const workdays = Array.isArray(profile.workDays) ? profile.workDays : [];
 
   for (let i = 0; i <= daysBetween; i++) {
     let currentTime = start.add(i, 'days')
@@ -79,8 +79,8 @@ function getFreeIntervals(logger: Logger, profile: UserProfile, timeframe: Inter
     let workStart: dayjs.Dayjs | null = null;
     let workEnd: dayjs.Dayjs | null = null;
     if (workdays.includes(currentTime.format('dddd'))) {
-      workStart = profile.leavesHomeAt ? timeOffset(currentTime, dayjs(profile.leavesHomeAt)) : null;
-      workEnd = profile.returnsHomeAt ? timeOffset(currentTime, dayjs(profile.returnsHomeAt)) : null;
+      workStart = profile.startsWorkAt ? timeOffset(currentTime, dayjs(profile.startsWorkAt)) : null;
+      workEnd = profile.endsWorkAt ? timeOffset(currentTime, dayjs(profile.endsWorkAt)) : null;
     }
 
     while (currentTime.isBefore(nextDay)) {

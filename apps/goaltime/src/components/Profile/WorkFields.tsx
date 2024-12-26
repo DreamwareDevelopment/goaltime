@@ -15,9 +15,9 @@ export interface WorkFieldsProps {
 
 export function WorkFields({ form }: WorkFieldsProps) {
   const timezone = form.watch('timezone')
-  const handleDaysInOfficeChange = (value: Option[]) => {
+  const handleWorkDaysChange = (value: Option[]) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    form.setValue('daysInOffice', value.map(option => option.value) as any)
+    form.setValue('workDays', value.map(option => option.value) as any)
   }
   return (
     <div className="flex flex-col gap-4">
@@ -41,11 +41,11 @@ export function WorkFields({ form }: WorkFieldsProps) {
       />
       <FormField
         control={form.control}
-        name="worksRemotely"
+        name="unemployed"
         render={({ field }) => (
           <FormItem className="flex items-center">
             <FormLabel className="pl-2">
-              Working Remote
+              Unemployed
             </FormLabel>
             <FormControl>
               <Checkbox
@@ -58,20 +58,20 @@ export function WorkFields({ form }: WorkFieldsProps) {
           </FormItem>
         )}
       />
-      {!form.watch('worksRemotely') && (
+      {!form.watch('unemployed') && (
         <>
           <FormField
             control={form.control}
-            name="daysInOffice"
+            name="workDays"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="pl-2">
-                  Days in Office
+                  Work Days
                 </FormLabel>
                 <FormControl>
                   <MultiSelect
                     options={daysOfTheWeekOptions}
-                    onChange={handleDaysInOfficeChange}
+                    onChange={handleWorkDaysChange}
                     value={field.value?.map(day => ({ label: day, value: day }))}
                   />
                 </FormControl>
@@ -82,11 +82,11 @@ export function WorkFields({ form }: WorkFieldsProps) {
           <div className="flex flex-wrap gap-4">
             <FormField
               control={form.control}
-              name="leavesHomeAt"
+              name="startsWorkAt"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="pl-2">
-                    Leaves Home At
+                    Starts Work At
                   </FormLabel>
                   <FormControl>
                     <DatetimePicker
@@ -105,11 +105,11 @@ export function WorkFields({ form }: WorkFieldsProps) {
             />
             <FormField
               control={form.control}
-              name="returnsHomeAt"
+              name="endsWorkAt"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="pl-1">
-                    Returns Home At
+                    Ends Work At
                   </FormLabel>
                   <FormControl>
                     <DatetimePicker

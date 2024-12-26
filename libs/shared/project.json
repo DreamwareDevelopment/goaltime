@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name required_sleep_times",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name change_work_fields",
         "cwd": "libs/shared"
       }
     },
