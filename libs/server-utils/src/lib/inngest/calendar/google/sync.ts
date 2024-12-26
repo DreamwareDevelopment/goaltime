@@ -267,7 +267,7 @@ async function deleteForFullSync(logger: Logger, prisma: PrismaClient, googleAut
 
 export const syncGoogleCalendar = inngest.createFunction(
   {
-    id: 'google-calendar-init',
+    id: 'google-calendar-sync',
     concurrency: [{
       // global concurrency queue for this function,
       // limit to 5 concurrent syncs as per the free tier quota
@@ -296,7 +296,7 @@ export const syncGoogleCalendar = inngest.createFunction(
   
     let cursor: string | null | undefined = undefined;
     let nextSyncToken: string | null | undefined = googleAuth.calendarSyncToken;
-    const initialSync = !nextSyncToken;
+    const initialSync = !googleAuth.calendarSyncToken;
     let isFullSync = initialSync;
     let index = 0;
     do {
@@ -367,6 +367,7 @@ export const syncGoogleCalendar = inngest.createFunction(
 
     if (initialSync) {
       // If it's initial sync, there are no goals yet, so we can skip scheduling
+      logger.info(`Initial sync for user ${googleAuth.userId}, skipping scheduling`);
       return;
     }
     if (isFullSync) {

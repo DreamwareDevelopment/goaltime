@@ -4,8 +4,9 @@ import { dayjs } from "@/shared/utils";
 
 import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
+import { Interval } from "../lib/inngest/calendar/scheduling";
 
-export async function getSchedule(userId: User['id'], date: dayjs.Dayjs, timezone: string): Promise<CalendarEvent[]> {
+export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const startOfDay = date.startOf('day').toDate()
   const endOfDay = date.endOf('day').toDate()
   const prisma = await getPrismaClient(userId);
@@ -37,8 +38,7 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   schedule: CalendarEvent[];
   profile: UserProfile;
   goals: Goal[];
-  start: Date;
-  end: Date;
+  interval: Interval;
 }> {
   const prisma = await getPrismaClient(userId);
   const profile = await prisma.userProfile.findUnique({
@@ -49,7 +49,7 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   if (!profile) {
     throw new Error('Profile not found for scheduling');
   }
-  const now = dayjs();
+  const now = dayjs.tz(new Date(), profile.timezone);
   const start = now.toDate();
   const weekLater = now.add(7, 'day');
   const end = weekLater.toDate();
@@ -68,6 +68,9 @@ export async function getSchedulingData(userId: User['id']): Promise<{
         },
       ],
     },
+    orderBy: {
+      startTime: "asc",
+    },
   });
   const goals = await prisma.goal.findMany({
     where: {
@@ -75,5 +78,5 @@ export async function getSchedulingData(userId: User['id']): Promise<{
     },
   });
   goals.sort(sortGoals);
-  return { schedule, profile, goals, start, end };
+  return { schedule, profile, goals, interval: { start, end } };
 }

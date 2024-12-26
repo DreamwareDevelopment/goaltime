@@ -21,7 +21,7 @@ export const checkIn = inngest.createFunction(
     retries: 1,
   },
   [{
-    event: InngestEvent.GoogleCalendarSync,
+    event: InngestEvent.CheckIn,
   }],
   async ({ step, event, logger }) => {
     const { userId } = event.data;

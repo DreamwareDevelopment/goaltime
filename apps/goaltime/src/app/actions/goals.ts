@@ -29,6 +29,7 @@ export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotific
     },
   })
   await inngest.send({
+    id: `schedule-new-goal-events-${newGoal.id}`,
     name: InngestEvent.ScheduleGoalEvents,
     data: {
       userId: newGoal.userId,

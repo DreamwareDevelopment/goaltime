@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_goal_fields",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name required_sleep_times",
         "cwd": "libs/shared"
       }
     },
