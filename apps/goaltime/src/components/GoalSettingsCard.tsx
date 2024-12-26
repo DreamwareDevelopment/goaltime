@@ -174,7 +174,7 @@ export function GoalSettingsCard({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button className={isDeleting ? "hidden" : ""} variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting}>

@@ -41,6 +41,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const profile = useSnapshot(userStore.profile!);
   const { toast } = useToast();
   const isToday = now.toDateString() === date.toDateString();
+  const [isLoading, setIsLoading] = useState(false)
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -84,6 +85,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
           title: 'Failed to load schedule',
           description: 'Please try again',
         });
+      } finally {
+        setIsLoading(false);
       }
     })
     return clearDebounce;
@@ -91,12 +94,14 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   }, [date, timezone]);
 
   const navigateDay = (direction: number) => {
+    setIsLoading(true);
     const newDate = new Date(date);
     newDate.setDate(date.getDate() + direction);
     setDate(newDate);
   };
 
   const changeTimezone = () => {
+    setIsLoading(true);
     userStore.updateUserProfile(profile, {
       userId: profile.userId,
       timezone: timezone
@@ -108,6 +113,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       toast({
         title: 'Failed to change timezone',
         description: 'Please try again',
+        variant: 'destructive',
       });
     });
   };
@@ -202,7 +208,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   }, [events, date, is24Hour, view]);
 
   const TimelineView = () => {
-    if (!schedule) return (
+    if (!schedule || isLoading) return (
       <div className="flex items-center justify-center h-[500px]">
         <LoadingSpinner />
       </div>
@@ -299,7 +305,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   const ListView = () => {
-    if (!schedule) return (
+    if (!schedule || isLoading) return (
       <div className="flex items-center justify-center h-[500px]">
         <LoadingSpinner />
       </div>
@@ -341,6 +347,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const DateToolbar = ({ className }: { className?: string }) => (
     <div className={className}>
       <Button
+        disabled={isLoading}
         variant="outline"
         size="icon"
         onClick={() => navigateDay(-1)}
@@ -350,6 +357,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
         <PopoverTrigger asChild>
           <Button
+            disabled={isLoading}
             variant="outline"
             className={cn(
               "justify-start text-left font-normal",
@@ -361,6 +369,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         </PopoverTrigger>
         <PopoverTrigger asChild>
           <Button
+            disabled={isLoading}
             variant="outline"
             className={cn(
               "justify-start text-left font-normal",
@@ -383,6 +392,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         </PopoverContent>
       </Popover>
       <Button
+        disabled={isLoading}
         variant="outline"
         size="icon"
         onClick={() => navigateDay(1)}
@@ -395,12 +405,14 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const ViewToolbar = ({ className }: { className?: string }) => (
     <div className={className}>
       <Button
+        disabled={isLoading}
         variant="outline"
         onClick={() => setIs24Hour(!is24Hour)}
       >
         {is24Hour ? "24h" : "12h"}
       </Button>
       <Button
+        disabled={isLoading}
         variant="outline"
         style={{
           backgroundColor: isToday ? "hsl(var(--secondary))" : "hsl(var(--background))",
@@ -412,6 +424,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       <Button
         variant="outline"
         size="icon"
+        disabled={isLoading}
         onClick={() => setView(view === 'timeline' ? 'list' : 'timeline')}
       >
         {view === 'timeline' ? (
