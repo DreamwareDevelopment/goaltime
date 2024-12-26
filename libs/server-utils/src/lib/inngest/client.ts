@@ -17,10 +17,16 @@ export const inngest = new Inngest({
   id: "goaltime",
   schemas: new EventSchemas().fromRecord<{
     [InngestEvent.GoogleCalendarSync]: {
-      data: GoogleAuth;
+      data: {
+        googleAuth: GoogleAuth;
+        forceFullSync?: true;
+      }
     };
     [InngestEvent.GoogleCalendarCronSync]: {
-      data: GoogleAuth;
+      data: {
+        googleAuth: GoogleAuth;
+        forceFullSync?: undefined;
+      }
     };
     [InngestEvent.CheckIn]: {
       data: AccountabilityEvent;

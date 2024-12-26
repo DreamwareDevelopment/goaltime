@@ -10,7 +10,7 @@ export const userStore = proxy<{
   user: SanitizedUser | null,
   profile: UserProfile | null,
   createUserProfile(profile: UserProfileInput): Promise<void>,
-  updateUserProfile(profile: Partial<UserProfileInput>): Promise<void>,
+  updateUserProfile(original: UserProfile, profile: Partial<UserProfileInput>): Promise<void>,
   uploadProfileImage(userId: string, image: File): Promise<string>,
   init(user: SanitizedUser, profile: UserProfile): void,
 }>({
@@ -24,8 +24,8 @@ export const userStore = proxy<{
     const userProfile = await createUserProfileAction(profile)
     this.profile = userProfile
   },
-  async updateUserProfile(profile) {
-    const userProfile = await updateUserProfileAction(profile)
+  async updateUserProfile(original, profile) {
+    const userProfile = await updateUserProfileAction(original, profile)
     this.profile = userProfile
   },
   async uploadProfileImage(userId, image) {

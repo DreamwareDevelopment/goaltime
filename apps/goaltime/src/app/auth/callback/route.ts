@@ -30,10 +30,12 @@ async function saveGoogleAuthTokens(session: Session, user: User) {
       refreshToken,
     }
   })
-  console.log('Sending Google Calendar Sync event')
+  console.log('Sending initial Google Calendar sync event')
   await inngest.send({
     name: InngestEvent.GoogleCalendarSync,
-    data: googleAuth,
+    data: {
+      googleAuth,
+    },
   })
 }
 

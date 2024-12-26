@@ -69,7 +69,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
       }
     }
     try {
-      await userStore.updateUserProfile(profile)
+      await userStore.updateUserProfile(p, profile)
       toast({
         variant: 'default',
         title: 'Profile updated',

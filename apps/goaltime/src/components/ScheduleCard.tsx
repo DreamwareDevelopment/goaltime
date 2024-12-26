@@ -97,7 +97,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   const changeTimezone = () => {
-    userStore.updateUserProfile({
+    userStore.updateUserProfile(profile, {
       userId: profile.userId,
       timezone: timezone
     }).then(() => {

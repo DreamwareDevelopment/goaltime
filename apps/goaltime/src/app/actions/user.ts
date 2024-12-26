@@ -3,22 +3,44 @@
 import { UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
+import { UserProfile } from '@prisma/client'
+import { fullSyncCalendar } from '@/server-utils/inngest'
 
 export async function createUserProfileAction(profile: UserProfileInput) {
   delete profile.otp
   const prisma = await getPrismaClient(profile.userId)
   const userProfile = await prisma.userProfile.create({
-    data: profile,
+    data: {
+      ...profile,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      preferredWakeUpTime: profile.preferredWakeUpTime!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      preferredSleepTime: profile.preferredSleepTime!,
+    },
   })
   return userProfile
 }
 
-export async function updateUserProfileAction(profile: Partial<UserProfileInput>) {
+export async function updateUserProfileAction(original: UserProfile, profile: Partial<UserProfileInput>) {
   const prisma = await getPrismaClient(profile.userId)
-  return prisma.userProfile.update({
+  const updated = await prisma.userProfile.update({
     where: { userId: profile.userId },
-    data: profile,
+    data: {
+      ...profile,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      preferredWakeUpTime: profile.preferredWakeUpTime!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      preferredSleepTime: profile.preferredSleepTime!,
+    },
   })
+  if (updated.timezone !== original.timezone) {
+    console.log('Timezone changed, syncing calendar')
+    const googleAuth = await prisma.googleAuth.findUnique({ where: { userId: profile.userId } })
+    if (googleAuth) {
+      await fullSyncCalendar(googleAuth)
+    }
+  }
+  return updated
 }
 
 export async function subscribeToMailingListAction(email: string) {
