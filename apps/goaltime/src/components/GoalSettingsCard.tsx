@@ -1,5 +1,5 @@
 import { FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { cn } from "@/ui-components/utils"
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
@@ -110,8 +110,7 @@ export function GoalSettingsCard({
     }
   })
 
-  // Move recommendation handling to useEffect
-  React.useEffect(() => {
+  useEffect(() => {
     if (recommendation) {
       form.clearErrors()
       const fields = form.control._fields

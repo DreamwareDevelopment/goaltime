@@ -9,4 +9,4 @@ ADD COLUMN     "unemployed" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "work_days" JSONB NULL DEFAULT NULL;
 
 -- AddForeignKey
-ALTER TABLE "public"."calendar_events" ADD CONSTRAINT "calendar_events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user_profiles"("user_id") ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "public"."calendar_events" ADD CONSTRAINT "calendar_events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE ON UPDATE NO ACTION;

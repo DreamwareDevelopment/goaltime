@@ -242,6 +242,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
           <CardFooter className="flex flex-wrap justify-between items-center gap-4 w-full">
             {currentStep > 0 && (
               <ShinyButton
+                disabled={isSubmitting || isValidating || isSendingOTP}
                 onClick={prevStep}
                 variant="expandIcon"
                 Icon={ArrowLeft}

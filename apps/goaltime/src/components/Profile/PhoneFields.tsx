@@ -1,9 +1,10 @@
+import { useEffect } from "react"
+import { UseFormReturn } from "react-hook-form"
+
+import { UserProfileInput } from "@/shared/zod"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form"
 import { OtpStyledInput } from "@/ui-components/otp"
 import { PhoneInput } from "@/ui-components/phone-input"
-
-import { UserProfileInput } from "@/shared/zod"
-import { UseFormReturn } from "react-hook-form"
 
 interface PhoneFieldProps {
   form: UseFormReturn<UserProfileInput>
@@ -44,6 +45,13 @@ interface OTPFieldProps {
 export const OTP_LENGTH = 6
 
 export function OTPField({ form, onOTP }: OTPFieldProps) {
+  useEffect(() => {
+    const otpInput = document.querySelector('.otp-input');
+    if (otpInput) {
+      (otpInput as HTMLInputElement).focus();
+    }
+  }, []);
+
   return (
     <div className="w-full flex justify-center">
       <FormField
@@ -61,6 +69,7 @@ export function OTPField({ form, onOTP }: OTPFieldProps) {
                   onOTP(otp)
                 }
               }}
+              className="otp-input"
             />
           </FormControl>
           <FormMessage className="ml-2" />

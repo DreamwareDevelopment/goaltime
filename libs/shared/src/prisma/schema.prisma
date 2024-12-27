@@ -323,6 +323,7 @@ model User {
   is_anonymous                Boolean           @default(false)
   googleAuth                  GoogleAuth?
   profile                     UserProfile?
+  calendarEvents              CalendarEvent[]
   identities                  Identity[]
   mfa_factors                 mfa_factors[]
   one_time_tokens             one_time_tokens[]
@@ -412,7 +413,6 @@ model UserProfile {
   notifications       NotificationSettings[]
   milestones          Milestone[]
   User                User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  calendarEvents      CalendarEvent[]
 
   @@schema("public")
   @@map("user_profiles")
@@ -550,7 +550,7 @@ model CalendarEvent {
   allDay      DateTime?        @map("all_day")
   color       String
   goal        Goal?            @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  userProfile UserProfile      @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
   @@map("calendar_events")

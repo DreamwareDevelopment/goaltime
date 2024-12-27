@@ -417,7 +417,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         style={{
           backgroundColor: isToday ? "hsl(var(--secondary))" : "hsl(var(--background))",
         }}
-        onClick={() => setDate(new Date())}
+        onClick={() => {
+          setIsLoading(true);
+          setDate(new Date());
+        }}
       >
         Today
       </Button>
