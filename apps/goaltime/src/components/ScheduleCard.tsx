@@ -16,8 +16,8 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
-import { binarySearchInsert, dayjs, debounce } from "@/shared/utils";
-import { CalendarEvent } from "@prisma/client";
+import { binarySearchInsert, dayjs, debounce, truncateText } from "@/shared/utils";
+import { CalendarEvent, CalendarProvider } from "@prisma/client";
 import { getTsRestClient } from "@/ui-components/hooks/ts-rest";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
@@ -226,16 +226,25 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                   <div
                     key={event.id}
                     className={cn(
-                      "px-2 mb-2 rounded-md",
-                      "text-white"
+                      "p-2 mb-2 rounded-md",
+                      event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
                     )}
                     style={{
-                      backgroundColor: event.color
+                      backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
                     }}
                   >
-                    <div className="font-medium">{event.title}</div>
-                    {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
-                    {event.description && <div className="text-sm">{event.description}</div>}
+                    <div className="flex justify-between">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{event.title}</span>
+                        {event.subtitle && <span className="text-sm italic">{event.subtitle}</span>}
+                        {event.description && <span className="text-sm">{truncateText(event.description, 100)}</span>}
+                      </div>
+                      { event.provider === CalendarProvider.google && (
+                        <div className="pr-1 text-xs">
+                          <span className="font-bold">Google</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </AccordionContent>
@@ -254,9 +263,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                 style={{ top: `${i * HOUR_HEIGHT}px` }}
               >
                 <div className="grid grid-cols-[72px_1fr] lg:grid-cols-[84px_1fr] gap-2">
-                  <div className="text-sm text-muted-foreground text-nowrap sticky left-0">
+                  <span className="text-sm text-muted-foreground text-nowrap sticky left-0">
                     {formatTime(`${String(i).padStart(2, '0')}:00`)}
-                  </div>
+                  </span>
                   <Separator className="mt-2" />
                 </div>
               </div>
@@ -272,28 +281,37 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                     key={event.id}
                     className={cn(
                       "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                      event.goalId ? "text-foreground" : "text-background"
+                      event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
                     )}
                     style={{
-                      backgroundColor: event.color,
+                      backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
                       top: `${event.top}px`,
                       height: `${event.height}px`,
                       minHeight: '20px',
                       left: event.left
                     }}
                   >
-                    <div className="text-sm">
-                      {event.title}
-                      {event.height < 45 && (
-                        <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
+                    <div className="flex justify-between pt-1">
+                      <div className="flex flex-col">
+                        <span className="text-sm">
+                          {event.title}
+                          {event.height < 45 && (
+                            <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
+                          )}
+                        </span>
+                        {/* Show time on second row only if event is more than 45px */}
+                        {event.height >= 45 && (
+                          <span className="text-xs">
+                            {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
+                          </span>
+                        )}
+                      </div>
+                      { event.provider === CalendarProvider.google && (
+                        <div className="pr-1 text-xs">
+                          <span className="font-bold">Google</span>
+                        </div>
                       )}
                     </div>
-                    {/* Show time on second row only if event is more than 45px */}
-                    {event.height >= 45 && (
-                      <div className="text-sm">
-                        {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -315,28 +333,35 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         {schedule.map(event => {
           const startTime = dayjs(event.startTime);
           const endTime = dayjs(event.endTime);
-          console.log(startTime.toISOString(), endTime.toISOString());
           return (
             <div
               key={event.id}
               className={cn(
-                "flex-shrink-0",
-                "p-3 mb-2 rounded-md",
-                event.color === "#f8fafc" ? "text-background" : "text-foreground"
+                "flex-shrink-0 px-2 py-1 mb-2 rounded-md",
+                event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
               )}
               style={{
-                backgroundColor: event.color
+                backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
               }}
             >
-              <div className="font-medium">{event.title}</div>
-              {event.subtitle && <div className="text-sm italic">{event.subtitle}</div>}
-              {event.description && <div className="text-sm">{event.description}</div>}
-              {!event.allDay && (
-                <div className="text-sm mt-1">
-                  {formatTime(startTime.toISOString())} - {formatTime(endTime.toISOString())}
+              <div className="flex justify-between">
+                <div className="flex flex-col">
+                  <span className="font-medium">{event.title}</span>
+                  {event.subtitle && <span className="text-sm italic">{event.subtitle}</span>}
+                  {event.description && <span className="text-xs">{truncateText(event.description, 100)}</span>}
+                  {!event.allDay && (
+                    <span className="text-xs mt-1">
+                      {formatTime(startTime.toISOString())} - {formatTime(endTime.toISOString())}
+                    </span>
+                  )}
+                  {event.allDay && <span className="text-sm mt-1">All Day</span>}
                 </div>
-              )}
-              {event.allDay && <div className="text-sm mt-1">All Day</div>}
+                { event.provider === CalendarProvider.google && (
+                  <div className="text-xs">
+                    <span className="font-bold">Google</span>
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}
@@ -384,6 +409,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
             mode="single"
             selected={date}
             onSelect={(newDate) => {
+              setIsLoading(true);
               setDate(newDate || new Date());
               setCalendarOpen(false);
             }}

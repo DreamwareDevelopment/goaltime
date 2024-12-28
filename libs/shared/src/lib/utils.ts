@@ -12,6 +12,13 @@ export const getTime = (time: string, timezone: string) => {
   return dayjs.tz(`1970-01-01T${time}:00`, timezone)
 }
 
+export const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength)}...`;
+};
+
 export function isValidHexColor(color: string): boolean {
   return /^#([0-9A-F]{3}){1,2}$/i.test(color);
 }
