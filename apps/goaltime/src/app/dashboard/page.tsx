@@ -44,10 +44,10 @@ export default async function Dashboard() {
 
         { hasGoals ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-            <Card className="col-span-1 lg:col-span-2 xl:col-span-4 lg:h-[703px]">
+            <Card className="col-span-1 lg:col-span-2 xl:col-span-4">
               <ScheduleCard />
             </Card>
-            <Card className="col-span-1 xl:col-span-3 lg:h-[703px]">
+            <Card className="col-span-1 xl:col-span-3">
               <GoalProgressCard />
             </Card>
             <Card className="col-span-full overflow-hidden">

@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name change_work_fields",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_default_calendar_event_id",
         "cwd": "libs/shared"
       }
     },

@@ -526,6 +526,7 @@ enum EventType {
 }
 
 enum CalendarProvider {
+  goaltime
   google
 
   @@schema("public")
@@ -534,7 +535,7 @@ enum CalendarProvider {
 
 // https://developers.google.com/calendar/api/v3/reference/events
 model CalendarEvent {
-  id          String           @id @db.VarChar(1024)
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(1024)
   goalId      String?          @db.Uuid @map("goal_id")
   provider    CalendarProvider @default(google)
   userId      String           @db.Uuid @map("user_id")

@@ -1,3 +1,4 @@
+import { PreferredTimesEnumType } from "@/shared/zod";
 import { Button } from "@/ui-components/button";
 import { DatetimePicker } from "@/ui-components/datetime-picker"
 import { FormControl, FormDescription, FormField, FormItem, FormMessage } from "@/ui-components/form"
@@ -113,9 +114,8 @@ export const MaximumTimeInput: React.FC<FormInputProps> = ({ form }) => {
   )
 }
 
-export type TimeSlot = 'Early Morning' | 'Morning' | 'Midday' | 'Afternoon' | 'Evening' | 'Night'
-
-const timeSlots: { [key in TimeSlot]: string } = {
+// TODO: Make this dynamic based on user's sleep schedule
+const timeSlots: { [key in PreferredTimesEnumType]: string } = {
   'Early Morning': '5-8AM',
   'Morning': '8-11AM',
   'Midday': '11AM-2PM',
@@ -135,7 +135,7 @@ export const PreferredTimes = ({ form }: FormInputProps) => {
           <FormControl>
             <div className="flex flex-wrap gap-2">
               {Object.entries(timeSlots).map(([slot, time]) => {
-                const timeSlot = slot as TimeSlot;
+                const timeSlot = slot as PreferredTimesEnumType;
                 const isSelected = field.value?.includes(timeSlot) ?? false;
 
                 return (
@@ -148,7 +148,7 @@ export const PreferredTimes = ({ form }: FormInputProps) => {
                           size="sm"
                           onClick={() => {
                             const newPreferredTimes = isSelected
-                              ? field.value.filter((t: TimeSlot) => t !== timeSlot)
+                              ? field.value.filter((t: PreferredTimesEnumType) => t !== timeSlot)
                               : [...(field.value || []), timeSlot];
                             field.onChange(newPreferredTimes);
                           }}

@@ -1,10 +1,11 @@
-import { CalendarEvent, Goal, User, UserProfile } from "@prisma/client";
+import { CalendarEvent, CalendarProvider, Goal, User, UserProfile } from "@prisma/client";
 
 import { dayjs } from "@/shared/utils";
 
 import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
 import { Interval } from "../lib/inngest/calendar/scheduling";
+import { SchedulingResultsType } from "../lib/inngest/agents/scheduling/scheduling";
 
 export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const startOfDay = date.startOf('day').toDate()
@@ -79,4 +80,40 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   });
   goals.sort(sortGoals);
   return { schedule, profile, goals, interval: { start, end } };
+}
+
+export async function deleteGoalEvents(userId: User['id']) {
+  const prisma = await getPrismaClient(userId);
+  await prisma.calendarEvent.deleteMany({
+    where: {
+      userId,
+      goalId: {
+        not: null,
+      },
+    },
+  });
+}
+
+export interface GoalSchedulingData {
+  title: string;
+  description: string | null;
+  color: string;
+}
+
+export async function saveSchedule(userId: User['id'], goalMap: Record<string, GoalSchedulingData>, timezone: string, schedule: SchedulingResultsType) {
+  const prisma = await getPrismaClient(userId);
+  await prisma.calendarEvent.createMany({
+    data: schedule.map(({ goalId, start, end }) => ({
+      id: crypto.randomUUID(),
+      userId,
+      goalId,
+      provider: CalendarProvider.goaltime,
+      startTime: dayjs(start).utc().toDate(),
+      endTime: dayjs(end).utc().toDate(),
+      title: goalMap[goalId].title,
+      description: goalMap[goalId].description,
+      color: goalMap[goalId].color,
+      timeZone: timezone,
+    })),
+  });
 }

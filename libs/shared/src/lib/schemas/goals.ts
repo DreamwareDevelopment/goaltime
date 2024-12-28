@@ -4,6 +4,7 @@ import { isValidHexColor } from "../utils";
 // Enums
 export const PriorityEnum = z.enum(["High", "Medium", "Low"]);
 export const PreferredTimesEnum = z.enum(["Early Morning", "Morning", "Midday", "Afternoon", "Evening", "Night"]);
+export type PreferredTimesEnumType = z.infer<typeof PreferredTimesEnum>;
 export const MilestoneViewEnum = z.enum(["daily", "lifetime"]);
 
 // Milestone Schema
