@@ -4,7 +4,6 @@
   "sourceRoot": "apps/goaltime",
   "projectType": "application",
   "tags": [],
-  "// targets": "to see all targets run: nx show project goaltime --web",
   "targets": {
     "build": {
       "dependsOn": ["shared:migrate"]
@@ -12,23 +11,20 @@
     "local-proxy": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "ngrok start --all"
-        ]
+        "commands": ["ngrok start --all"]
       }
     },
     "local-inngest": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "npx inngest-cli@latest dev"
-        ]
+        "commands": ["npx inngest-cli@latest dev"]
       }
     },
     "dev": {
       "dependsOn": ["shared:type-gen"],
       "options": {
-        "command": "NODE_TLS_REJECT_UNAUTHORIZED=0 next dev"
+        "command": "NODE_TLS_REJECT_UNAUTHORIZED=0 next dev",
+        "proxyConfig": "apps/goaltime/proxy.conf.json"
       }
     }
   }

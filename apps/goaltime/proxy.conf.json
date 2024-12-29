@@ -1,0 +1,6 @@
+{
+  "/websocket": {
+    "target": "https://localhost:3333",
+    "secure": true
+  }
+}

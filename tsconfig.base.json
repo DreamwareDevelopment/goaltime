@@ -17,17 +17,19 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/server-utils/supabase": ["libs/server-utils/src/lib/supabase/index.ts"],
-      "@/server-utils/prisma": ["libs/server-utils/src/lib/prisma/client.ts"],
       "@/server-utils/inngest": ["libs/server-utils/src/lib/inngest/index.ts"],
+      "@/server-utils/prisma": ["libs/server-utils/src/lib/prisma/client.ts"],
       "@/server-utils/queries/*": ["libs/server-utils/src/queries/*"],
+      "@/server-utils/supabase": [
+        "libs/server-utils/src/lib/supabase/index.ts"
+      ],
+      "@/shared/contracts": ["libs/shared/src/lib/contracts/index.ts"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
       "@/shared/zod": ["libs/shared/src/lib/schemas/index.ts"],
-      "@/shared/contracts": ["libs/shared/src/lib/contracts/index.ts"],
       "@/ui-components/*": ["libs/ui-components/src/components/ui/*"],
-      "@/ui-components/utils": ["libs/ui-components/src/utils.ts"],
-      "@/ui-components/svgs/*": ["libs/ui-components/src/svgs/*"],
       "@/ui-components/hooks/*": ["libs/ui-components/src/hooks/*"],
+      "@/ui-components/svgs/*": ["libs/ui-components/src/svgs/*"],
+      "@/ui-components/utils": ["libs/ui-components/src/utils.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
