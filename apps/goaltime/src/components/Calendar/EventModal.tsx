@@ -119,8 +119,29 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
     }
   }
 
+  const handleDelete = async () => {
+    setOpen(false);
+    try {
+      await calendarStore.deleteCalendarEvent(event);
+      toast({
+        title: 'Event deleted',
+        description: 'Your event has been deleted.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error deleting event',
+        description: 'Please try again later.',
+        variant: 'destructive',
+      });
+    }
+  }
+
   return (
     <CredenzaContent {...props}>
+      <CredenzaDescription className="sr-only">
+        Edit single event
+      </CredenzaDescription>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CredenzaHeader className="flex flex-col items-center gap-2 md:py-4 px-4">
@@ -130,7 +151,7 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
           </CredenzaHeader>
           <CredenzaBody className="px-0">
             <div className="flex flex-col gap-4 px-4 pt-0 pb-4">
-              <div className="flex flex-wrap justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-4">
                 <FormField
                   control={form.control}
                   name="startTime"
@@ -174,7 +195,10 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
                   )}
                 />
               </div>
-              <div className="flex justify-center">
+              <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
+                <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
+                  Delete Event
+                </ShinyButton>
                 <ShinyButton className="w-28" variant="gooeyLeft" type="submit">
                   {isValidating || isSubmitting ? <LoadingSpinner /> : "Save"}
                 </ShinyButton>

@@ -49,8 +49,10 @@ export const calendarStore = proxy<{
     }
     calendarStore.events[day].splice(originalIndex, 1)
     const newIndex = original.allDay ? originalIndex : binarySearchInsert(calendarStore.events[day], { ...original, ...updated }, (a, b) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return a.startTime!.getTime() - b.startTime!.getTime()
+      if (!a.startTime || !b.startTime) {
+        return !a.startTime ? -1 : 1
+      }
+      return a.startTime.getTime() - b.startTime.getTime()
     })
     const updatedEvent = await updateCalendarEventAction(original, updated)
     calendarStore.events[day].splice(newIndex, 1, updatedEvent)
