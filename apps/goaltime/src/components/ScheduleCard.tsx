@@ -220,7 +220,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                     key={event.id}
                     className={cn(
                       "p-2 mb-2 rounded-md",
-                      event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
+                      event.goalId ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
                     )}
                     style={{
                       backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
@@ -276,7 +276,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                         role={event.event.goalId ? "button" : undefined}
                         className={cn(
                           "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                          event.event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
+                          event.event.goalId ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
                         )}
                         style={{
                           backgroundColor: event.event.goalId ? event.event.color : "hsl(var(--accent-foreground))",
@@ -336,7 +336,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
               key={event.id}
               className={cn(
                 "flex-shrink-0 px-2 py-1 mb-2 rounded-md",
-                event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
+                event.goalId ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
               )}
               style={{
                 backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
