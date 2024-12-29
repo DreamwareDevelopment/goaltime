@@ -40,8 +40,8 @@ export const GoalSchema = z.object({
   id: z.string().uuid().optional(),
   userId: z.string().uuid(),
   title: z.string()
-    .min(1.0, { message: "Title is required" })
-    .max(100.0, { message: "Title must be less than 100 characters" })
+    .min(1, { message: "Title is required" })
+    .max(100, { message: "Title must be less than 100 characters" })
     .default(""),
   description: z.string()
     .max(1000, { message: "Description must be less than 1000 characters" })

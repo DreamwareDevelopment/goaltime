@@ -23,6 +23,8 @@ import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
 import { useSnapshot } from "valtio";
 import { useToast } from "@/ui-components/hooks/use-toast";
+import { Credenza, CredenzaTrigger } from "@/libs/ui-components/src/components/ui/credenza";
+import { EventModal } from "./Calendar/EventModal";
 
 export interface ViewEvent extends CalendarEvent {
   top: number;
@@ -45,6 +47,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
   const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(false);
@@ -277,42 +280,47 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                 const startTime = dayjs.utc(event.startTime).tz(timezone);
                 const endTime = dayjs.utc(event.endTime).tz(timezone);
                 return (
-                  <div
-                    key={event.id}
-                    className={cn(
-                      "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                      event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
-                    )}
-                    style={{
-                      backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
-                      top: `${event.top}px`,
-                      height: `${event.height}px`,
-                      minHeight: '20px',
-                      left: event.left
-                    }}
-                  >
-                    <div className="flex justify-between pt-1">
-                      <div className="flex flex-col">
-                        <span className="text-sm">
-                          {event.title}
-                          {event.height < 45 && (
-                            <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
-                          )}
-                        </span>
-                        {/* Show time on second row only if event is more than 45px */}
-                        {event.height >= 45 && (
-                          <span className="text-xs">
-                            {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
-                          </span>
+                  <Credenza key={event.id} open={modalOpen} onOpenChange={setModalOpen}>
+                    <CredenzaTrigger>
+                      <div
+                        role={event.goalId ? "button" : undefined}
+                        className={cn(
+                          "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
+                          event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
                         )}
-                      </div>
-                      { event.provider === CalendarProvider.google && (
-                        <div className="pr-1 text-xs">
-                          <span className="font-bold">Google</span>
+                        style={{
+                          backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
+                          top: `${event.top}px`,
+                          height: `${event.height}px`,
+                          minHeight: '20px',
+                          left: event.left
+                        }}
+                      >
+                        <div className="flex justify-between pt-1">
+                          <div className="flex flex-col">
+                            <span className="text-sm">
+                              {event.title}
+                              {event.height < 45 && (
+                                <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
+                              )}
+                            </span>
+                            {/* Show time on second row only if event is more than 45px */}
+                            {event.height >= 45 && (
+                              <span className="text-xs">
+                                {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
+                              </span>
+                            )}
+                          </div>
+                          { event.provider === CalendarProvider.google && (
+                            <div className="pr-1 text-xs">
+                              <span className="font-bold">Google</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    </CredenzaTrigger>
+                    <EventModal event={event} setOpen={setModalOpen} />
+                  </Credenza>
                 );
               })}
             </div>

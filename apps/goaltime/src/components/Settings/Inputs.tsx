@@ -11,6 +11,8 @@ export interface FormInputProps {
   form: UseFormReturn<GoalInput>;
 }
 
+// TODO: Make this generic
+
 export const TitleInput: React.FC<FormInputProps> = ({ form }) => {
   return (
     <FormField
