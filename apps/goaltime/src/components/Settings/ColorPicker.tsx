@@ -51,8 +51,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ form }) => {
                         className="w-4 h-4 rounded-full mr-2" 
                         style={{ backgroundColor: field.value }} 
                       />
-                      <Palette className="mr-2 h-4 w-4" />
-                      <span>{field.value}</span>
+                      <Palette className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64">

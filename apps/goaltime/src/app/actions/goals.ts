@@ -89,7 +89,7 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
       },
     })
   }
-  if (original.title !== updated.title || original.description !== updated.description) {
+  if (original.title !== updated.title || original.description !== updated.description || original.color !== updated.color) {
     await prisma.calendarEvent.updateMany({
       where: {
         goalId: updated.id,
@@ -97,6 +97,7 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
       data: {
         title: updated.title,
         description: updated.description,
+        color: updated.color,
       },
     })
   }
