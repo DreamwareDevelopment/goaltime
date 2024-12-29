@@ -18,7 +18,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
 import { binarySearchInsert, dayjs, debounce, truncateText } from "@/shared/utils";
 import { CalendarEvent, CalendarProvider } from "@prisma/client";
-import { getTsRestClient } from "@/ui-components/hooks/ts-rest";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
 import { useSnapshot } from "valtio";
@@ -26,7 +25,7 @@ import { useToast } from "@/ui-components/hooks/use-toast";
 import { Credenza, CredenzaTrigger } from "@/libs/ui-components/src/components/ui/credenza";
 import { EventModal } from "./Calendar/EventModal";
 
-export interface ViewEvent extends CalendarEvent {
+export interface ViewFields {
   top: number;
   height: number;
   left: number;
@@ -34,16 +33,23 @@ export interface ViewEvent extends CalendarEvent {
   minutes: number | null;
 }
 
+interface ViewFieldsWithCalendarEvent {
+  event: CalendarEvent;
+  viewFields: ViewFields;
+}
+
 export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [date, setDate] = useState(new Date());
+  const day = date.toDateString();
   const now = new Date();
-  const [schedule, setSchedule] = useState<CalendarEvent[] | null>(null);
-  const { userStore } = useValtio();
+  const { calendarStore, userStore } = useValtio();
+  calendarStore.ensureCalendarEvents(date);
+  const schedule = useSnapshot(calendarStore.events[day]);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!);
   const { toast } = useToast();
   const isToday = now.toDateString() === date.toDateString();
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -63,25 +69,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   }, []);
 
   useEffect(() => {
+    setIsLoading(true);
     const clearDebounce = debounce(async () => {
       try {
-        const client = getTsRestClient();
-        const response = await client.calendar.getSchedule({
-          query: {
-            date: date,
-            timezone,
-          }
-        })
-        const { body, status } = response;
-        if (status === 200) {
-          setSchedule(body);
-        } else if (status === 404) {
-          const errorMessage = response.body.error;
-          toast({
-            title: 'Failed to load schedule',
-            description: errorMessage,
-          });
-        }
+        await calendarStore.loadCalendarEvents(date, timezone)
       } catch (error) {
         console.error(error);
         toast({
@@ -144,32 +135,31 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   const allDayEvents: CalendarEvent[] = [];
-  const events: ViewEvent[] = [];
+  const events: ViewFieldsWithCalendarEvent[] = [];
   for (const event of schedule ?? []) {
     if (!event.allDay && event.startTime && event.endTime) {
       const startTime = dayjs.utc(event.startTime).tz(timezone);
       const endTime = dayjs.utc(event.endTime).tz(timezone);
-      const newEvent = {
-        ...event,
+      const viewFields = {
         hours: startTime.hour(),
         minutes: startTime.minute(),
         top: getEventPosition(startTime),
         height: getEventHeight(startTime, endTime),
         left: 0
       };
-      binarySearchInsert(events, newEvent, (a, b) => a.top - b.top);
+      binarySearchInsert(events, { event, viewFields }, (a, b) => a.viewFields.top - b.viewFields.top);
     } else if (event.allDay) {
       allDayEvents.push(event);
     }
   }
-  const shiftOverlappingEvents = (events: ViewEvent[]) => {
+  const shiftOverlappingEvents = (events: ViewFieldsWithCalendarEvent[]) => {
     for (let i = 0; i < events.length; i++) {
       for (let j = i + 1; j < events.length; j++) {
-        if (events[j].top >= events[i].top + events[i].height) {
+        if (events[j].viewFields.top >= events[i].viewFields.top + events[i].viewFields.height) {
           // No more overlaps possible, break out of the loop
           break;
         }
-        events[j].left = (events[i].left || 0) + 42;
+        events[j].viewFields.left = (events[i].viewFields.left || 0) + 42;
       }
     }
   };
@@ -183,13 +173,13 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       for (let i = 0; i < events.length; i++) {
         const currentEvent = events[i];
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const currentEventTime = currentEvent.hours! * 60 + currentEvent.minutes!;
+        const currentEventTime = currentEvent.viewFields.hours! * 60 + currentEvent.viewFields.minutes!;
   
         if (!upcomingEvent && currentEventTime >= currentTime) {
           upcomingEvent = currentEvent;
         } else if (upcomingEvent) {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const selectedEventTime = upcomingEvent.hours! * 60 + upcomingEvent.minutes!;
+          const selectedEventTime = upcomingEvent.viewFields.hours! * 60 + upcomingEvent.viewFields.minutes!;
           if (currentEventTime >= currentTime && currentEventTime < selectedEventTime) {
             upcomingEvent = currentEvent;
           }
@@ -203,7 +193,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   
     if (eventToScrollTo && scrollRef.current) {
       scrollRef.current.scrollTo({
-        top: eventToScrollTo.top,
+        top: eventToScrollTo.viewFields.top,
         behavior: "auto"
       });
     }
@@ -277,49 +267,49 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
             {/* Events */}
             <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
               {events.map((event, index) => {
-                const startTime = dayjs.utc(event.startTime).tz(timezone);
-                const endTime = dayjs.utc(event.endTime).tz(timezone);
+                const startTime = dayjs.utc(event.event.startTime).tz(timezone);
+                const endTime = dayjs.utc(event.event.endTime).tz(timezone);
                 return (
-                  <Credenza key={event.id} open={modalOpen} onOpenChange={setModalOpen}>
+                  <Credenza key={event.event.id} open={modalOpen} onOpenChange={setModalOpen}>
                     <CredenzaTrigger>
                       <div
-                        role={event.goalId ? "button" : undefined}
+                        role={event.event.goalId ? "button" : undefined}
                         className={cn(
                           "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                          event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
+                          event.event.goalId ? "text-white cursor-pointer hover:scale-y-110 hover:opacity-95 transition-all duration-150" : "text-background"
                         )}
                         style={{
-                          backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
-                          top: `${event.top}px`,
-                          height: `${event.height}px`,
+                          backgroundColor: event.event.goalId ? event.event.color : "hsl(var(--accent-foreground))",
+                          top: `${event.viewFields.top}px`,
+                          height: `${event.viewFields.height}px`,
                           minHeight: '20px',
-                          left: event.left
+                          left: event.viewFields.left
                         }}
                       >
                         <div className="flex justify-between pt-1">
                           <div className="flex flex-col">
-                            <span className="text-sm">
-                              {event.title}
-                              {event.height < 45 && (
+                            <span className="text-sm text-left">
+                              {event.event.title}
+                              {event.viewFields.height < 45 && (
                                 <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
                               )}
                             </span>
                             {/* Show time on second row only if event is more than 45px */}
-                            {event.height >= 45 && (
-                              <span className="text-xs">
+                            {event.viewFields.height >= 45 && (
+                              <span className="text-xs text-left">
                                 {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
                               </span>
                             )}
                           </div>
-                          { event.provider === CalendarProvider.google && (
-                            <div className="pr-1 text-xs">
+                          { event.event.provider === CalendarProvider.google && (
+                            <div className="pr-1 text-xs text-right">
                               <span className="font-bold">Google</span>
                             </div>
                           )}
                         </div>
                       </div>
                     </CredenzaTrigger>
-                    <EventModal event={event} setOpen={setModalOpen} />
+                    <EventModal event={event.event} setOpen={setModalOpen} />
                   </Credenza>
                 );
               })}

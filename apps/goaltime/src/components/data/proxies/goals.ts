@@ -3,6 +3,7 @@ import { proxy } from 'valtio'
 import { GoalInput } from "@/shared/zod"
 import { createGoalAction, deleteGoalAction, updateGoalAction } from '../../../app/actions/goals'
 import { Goal, NotificationSettings } from '@prisma/client'
+import { calendarStore } from './calendar'
 
 export const goalStore = proxy<{
   goals: Goal[] | null,
@@ -33,6 +34,12 @@ export const goalStore = proxy<{
     }
     const index = goalStore.goals.findIndex(g => g.id === input.id)
     if (index >= 0) {
+      if (original.color !== input.color) {
+        // Make a best effort to update the event colors, don't block the UI update
+        calendarStore.updateEventColors(original.id, input.color).catch(e => {
+          console.error(`Error updating event colors for goal ${original.id}`, e)
+        })
+      }
       const result = await updateGoalAction(original, input)
       goalStore.goals[index] = result
     }

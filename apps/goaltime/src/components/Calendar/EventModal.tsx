@@ -2,18 +2,19 @@ import { CredenzaBody, CredenzaContent, CredenzaDescription, CredenzaHeader, Cre
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { DatetimePicker } from "@/ui-components/datetime-picker";
 import { dayjs } from "@/shared/utils"
-import { ViewEvent } from "../ScheduleCard";
 import { Label } from "@/ui-components/label";
-import { useState } from "react";
 import { LoadingSpinner } from "@/libs/ui-components/src/svgs/spinner";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
-import { useForm, UseFormReturn } from "react-hook-form";
-import { CalendarEventInput, CalendarEventSchema, getDefaults } from "@/shared/zod";
+import { FieldErrors, useForm, UseFormReturn } from "react-hook-form";
+import { CalendarEventInput, CalendarEventSchema, getDefaults, getZodResolver } from "@/shared/zod";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { AutosizeTextarea } from "@/ui-components/text-area";
+import { useValtio } from "../data/valtio";
+import { CalendarEvent } from "@prisma/client";
+import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
 
 interface EventModalProps extends React.HTMLAttributes<HTMLDivElement> {
-  event: ViewEvent;
+  event: CalendarEvent;
   setOpen: (open: boolean) => void;
 }
 
@@ -73,7 +74,8 @@ const DescriptionInput: React.FC<{ form: UseFormReturn<CalendarEventInput> }> = 
 }
 
 export function EventModal({ event, setOpen, ...props }: EventModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { calendarStore } = useValtio()
+  const { toast } = useToast();
 
   const form = useForm<CalendarEventInput>({
     defaultValues: {
@@ -82,20 +84,39 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
       startTime: dayjs(event.startTime).toDate(),
       endTime: dayjs(event.endTime).toDate(),
     },
+    resolver: getZodResolver(CalendarEventSchema, async (data) => {
+      const errors: FieldErrors<CalendarEventInput> = {}
+      if (data.startTime && data.endTime && dayjs(data.endTime).isBefore(dayjs(data.startTime))) {
+        errors.endTime = {
+          type: 'validate',
+          message: 'End time must be after start time',
+        }
+      }
+      return errors;
+    }),
   });
 
   const { formState, handleSubmit } = form
   const { isSubmitting, isValidating } = formState
 
   const onSubmit = async () => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    // await updateEvent(event.id, {
-    //   startTime: dayjs(start).toISOString(),
-    //   endTime: dayjs(end).toISOString(),
-    // });
-    setIsLoading(false);
+    // This is intentionally closing the modal before the update to avoid the update
+    // rerendering the open animation. It's instant so it's fine.
     setOpen(false);
+    try {
+      await calendarStore.updateCalendarEvent(event, form.getValues());
+      toast({
+        title: 'Event updated',
+        description: 'Your event has been updated.',
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error updating event',
+        description: 'Please try again later.',
+        variant: 'destructive',
+      });
+    }
   }
 
   return (
@@ -123,10 +144,11 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
                               [],
                               ["hours", "minutes", "am/pm"]
                             ]}
-                            value={field.value}
+                            {...field}
                           />
                         </div>
                       </FormControl>
+                      <FormMessage className="ml-2" />
                     </FormItem>
                   )}
                 />
@@ -143,17 +165,18 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
                               [],
                               ["hours", "minutes", "am/pm"]
                             ]}
-                            value={field.value}
+                            {...field}
                           />
                         </div>
                       </FormControl>
+                      <FormMessage className="ml-2" />
                     </FormItem>
                   )}
                 />
               </div>
               <div className="flex justify-center">
-                <ShinyButton className="w-28" variant="gooeyLeft" disabled={isLoading} type="submit">
-                  {isLoading || isValidating || isSubmitting ? <LoadingSpinner /> : "Save"}
+                <ShinyButton className="w-28" variant="gooeyLeft" type="submit">
+                  {isValidating || isSubmitting ? <LoadingSpinner /> : "Save"}
                 </ShinyButton>
               </div>
             </div>
