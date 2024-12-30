@@ -1,9 +1,10 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
-import { GoogleAuth } from "@prisma/client";
+import { CalendarEvent, GoogleAuth } from "@prisma/client";
 
 import type { AccountabilityEvent } from "./agents";
 
 export enum InngestEvent {
+  SyncToClient = "streaming/sync",
   GoogleCalendarSync = "calendar/google/sync",
   GoogleCalendarCronSync = "calendar/google/sync/cron",
   ScheduleGoalEvents = "calendar/scheduling",
@@ -40,6 +41,12 @@ export const inngest = new Inngest({
     [InngestEvent.ScheduleGoalEvents]: {
       data: {
         userId: string;
+      };
+    };
+    [InngestEvent.SyncToClient]: {
+      data: {
+        userId: string;
+        calendarEvents?: CalendarEvent[];
       };
     };
   }>()
