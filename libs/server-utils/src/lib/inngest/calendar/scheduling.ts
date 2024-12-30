@@ -1,4 +1,4 @@
-import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "libs/server-utils/src/queries/calendar";
+import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
 import { inngest, InngestEvent } from "../client";
 import { CalendarEvent, Goal, UserProfile } from "@prisma/client";
 import { Logger } from "inngest/middleware/logger";
@@ -71,11 +71,25 @@ function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: Cal
   const timeblocks: Interval[] = [];
   let currentTime = start;
   while (currentTime.isBefore(end)) {
-    const nextEvent = upcomingEvents.find(event => dayjs(event.startTime!).isAfter(currentTime) && dayjs(event.startTime!).isBefore(end));
+    // eslint-disable-next-line no-loop-func
+    const nextEvent = upcomingEvents.find(event => {
+      if (event.allDay) {
+        return false;
+      }
+      if (event.startTime) {
+        const startTime = dayjs(event.startTime);
+        return startTime.isAfter(currentTime) && startTime.isBefore(end);
+      }
+      console.warn(`No start time for event: ${JSON.stringify(event, null, 2)}`);
+      return false;
+    });
     if (nextEvent) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (dayjs(nextEvent.startTime!).diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         timeblocks.push({ start: currentTime.toDate(), end: nextEvent.startTime! });
       }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       currentTime = dayjs(nextEvent.endTime!);
       continue;
     }
@@ -178,10 +192,12 @@ function getRemainingCommitmentForPeriod(goal: Goal, timeframe: Interval): numbe
   // This function could also get the completed commitment so far to give some analytics
   // If the user has been on track or if they are having to work more per week to catch up
   const start = dayjs(timeframe.start);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const deadline = dayjs(goal.deadline!);
   const end = dayjs(timeframe.end);
   const daysRemainingThisPeriod = end.diff(start, 'days');
   const daysUntilDeadline = deadline.diff(start, 'days');
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const remainingTime = goal.estimate! - goal.completed;
   if (daysUntilDeadline <= 0) {
     return remainingTime;

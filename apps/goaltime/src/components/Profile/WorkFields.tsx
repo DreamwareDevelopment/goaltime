@@ -79,7 +79,7 @@ export function WorkFields({ form }: WorkFieldsProps) {
               </FormItem>
             )}
           />
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-4 sm:gap-16">
             <FormField
               control={form.control}
               name="startsWorkAt"

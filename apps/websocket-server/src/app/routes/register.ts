@@ -9,6 +9,7 @@ export default async function (fastify: FastifyInstance) {
       console.log(`Registering websocket connection for ${request.supabaseUser?.id}`);
       socket.on('open', () => {
         ConnectionManager.getInstance().addConnection(request.supabaseUser?.id, socket);
+        socket.send(JSON.stringify({ type: 'open' }));
       });
       socket.on('close', () => {
         ConnectionManager.getInstance().removeConnection(request.supabaseUser?.id);

@@ -23,8 +23,7 @@
     "dev": {
       "dependsOn": ["shared:type-gen"],
       "options": {
-        "command": "NODE_TLS_REJECT_UNAUTHORIZED=0 next dev",
-        "proxyConfig": "apps/goaltime/proxy.conf.json"
+        "command": "NODE_TLS_REJECT_UNAUTHORIZED=0 next dev"
       }
     }
   }

@@ -239,7 +239,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
               </motion.div>
             </AnimatePresence>
           </CardContent>
-          <CardFooter className="flex flex-wrap justify-between items-center gap-4 w-full">
+          <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap justify-between items-center gap-4">
             {currentStep > 0 && (
               <ShinyButton
                 disabled={isSubmitting || isValidating || isSendingOTP}
@@ -260,7 +260,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                 iconPlacement="right"
                 onClick={nextStep}
                 disabled={isVerifyingOTP}
-                className="ml-auto min-w-[178px]"
+                className="min-w-[178px]"
                 type="button"
               >
                 {isSendingOTP || isVerifyingOTP ? <LoadingSpinner className="h-4 w-4" /> : 'Next'}
@@ -270,7 +270,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                 variant="gooeyLeft"
                 type="submit"
                 disabled={!isDirty}
-                className="ml-auto min-w-[178px]"
+                className="min-w-[178px]"
               >
                 {isSubmitting || isValidating ? <LoadingSpinner className="h-4 w-4" /> : 'Prepare Goals'}
               </ShinyButton>
