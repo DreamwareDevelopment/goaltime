@@ -20,10 +20,12 @@ export class ConnectionManager {
 
   addConnection(userId: string, socket: WebSocket) {
     this.connections.set(userId, socket);
+    console.log(`Current number of connections: ${this.connections.size}`)
   }
 
   removeConnection(userId: string) {
     this.connections.delete(userId);
+    console.log(`Current number of connections: ${this.connections.size}`)
   }
 
   getConnection(userId: string) {

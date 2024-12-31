@@ -9,5 +9,11 @@ export default fp(async function (fastify: FastifyInstance) {
 
   fastify.register(fastifyJWT, {
     secret: process.env.SUPABASE_JWT_SECRET,
+    verify: {
+      extractToken(request) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (request.query as any).access_token as string | undefined;
+      },
+    },
   });
 });

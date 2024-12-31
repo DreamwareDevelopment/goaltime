@@ -3,7 +3,6 @@ import type { JWT } from "@fastify/jwt";
 import {
   SupabaseClient,
   SupabaseClientOptions,
-  User,
   createClient,
 } from "@supabase/supabase-js";
 import type { FastifyPluginCallback, FastifyRequest } from "fastify";
@@ -21,6 +20,10 @@ const NoUserDataFoundError = createError(
   401,
 );
 
+interface SupabaseUser {
+  id: string;
+}
+
 declare module "fastify" {
   export interface FastifyInstance {
     supabaseClient: SupabaseClient;
@@ -28,7 +31,7 @@ declare module "fastify" {
   }
   export interface FastifyRequest {
     _supabaseClient: SupabaseClient;
-    supabaseUser: User;
+    supabaseUser: SupabaseUser;
   }
 }
 
@@ -107,7 +110,7 @@ const fastifySupabase: FastifyPluginCallback<FastifySupabasePluginOpts> = (
     ["user"],
   );
 
-  fastify.decorateRequest(
+  fastify.decorateRequest<SupabaseUser>(
     "supabaseUser",
     {
       getter() {
@@ -117,7 +120,9 @@ const fastifySupabase: FastifyPluginCallback<FastifySupabasePluginOpts> = (
           throw new NoUserDataFoundError();
         }
 
-        return req.user as User;
+        return {
+          id: (req.user as { sub: string }).sub,
+        } as SupabaseUser;
       },
     },
     ["user"],
