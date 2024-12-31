@@ -6,17 +6,46 @@ interface WebSocketClientOptions {
   onError: (error: Event) => void
 }
 
-async function getAccessToken() {
+interface TokenInfo {
+  accessToken: string
+  expiresAt?: number
+  refreshToken: string
+}
+
+async function getTokenInfo(): Promise<TokenInfo> {
   const supabase = await createClient()
   const session = await supabase.auth.getSession()
   if (!session.data.session) {
     throw new Error('No session found')
   }
-  return session.data.session.access_token
+  return {
+    accessToken: session.data.session.access_token,
+    expiresAt: session.data.session.expires_at,
+    refreshToken: session.data.session.refresh_token,
+  }
+}
+
+async function refreshTokenIfNeeded(tokenInfo: TokenInfo): Promise<TokenInfo> {
+  if (tokenInfo.expiresAt && tokenInfo.expiresAt < Date.now() / 1000) {
+    console.log('Refreshing token...')
+    const supabase = await createClient()
+    const refreshedSession = await supabase.auth.refreshSession({
+      refresh_token: tokenInfo.refreshToken,
+    })
+    if (!refreshedSession.data.session) {
+      throw new Error('Failed to refresh')
+    }
+    return {
+      accessToken: refreshedSession.data.session.access_token,
+      expiresAt: refreshedSession.data.session.expires_at,
+      refreshToken: refreshedSession.data.session.refresh_token,
+    }
+  }
+  return tokenInfo
 }
 
 export class WebSocketClient {
-  private accessToken: string | null = null
+  private tokenInfo: TokenInfo | null = null
   private socket: WebSocket | null = null
   private reconnectIntervalRef: number | null = null
   private reconnectOffset = 5000
@@ -35,25 +64,26 @@ export class WebSocketClient {
   private constructor() {}
 
   public async init() {
-    if (!this.accessToken) {
-      this.accessToken = await getAccessToken()
+    if (!this.tokenInfo) {
+      this.tokenInfo = await getTokenInfo()
     }
     return this
   }
 
   public async connect(options: WebSocketClientOptions) {
-    if (!this.accessToken) {
-      throw new Error('Invariant: Access token not initialized')
+    if (!this.tokenInfo) {
+      throw new Error('Invariant: Token info not initialized')
     }
     if (this.socket) {
       return;
     }
+    this.tokenInfo = await refreshTokenIfNeeded(this.tokenInfo)
     console.log('Connecting to WebSocket...')
     const host = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL
     if (!host) {
       throw new Error('NEXT_PUBLIC_WEBSOCKET_SERVER_URL is not set')
     }
-    const url = `${host}/register?access_token=${this.accessToken}`
+    const url = `${host}/register?access_token=${this.tokenInfo.accessToken}`
     this.options = options
 
     this.socket = new WebSocket(url)
