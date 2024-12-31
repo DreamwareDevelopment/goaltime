@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import { app } from './app/app';
 
-const port = process.env.WEBSOCKET_SERVER_PORT ? Number(process.env.WEBSOCKET_SERVER_PORT) : 3333;
+const port = process.env.WEBSOCKET_SERVER_PORT ? Number(process.env.WEBSOCKET_SERVER_PORT) : 8888;
 
 // Instantiate Fastify with some config
 const server = Fastify({

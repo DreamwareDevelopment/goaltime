@@ -1,7 +1,7 @@
 "use client"
 
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList, RefreshCw } from "lucide-react";
 import React, { useEffect, useRef, useState } from 'react';
 
 import { cn } from "@/ui-components/utils";
@@ -22,8 +22,10 @@ import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
 import { useSnapshot } from "valtio";
 import { useToast } from "@/ui-components/hooks/use-toast";
-import { Credenza, CredenzaTrigger } from "@/libs/ui-components/src/components/ui/credenza";
+import { Credenza, CredenzaTrigger } from "@/ui-components/credenza";
 import { EventModal } from "./Calendar/EventModal";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/ui-components/tooltip";
+import { syncCalendarAction } from "../app/actions/calendar";
 
 export interface ViewFields {
   top: number;
@@ -53,7 +55,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
   const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(false);
@@ -220,10 +222,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                     key={event.id}
                     className={cn(
                       "p-2 mb-2 rounded-md",
-                      event.goalId ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
+                      event.provider === CalendarProvider.goaltime ? "text-white" : "text-background"
                     )}
                     style={{
-                      backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
+                      backgroundColor: event.provider === CalendarProvider.goaltime ? event.color : "hsl(var(--accent-foreground))",
                     }}
                   >
                     <div className="flex justify-between">
@@ -270,16 +272,16 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                 const startTime = dayjs.utc(event.event.startTime).tz(timezone);
                 const endTime = dayjs.utc(event.event.endTime).tz(timezone);
                 return (
-                  <Credenza key={event.event.id} open={modalOpen} onOpenChange={setModalOpen}>
+                  <Credenza key={event.event.id} open={modalOpen[event.event.id]} onOpenChange={(open) => setModalOpen({ ...modalOpen, [event.event.id]: open })}>
                     <CredenzaTrigger>
                       <div
-                        role={event.event.goalId ? "button" : undefined}
+                        role={event.event.provider === CalendarProvider.goaltime ? "button" : undefined}
                         className={cn(
                           "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
-                          event.event.goalId ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
+                          event.event.provider === CalendarProvider.goaltime ? "text-white hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
                         )}
                         style={{
-                          backgroundColor: event.event.goalId ? event.event.color : "hsl(var(--accent-foreground))",
+                          backgroundColor: event.event.provider === CalendarProvider.goaltime ? event.event.color : "hsl(var(--accent-foreground))",
                           top: `${event.viewFields.top}px`,
                           height: `${event.viewFields.height}px`,
                           minHeight: '20px',
@@ -291,13 +293,13 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                             <span className="text-sm text-left">
                               {event.event.title}
                               {event.viewFields.height < 45 && (
-                                <span>, {startTime.format("h:mm A")} - {endTime.format("h:mm A")}</span>
+                                <span>, {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}</span>
                               )}
                             </span>
                             {/* Show time on second row only if event is more than 45px */}
                             {event.viewFields.height >= 45 && (
                               <span className="text-xs text-left">
-                                {startTime.format("h:mm A")} - {endTime.format("h:mm A")}
+                                {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
                               </span>
                             )}
                           </div>
@@ -309,7 +311,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                         </div>
                       </div>
                     </CredenzaTrigger>
-                    <EventModal event={event.event} setOpen={setModalOpen} />
+                    <EventModal event={event.event} is24Hour={is24Hour} isEditable={event.event.provider === CalendarProvider.goaltime} setOpen={(open) => setModalOpen({ ...modalOpen, [event.event.id]: open })} />
                   </Credenza>
                 );
               })}
@@ -336,10 +338,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
               key={event.id}
               className={cn(
                 "flex-shrink-0 px-2 py-1 mb-2 rounded-md",
-                event.goalId ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
+                event.provider === CalendarProvider.goaltime ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
               )}
               style={{
-                backgroundColor: event.goalId ? event.color : "hsl(var(--accent-foreground))",
+                backgroundColor: event.provider === CalendarProvider.goaltime ? event.color : "hsl(var(--accent-foreground))",
               }}
             >
               <div className="flex justify-between">
@@ -349,7 +351,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                   {event.description && <span className="text-xs">{truncateText(event.description, 100)}</span>}
                   {!event.allDay && (
                     <span className="text-xs mt-1">
-                      {formatTime(startTime.toISOString())} - {formatTime(endTime.toISOString())}
+                      {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
                     </span>
                   )}
                   {event.allDay && <span className="text-sm mt-1">All Day</span>}
@@ -460,6 +462,27 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
           <CalendarIcon className="h-4 w-4" />
         )}
       </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={isLoading}
+              onClick={async () => {
+                setIsLoading(true);
+                await syncCalendarAction(profile.userId);
+                setIsLoading(false);
+              }}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Refresh external calendars</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   )
 

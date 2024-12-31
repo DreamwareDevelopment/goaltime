@@ -15,6 +15,8 @@ import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
 
 interface EventModalProps extends React.HTMLAttributes<HTMLDivElement> {
   event: CalendarEvent;
+  isEditable: boolean;
+  is24Hour: boolean;
   setOpen: (open: boolean) => void;
 }
 
@@ -73,7 +75,7 @@ const DescriptionInput: React.FC<{ form: UseFormReturn<CalendarEventInput> }> = 
   )
 }
 
-export function EventModal({ event, setOpen, ...props }: EventModalProps) {
+export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: EventModalProps) {
   const { calendarStore } = useValtio()
   const { toast } = useToast();
 
@@ -135,6 +137,27 @@ export function EventModal({ event, setOpen, ...props }: EventModalProps) {
         variant: 'destructive',
       });
     }
+  }
+
+  if (!isEditable) {
+    return (
+      <CredenzaContent {...props}>
+        <CredenzaDescription className="text-right pr-4">
+          <span className="font-bold capitalize">{event.provider}</span> event
+        </CredenzaDescription>
+        <CredenzaHeader className="flex flex-col items-start gap-2 md:py-4 px-4">
+          <CredenzaTitle>{event.title}</CredenzaTitle>
+          { event.description && <p className="text-md text-muted-foreground">{event.description}</p> }
+        </CredenzaHeader>
+        <CredenzaBody className="px-0">
+          <div className="flex flex-col gap-4 px-4 pt-0 pb-4">
+            <p className="text-md text-muted-foreground">
+              {dayjs(event.startTime).format(is24Hour ? 'HH:mm' : 'h:mm A')} - {dayjs(event.endTime).format(is24Hour ? 'HH:mm' : 'h:mm A')}
+            </p>
+          </div>
+        </CredenzaBody>
+      </CredenzaContent>
+    )
   }
 
   return (

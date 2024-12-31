@@ -13,6 +13,7 @@ export const calendarStore = proxy<{
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
   updateEventColors(goalId: string, color: string): Promise<void>,
   deleteCalendarEvent(event: CalendarEvent): Promise<void>,
+  setCalendarEvents(events: CalendarEvent[]): void,
 }>({
   events: {},
   ensureCalendarEvents(date: Date) {
@@ -86,5 +87,31 @@ export const calendarStore = proxy<{
       return; // No events to update
     }
     await updateCalendarEventColorsAction(userId, eventIdsToUpdate, color)
+  },
+  setCalendarEvents(events: CalendarEvent[]) {
+    for (const event of events) {
+      const eventTime = dayjs(event.startTime || event.allDay);
+      const eventDate = eventTime.toDate();
+      const eventDateString = eventDate.toDateString();
+      if (!(eventDateString in calendarStore.events)) {
+        continue;
+      }
+      const existingEvents = calendarStore.events[eventDateString];
+      const existingEventIndex = existingEvents.findIndex((e) => e.id === event.id);
+      if (existingEventIndex > -1) {
+        existingEvents.splice(existingEventIndex, 1, event);
+      } else {
+        if (event.allDay) {
+          existingEvents.unshift(event);
+        } else {
+          binarySearchInsert(existingEvents, event, (a, b) => {
+            if (!a?.startTime || !b?.startTime) {
+              return !a?.startTime ? -1 : 1;
+            }
+            return a.startTime.getTime() - b.startTime.getTime();
+          });
+        }
+      }
+    }
   },
 })

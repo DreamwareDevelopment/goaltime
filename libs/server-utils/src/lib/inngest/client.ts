@@ -1,7 +1,8 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
-import { CalendarEvent, GoogleAuth } from "@prisma/client";
+import { GoogleAuth } from "@prisma/client";
 
 import type { AccountabilityEvent } from "./agents";
+import type { SyncEvent } from "@/shared/zod";
 
 export enum InngestEvent {
   SyncToClient = "streaming/sync",
@@ -44,10 +45,7 @@ export const inngest = new Inngest({
       };
     };
     [InngestEvent.SyncToClient]: {
-      data: {
-        userId: string;
-        calendarEvents?: CalendarEvent[];
-      };
+      data: SyncEvent;
     };
   }>()
 });

@@ -14,7 +14,7 @@ export const syncToClient = inngest.createFunction({
 }, {
   event: InngestEvent.SyncToClient,
 }, async ({ event, step }) => {
-  const { userId, calendarEvents } = event.data;
+  const { userId } = event.data;
   let connection = ConnectionManager.getInstance().getConnection(userId);
   if (connection) {
     await step.run(`sync-to-client-${userId}`, async () => {
@@ -24,7 +24,7 @@ export const syncToClient = inngest.createFunction({
           console.error(`Connection closed by user ${userId}`);
           return;
         }
-        connection.send(JSON.stringify({ type: 'calendar-events', data: calendarEvents }), (error) => {
+        connection.send(JSON.stringify(event.data), (error) => {
           if (error) {
             console.error(error);
             reject(error);

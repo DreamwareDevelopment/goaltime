@@ -46,7 +46,6 @@ export class WebSocketClient {
       throw new Error('Invariant: Access token not initialized')
     }
     if (this.socket) {
-      console.log('WebSocket already connected')
       return;
     }
     console.log('Connecting to WebSocket...')

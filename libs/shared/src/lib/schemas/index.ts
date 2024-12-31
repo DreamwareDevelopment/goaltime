@@ -11,6 +11,7 @@ export * from "./auth";
 export * from "./goals";
 export * from "./user";
 export * from "./calendar";
+export * from "./sync";
 
 type DeepRemoveDefault<I extends z.ZodTypeAny> =
   I extends z.ZodDefault<infer T> ? T

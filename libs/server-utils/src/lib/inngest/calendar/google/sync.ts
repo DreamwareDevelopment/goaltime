@@ -1,12 +1,13 @@
 import { google, calendar_v3 } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
+import { Logger } from "inngest/middleware/logger";
 
 import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient } from "@prisma/client";
+import { dayjs } from "@/shared/utils";
+import { SerializableCalendarEvent } from "@/shared/zod";
 
 import { getPrismaClient } from "../../../prisma/client";
 import { inngest, InngestEvent, InngestEventData } from "../../client";
-import { Logger } from "inngest/middleware/logger";
-import { dayjs } from "@/shared/utils";
 
 // Relevant docs:
 // https://developers.google.com/calendar/api/guides/sync
@@ -21,6 +22,8 @@ interface CalendarEventResult {
 interface CalendarEventsIterationResult {
   nextPageToken?: string | null | undefined;
   nextSyncToken?: string | null | undefined;
+  calendarEvents?: SerializableCalendarEvent[];
+  calendarEventsToDelete?: string[];
 }
 
 type CalendarSyncAction = "refresh" | "full-sync";
@@ -307,6 +310,8 @@ export const syncGoogleCalendar = inngest.createFunction(
 
     let cursor: string | null | undefined = undefined;
     let nextSyncToken: string | null | undefined = googleAuth.calendarSyncToken;
+    const calendarEvents: SerializableCalendarEvent[] = [];
+    const calendarEventsToDelete: string[] = [];
     const initialSync = !googleAuth.calendarSyncToken && !forceFullSync;
     let isFullSync = initialSync || forceFullSync;
     let index = 0;
@@ -335,6 +340,8 @@ export const syncGoogleCalendar = inngest.createFunction(
           return {
             nextPageToken: res.nextPageToken,
             nextSyncToken: res.nextSyncToken,
+            calendarEvents: events,
+            calendarEventsToDelete: [],
           };
         } else {
           if (index === 1) {
@@ -373,11 +380,19 @@ export const syncGoogleCalendar = inngest.createFunction(
           return {
             nextPageToken: res.nextPageToken,
             nextSyncToken: res.nextSyncToken,
+            calendarEvents: events,
+            calendarEventsToDelete: deletedEvents,
           };
         }
       });
       cursor = stepResult.nextPageToken;
       nextSyncToken = stepResult.nextSyncToken;
+      if (stepResult.calendarEvents) {
+        calendarEvents.push(...stepResult.calendarEvents);
+      }
+      if (stepResult.calendarEventsToDelete) {
+        calendarEventsToDelete.push(...stepResult.calendarEventsToDelete);
+      }
     } while (!nextSyncToken);
 
     if (initialSync) {
@@ -395,6 +410,14 @@ export const syncGoogleCalendar = inngest.createFunction(
     } else {
       // TODO: If the events have changed or there are new events, we need to schedule goal events again
     }
+    await step.sendEvent("sync-events-to-client", {
+      name: InngestEvent.SyncToClient,
+      data: {
+        userId: googleAuth.userId,
+        calendarEvents,
+        calendarEventsToDelete,
+      },
+    });
   },
 );
 

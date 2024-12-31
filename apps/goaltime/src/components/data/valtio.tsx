@@ -2,11 +2,14 @@
 
 import { createContext, useContext, useEffect, useRef } from 'react'
 
-import { calendarStore, goalStore, milestoneDynamicStore, userStore } from './proxies'
 import { Goal, NotificationSettings, UserProfile } from '@prisma/client'
+import { SyncEvent } from '@/shared/zod'
 import { SanitizedUser } from '@/server-utils/queries/user'
+import { useToast } from '@/ui-components/hooks/use-toast'
+
+import { calendarStore, goalStore, milestoneDynamicStore, userStore } from './proxies'
+import { processSyncEvent } from './sync/events'
 import { WebSocketClient } from './websocket'
-import { useToast } from '@/libs/ui-components/src/hooks/use-toast'
 
 interface DashboardData {
   goals: Goal[]
@@ -48,6 +51,14 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
           },
           onMessage: (event) => {
             console.log('WebSocket message received:', event)
+            const data = JSON.parse(event.data) as SyncEvent
+            processSyncEvent(data)
+            if (data.calendarEvents?.length) {
+              toast({
+                title: `${data.calendarEvents?.length} events synced`,
+                description: 'Your schedule has been updated'
+              })
+            }
           },
           onError: (error) => {
             console.error('WebSocket error:', error)
