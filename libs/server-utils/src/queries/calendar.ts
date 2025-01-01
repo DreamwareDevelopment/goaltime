@@ -48,18 +48,28 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   interval: Interval;
 }> {
   const prisma = await getPrismaClient(userId);
-  const profile = await prisma.userProfile.findUnique({
+  const googleAuthPromise = prisma.googleAuth.findUnique({
+    where: {
+      userId,
+    },
+  });
+  const profilePromise = prisma.userProfile.findUnique({
     where: {
       userId,
     },
   })
+  const [profile, googleAuth] = await Promise.all([profilePromise, googleAuthPromise]);
   if (!profile) {
     throw new Error('Profile not found for scheduling');
   }
+  if (!googleAuth?.lastFullSyncAt) {
+    throw new Error('Google auth not found for scheduling');
+  }
+  const lastFullSync = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
   const now = dayjs.tz(new Date(), profile.timezone);
   const start = now.toDate();
-  const weekLater = now.add(7, 'day');
-  const end = weekLater.toDate();
+  const nextFullSync = lastFullSync.day(7).hour(profile.preferredSleepTime.getHours()).minute(profile.preferredSleepTime.getMinutes());
+  const end = nextFullSync.toDate();
   const schedule = await prisma.calendarEvent.findMany({
     where: {
       userId,
