@@ -89,6 +89,9 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
       },
     })
   }
+  // TODO: Fix the race condition here, it should be okay since the db update
+  // should be faster than the inngest event, but it's not technically correct.
+  // We do want to update the colors of all the events though, not just the ones that get scheduled.
   if (original.title !== updated.title || original.description !== updated.description || original.color !== updated.color) {
     await prisma.calendarEvent.updateMany({
       where: {
