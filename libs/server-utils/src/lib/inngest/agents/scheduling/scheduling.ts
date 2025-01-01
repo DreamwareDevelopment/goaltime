@@ -13,6 +13,7 @@ export const SchedulingSchema = z.object({
     allowMultiplePerDay: z.boolean(),
     canDoDuringWork: z.boolean(),
   })),
+  interval: z.object({ start: z.string(), end: z.string() }),
   freeIntervals: z.array(z.object({ start: z.string(), end: z.string() })),
   freeWorkIntervals: z.array(z.object({ start: z.string(), end: z.string() })),
 }).required();

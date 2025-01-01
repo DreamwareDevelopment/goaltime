@@ -266,6 +266,10 @@ async function deleteForFullSync(logger: Logger, prisma: PrismaClient, googleAut
       await tx.calendarEvent.deleteMany({
         where: {
           userId: googleAuth.userId,
+          OR: [
+            { startTime: { gt: new Date() } },
+            { allDay: { gt: new Date() } },
+          ],
         },
       });
     } catch (error) {

@@ -16,7 +16,7 @@ export async function updateCalendarEventAction(original: CalendarEvent, updated
 
 export async function updateCalendarEventColorsAction(userId: string, eventIds: string[], color: string): Promise<void> {
   const prisma = await getPrismaClient(userId)
-  await prisma.calendarEvent.updateMany({ where: { id: { in: eventIds }, userId }, data: { color } })
+  await prisma.calendarEvent.updateMany({ where: { userId, id: { in: eventIds } }, data: { color } })
 }
 
 export async function deleteCalendarEventAction(eventId: string, userId: string): Promise<void> {

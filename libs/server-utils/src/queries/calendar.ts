@@ -18,19 +18,25 @@ export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promis
         {
           startTime: {
             gte: startOfDay,
-          },
-          endTime: {
             lte: endOfDay,
+            not: null,
           },
         },
         {
           allDay: {
             gte: startOfDay,
             lte: endOfDay,
+            not: null,
           },
         }
       ],
     },
+    orderBy: {
+      startTime: {
+        sort: 'asc',
+        nulls: 'first'
+      }
+    }
   });
   return schedule;
 }
@@ -58,16 +64,11 @@ export async function getSchedulingData(userId: User['id']): Promise<{
     where: {
       userId,
       goalId: null,
-      OR: [
-        {
-          startTime: {
-            gte: start,
-          },
-          endTime: {
-            lte: end,
-          },
-        },
-      ],
+      startTime: {
+        gte: start,
+        lte: end,
+        not: null,
+      },
     },
     orderBy: {
       startTime: "asc",
@@ -82,13 +83,17 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   return { schedule, profile, goals, interval: { start, end } };
 }
 
-export async function deleteGoalEvents(userId: User['id']) {
+export async function deleteGoalEvents(userId: User['id'], interval: Interval<string>) {
   const prisma = await getPrismaClient(userId);
   await prisma.calendarEvent.deleteMany({
     where: {
       userId,
       goalId: {
         not: null,
+      },
+      startTime: {
+        gte: dayjs(interval.start).utc().toDate(),
+        lte: dayjs(interval.end).utc().toDate(),
       },
     },
   });

@@ -234,6 +234,10 @@ export const scheduleGoalEvents = inngest.createFunction(
       return {
         data: {
           userId,
+          interval: {
+            start: interval.start.toISOString(),
+            end: interval.end.toISOString(),
+          },
           goals: goals.map(goal => ({
             id: goal.id,
             allowMultiplePerDay: goal.allowMultiplePerDay,
@@ -268,7 +272,7 @@ export const scheduleGoalEvents = inngest.createFunction(
     await step.run('save-schedule', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const schedule = SchedulingResultsSchema.parse(JSON.parse((result.state.results[0].output[0] as any).content));
-      await deleteGoalEvents(userId);
+      await deleteGoalEvents(userId, data.interval);
       await saveSchedule(userId, goalMap, timezone, schedule);
     })
   }
