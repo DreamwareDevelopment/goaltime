@@ -28,38 +28,54 @@ interface PreparedSchedulingData {
 export const MIN_BLOCK_SIZE = 10;
 export const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
 
-function parsePreferredTimes(preferredTimes: JsonValue): Interval<string>[] {
+const timeToInterval: Record<PreferredTimesEnumType, Interval<string>> = {
+  'Early Morning': {
+    start: '5:00',
+    end: '8:00',
+  },
+  'Morning': {
+    start: '8:00',
+    end: '11:00',
+  },
+  'Midday': {
+    start: '11:00',
+    end: '14:00',
+  },
+  'Afternoon': {
+    start: '14:00',
+    end: '17:00',
+  },
+  'Evening': {
+    start: '17:00',
+    end: '20:00',
+  },
+  'Night': {
+    start: '20:00',
+    end: '23:00',
+  },
+}
+
+function parsePreferredTimes(profile: UserProfile, preferredTimes: JsonValue): Interval<string>[] {
   if (!Array.isArray(preferredTimes)) {
     throw new Error('Preferred times must be an array');
   }
-  const timeToInterval: Record<PreferredTimesEnumType, Interval<string>> = {
-    'Early Morning': {
-      start: '5:00',
-      end: '8:00',
-    },
-    'Morning': {
-      start: '8:00',
-      end: '11:00',
-    },
-    'Midday': {
-      start: '11:00',
-      end: '14:00',
-    },
-    'Afternoon': {
-      start: '14:00',
-      end: '17:00',
-    },
-    'Evening': {
-      start: '17:00',
-      end: '20:00',
-    },
-    'Night': {
-      start: '20:00',
-      end: '23:00',
-    },
-  }
   return preferredTimes.map(time => {
-    return timeToInterval[time as PreferredTimesEnumType];
+    const interval = timeToInterval[time as PreferredTimesEnumType];
+    if (time === 'Early Morning') {
+      return {
+        start: dayjs(profile.preferredWakeUpTime).add(15, 'minutes').format('HH:mm'),
+        end: interval.end,
+      };
+    } else if (time === 'Night') {
+      return {
+        start: interval.start,
+        end: dayjs(profile.preferredSleepTime).subtract(30, 'minutes').format('HH:mm'),
+      };
+    }
+    return {
+      start: interval.start,
+      end: interval.end,
+    };
   });
 }
 
@@ -243,7 +259,7 @@ export const scheduleGoalEvents = inngest.createFunction(
             allowMultiplePerDay: goal.allowMultiplePerDay,
             canDoDuringWork: goal.canDoDuringWork,
             priority: goal.priority,
-            preferredTimes: parsePreferredTimes(goal.preferredTimes as JsonValue),
+            preferredTimes: parsePreferredTimes(profile, goal.preferredTimes as JsonValue),
             remainingCommitment: getRemainingCommitmentForPeriod(goal, interval),
           })),
           freeIntervals: freeIntervals.map(interval => ({
