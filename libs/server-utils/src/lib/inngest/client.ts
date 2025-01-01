@@ -1,5 +1,5 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
-import { GoogleAuth } from "@prisma/client";
+import { GoogleAuth, UserProfile } from "@prisma/client";
 
 import type { AccountabilityEvent } from "./agents";
 import type { SyncEvent } from "@/shared/zod";
@@ -20,12 +20,14 @@ export const inngest = new Inngest({
   schemas: new EventSchemas().fromRecord<{
     [InngestEvent.GoogleCalendarSync]: {
       data: {
+        profile: UserProfile;
         googleAuth: GoogleAuth;
         forceFullSync?: true;
       }
     };
     [InngestEvent.GoogleCalendarCronSync]: {
       data: {
+        profile: UserProfile;
         googleAuth: GoogleAuth;
         forceFullSync?: undefined;
       }

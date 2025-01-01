@@ -4,7 +4,7 @@ import { UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
-import { fullSyncCalendar } from '@/server-utils/inngest'
+import { fullSyncCalendarAction, syncCalendarAction } from './calendar'
 
 export async function createUserProfileAction(profile: UserProfileInput) {
   delete profile.otp
@@ -18,6 +18,7 @@ export async function createUserProfileAction(profile: UserProfileInput) {
       preferredSleepTime: profile.preferredSleepTime!,
     },
   })
+  await syncCalendarAction(userProfile.userId)
   return userProfile
 }
 
@@ -37,7 +38,7 @@ export async function updateUserProfileAction(original: UserProfile, profile: Pa
     console.log('Timezone changed, syncing calendar')
     const googleAuth = await prisma.googleAuth.findUnique({ where: { userId: profile.userId } })
     if (googleAuth) {
-      await fullSyncCalendar(googleAuth)
+      await fullSyncCalendarAction(updated, googleAuth)
     }
   }
   return updated

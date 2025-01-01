@@ -2,7 +2,7 @@ import { google, calendar_v3 } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { Logger } from "inngest/middleware/logger";
 
-import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient } from "@prisma/client";
+import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient, UserProfile } from "@prisma/client";
 import { dayjs } from "@/shared/utils";
 import { SerializableCalendarEvent } from "@/shared/zod";
 
@@ -34,14 +34,19 @@ async function incrementalSyncCalendarEvents(
   calendar: calendar_v3.Calendar,
   pageToken: string | null | undefined,
   syncToken: string | null | undefined,
+  profile: UserProfile,
 ): Promise<CalendarEventResult | CalendarSyncAction> {
   if (!googleAuth.lastFullSyncAt) {
     throw new Error(`Invariant error: Google auth ${googleAuth.userId} has no last full sync date during incremental sync`);
   }
-  const lastFullSyncAt = new Date(googleAuth.lastFullSyncAt);
+  const lastFullSyncAt = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
+  const preferredSleepTime = dayjs(profile.preferredSleepTime);
+  const nextSundayNight = lastFullSyncAt.day(7).hour(preferredSleepTime.hour()).minute(preferredSleepTime.minute());
+
   try {
-    // Schedule a full sync 6 days in the future
-    if ((new Date().getTime() - lastFullSyncAt.getTime()) > 6 * 24 * 60 * 60 * 1000) {
+    // Schedule a full sync on the next Sunday night when the user is going to sleep
+    // TODO: Fire an event to archive the last week's events
+    if (dayjs.tz(profile.timezone).isAfter(nextSundayNight)) {
       return "full-sync";
     }
     const res = await calendar.events.list({
@@ -73,14 +78,17 @@ async function incrementalSyncCalendarEvents(
 async function fullSyncCalendarEvents(
   logger: Logger,
   calendar: calendar_v3.Calendar,
+  profile: UserProfile,
   pageToken?: string | null,
 ): Promise<CalendarEventResult | "refresh"> {
   try {
     // Sync events for the next 7 days
+    const timeMin = dayjs().tz(profile.timezone).startOf('day').utc().toISOString();
+    const timeMax = dayjs().tz(profile.timezone).day(7).endOf('day').utc().toISOString();
     const res = await calendar.events.list({
       calendarId: 'primary',
-      timeMin: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
-      timeMax: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      timeMin,
+      timeMax,
       singleEvents: true,
       pageToken: pageToken ?? undefined,
     });
@@ -267,18 +275,6 @@ async function deleteForFullSync(logger: Logger, prisma: PrismaClient, googleAut
   });
 }
 
-export async function fullSyncCalendar(googleAuth: GoogleAuth) {
-  googleAuth.lastFullSyncAt = null;
-  googleAuth.calendarSyncToken = null;
-  await inngest.send({
-    name: InngestEvent.GoogleCalendarSync,
-    data: {
-      googleAuth,
-      forceFullSync: true,
-    },
-  })
-}
-
 export const syncGoogleCalendar = inngest.createFunction(
   {
     id: 'google-calendar-sync',
@@ -303,7 +299,7 @@ export const syncGoogleCalendar = inngest.createFunction(
     event: InngestEvent.GoogleCalendarCronSync,
   }],
   async ({ step, event, logger }) => {
-    const { googleAuth, forceFullSync } = event.data;
+    const { profile, googleAuth, forceFullSync } = event.data;
     const prisma = await getPrismaClient(googleAuth.userId);
     const oauth2Client = getGoogleOAuth2Client(googleAuth);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
@@ -328,7 +324,7 @@ export const syncGoogleCalendar = inngest.createFunction(
           } else {
             logger.info(`Continuing full sync...`);
           }
-          const res = await fullSyncCalendarEvents(logger, calendar, cursor);
+          const res = await fullSyncCalendarEvents(logger, calendar, profile, cursor);
           if (res === "refresh") {
             logger.info(`Google access token expired, refreshing...`);
             await refreshGoogleAccessToken(logger, prisma, googleAuth, oauth2Client);
@@ -349,7 +345,7 @@ export const syncGoogleCalendar = inngest.createFunction(
           } else {
             logger.info(`Continuing incremental sync...`);
           }
-          const res = await incrementalSyncCalendarEvents(logger, googleAuth, calendar, cursor, nextSyncToken);
+          const res = await incrementalSyncCalendarEvents(logger, googleAuth, calendar, cursor, nextSyncToken, profile);
           if (res === "refresh") {
             logger.info(`Google access token expired, refreshing...`);
             await refreshGoogleAccessToken(logger, prisma, googleAuth, oauth2Client);
@@ -437,9 +433,18 @@ export const syncCalendars = inngest.createFunction(
   async ({ step }) => {
     const prisma = await getPrismaClient();
     const googleAuths = await prisma.googleAuth.findMany();
-    const events: InngestEventData[InngestEvent.GoogleCalendarCronSync][] = googleAuths.map(googleAuth => ({
+    const profiles = await prisma.userProfile.findMany();
+    const googleAuthsAndProfiles = googleAuths.map(googleAuth => {
+      const profile = profiles.find(profile => profile.userId === googleAuth.userId);
+      if (!profile) {
+        throw new Error(`Profile not found during cron sync for user ${googleAuth.userId}`);
+      }
+      return { googleAuth, profile };
+    });
+    const events: InngestEventData[InngestEvent.GoogleCalendarCronSync][] = googleAuthsAndProfiles.map(({ googleAuth, profile }) => ({
       name: InngestEvent.GoogleCalendarCronSync,
       data: {
+        profile,
         googleAuth,
       },
     }));
