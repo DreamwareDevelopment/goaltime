@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { getSchedulingNetwork, SchedulingDataType, SchedulingResultsSchema } from "../agents/scheduling/scheduling";
+import { GoalSchedulingInput, scheduleGoal, ScheduleInputData } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -20,7 +20,8 @@ interface SchedulingData {
 }
 
 interface PreparedSchedulingData {
-  data: SchedulingDataType;
+  interval: Interval<string>;
+  data: ScheduleInputData;
   goalMap: Record<string, GoalSchedulingData>;
   timezone: string;
 }
@@ -241,19 +242,18 @@ export const scheduleGoalEvents = inngest.createFunction(
   async ({ step, event, logger }) => {
     logger.info('Scheduling goal events');
     const { userId } = event.data;
-    const { data, goalMap, timezone } = await step.run('get-scheduling-data', async () => {
+    const { data, interval, goalMap, timezone } = await step.run('get-scheduling-data', async () => {
       const schedulingData = await getSchedulingData(userId);
       const { goals, interval, profile, schedule } = schedulingData as unknown as SchedulingData;
       const { freeIntervals, freeWorkIntervals } = getFreeIntervals(logger, profile, interval, schedule);
       // freeIntervals.map(interval => logger.info(`Free interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       // freeWorkIntervals.map(interval => logger.info(`Free work interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       return {
+        interval: {
+          start: interval.start.toISOString(),
+          end: interval.end.toISOString(),
+        },
         data: {
-          userId,
-          interval: {
-            start: interval.start.toISOString(),
-            end: interval.end.toISOString(),
-          },
           goals: goals.map(goal => ({
             id: goal.id,
             allowMultiplePerDay: goal.allowMultiplePerDay,
@@ -261,6 +261,8 @@ export const scheduleGoalEvents = inngest.createFunction(
             priority: goal.priority,
             preferredTimes: parsePreferredTimes(profile, goal.preferredTimes as JsonValue),
             remainingCommitment: getRemainingCommitmentForPeriod(goal, interval),
+            minimumTime: goal.minimumTime,
+            maximumTime: goal.maximumTime,
           })),
           freeIntervals: freeIntervals.map(interval => ({
             start: dayjs(interval.start).format(DATE_TIME_FORMAT),
@@ -283,13 +285,114 @@ export const scheduleGoalEvents = inngest.createFunction(
       } as PreparedSchedulingData;
     });
 
-    const network = getSchedulingNetwork();
-    const result = await network.run(JSON.stringify(data));
-    await step.run('save-schedule', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const schedule = SchedulingResultsSchema.parse(JSON.parse((result.state.results[0].output[0] as any).content));
-      await deleteGoalEvents(userId, data.interval);
-      await saveSchedule(userId, goalMap, timezone, schedule);
-    })
+    let freeIntervals = data.freeIntervals.map(interval => ({
+      start: dayjs(interval.start),
+      end: dayjs(interval.end),
+    }));
+    let freeWorkIntervals = data.freeWorkIntervals.map(interval => ({
+      start: dayjs(interval.start),
+      end: dayjs(interval.end),
+    }));
+    const schedule: Array<Interval<dayjs.Dayjs> & { goalId: string }> = [];
+    for (const goal of data.goals) {
+      logger.info(`Scheduling goal: ${goal.id}`);
+      const input: GoalSchedulingInput = {
+        goal,
+        freeIntervals: freeIntervals.map(interval => ({
+          start: interval.start.format(DATE_TIME_FORMAT),
+          end: interval.end.format(DATE_TIME_FORMAT),
+        })),
+        freeWorkIntervals: freeWorkIntervals.map(interval => ({
+          start: interval.start.format(DATE_TIME_FORMAT),
+          end: interval.end.format(DATE_TIME_FORMAT),
+        })),
+      }
+      const intervals = await step.ai.wrap('schedule-goal', scheduleGoal, input);
+      ({ freeIntervals, freeWorkIntervals } = updateIntervals(
+        { freeIntervals, freeWorkIntervals },
+        intervals.map(interval => ({
+          start: dayjs.tz(interval.start, timezone),
+          end: dayjs.tz(interval.end, timezone),
+        })).sort((a, b) => a.start.diff(b.start))
+      ));
+      schedule.push(...intervals.map(interval => ({ start: dayjs(interval.start), end: dayjs(interval.end), goalId: goal.id })));
+    }
+
+    const { deletedEvents, newEvents } = await step.run('save-schedule', async () => {
+      const deletedEvents = await deleteGoalEvents(userId, interval);
+      const newEvents = await saveSchedule(userId, goalMap, timezone, schedule);
+      return { deletedEvents, newEvents };
+    });
+
+    await step.sendEvent('sync-to-client', {
+      name: InngestEvent.SyncToClient,
+      data: {
+        userId,
+        calendarEvents: newEvents,
+        calendarEventsToDelete: deletedEvents,
+      },
+    });
   }
 )
+
+interface Intervals {
+  freeIntervals: Interval<dayjs.Dayjs>[];
+  freeWorkIntervals: Interval<dayjs.Dayjs>[];
+}
+function updateIntervals(intervals: Intervals, schedule: Array<Interval<dayjs.Dayjs>>): Intervals {
+  let { freeIntervals, freeWorkIntervals } = { ...intervals };
+
+  for (const scheduledInterval of schedule) {
+    freeIntervals = freeIntervals.flatMap(freeInterval => {
+      if (freeInterval.start.isAfter(scheduledInterval.end)) {
+        // Free interval starts after the scheduled interval ends
+        return [freeInterval];
+      } else if (freeInterval.end.isBefore(scheduledInterval.start)) {
+        // Free interval ends before the scheduled interval starts
+        return [freeInterval];
+      } else if (freeInterval.start.isSame(scheduledInterval.start, 'minute') && freeInterval.end.isAfter(scheduledInterval.end)) {
+        // Free interval starts at the same time as the scheduled interval and ends after it
+        return [{ start: scheduledInterval.end, end: freeInterval.end }];
+      } else if (freeInterval.end.isSame(scheduledInterval.start, 'minute') && freeInterval.start.isBefore(scheduledInterval.start)) {
+        // Free interval ends at the same time as the scheduled interval and starts before it
+        return [{ start: freeInterval.start, end: scheduledInterval.start }];
+      } else if (freeInterval.start.isBefore(scheduledInterval.start) && freeInterval.end.isAfter(scheduledInterval.end)) {
+        // Free interval contains the scheduled interval
+        return [
+          { start: freeInterval.start, end: scheduledInterval.start },
+          { start: scheduledInterval.end, end: freeInterval.end },
+        ];
+      } else {
+        // Free interval is fully covered by the scheduled interval
+        return [];
+      }
+    });
+
+    freeWorkIntervals = freeWorkIntervals.flatMap(freeInterval => {
+      if (freeInterval.start.isAfter(scheduledInterval.end)) {
+        // Free interval starts after the scheduled interval ends
+        return [freeInterval];
+      } else if (freeInterval.end.isBefore(scheduledInterval.start)) {
+        // Free interval ends before the scheduled interval starts
+        return [freeInterval];
+      } else if (freeInterval.start.isSame(scheduledInterval.start, 'minute') && freeInterval.end.isAfter(scheduledInterval.end)) {
+        // Free interval starts at the same time as the scheduled interval and ends after it
+        return [{ start: scheduledInterval.end, end: freeInterval.end }];
+      } else if (freeInterval.end.isSame(scheduledInterval.start, 'minute') && freeInterval.start.isBefore(scheduledInterval.start)) {
+        // Free interval ends at the same time as the scheduled interval and starts before it
+        return [{ start: freeInterval.start, end: scheduledInterval.start }];
+      } else if (freeInterval.start.isBefore(scheduledInterval.start) && freeInterval.end.isAfter(scheduledInterval.end)) {
+        // Free interval contains the scheduled interval
+        return [
+          { start: freeInterval.start, end: scheduledInterval.start },
+          { start: scheduledInterval.end, end: freeInterval.end },
+        ];
+      } else {
+        // Free interval is fully covered by the scheduled interval
+        return [];
+      }
+    });
+  }
+
+  return { freeIntervals, freeWorkIntervals };
+}

@@ -292,12 +292,12 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                           <div className="flex flex-col">
                             <span className="text-sm text-left">
                               {event.event.title}
-                              {event.viewFields.height < 45 && (
+                              {event.viewFields.height < 60 && (
                                 <span>, {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}</span>
                               )}
                             </span>
-                            {/* Show time on second row only if event is more than 45px */}
-                            {event.viewFields.height >= 45 && (
+                            {/* Show time on second row only if event is more than 60px */}
+                            {event.viewFields.height >= 60 && (
                               <span className="text-xs text-left">
                                 {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
                               </span>

@@ -13,7 +13,7 @@ export const calendarStore = proxy<{
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
   updateEventColors(goalId: string, color: string): Promise<void>,
   deleteCalendarEvent(event: CalendarEvent): Promise<void>,
-  setCalendarEvents(events: CalendarEvent[]): void,
+  setCalendarEvents(events: CalendarEvent[], eventsToDelete: string[]): void,
 }>({
   events: {},
   ensureCalendarEvents(date: Date) {
@@ -88,7 +88,16 @@ export const calendarStore = proxy<{
     }
     await updateCalendarEventColorsAction(userId, eventIdsToUpdate, color)
   },
-  setCalendarEvents(events: CalendarEvent[]) {
+  setCalendarEvents(events: CalendarEvent[], eventsToDelete: string[]) {
+    if (eventsToDelete.length > 0) {
+      // TODO: Improve performance of this
+      for (const day of Object.keys(calendarStore.events)) {
+        const index = calendarStore.events[day].findIndex(e => eventsToDelete.includes(e.id));
+        if (index > -1) {
+          calendarStore.events[day].splice(index, 1);
+        }
+      }
+    }
     for (const event of events) {
       const eventTime = dayjs(event.startTime || event.allDay);
       const eventDate = eventTime.toDate();
