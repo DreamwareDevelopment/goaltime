@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 
-import { UserProfile } from '@prisma/client'
+import { GoogleAuth, UserProfile } from '@prisma/client'
 
 import { createClient } from '../lib/supabase'
 import { getPrismaClient } from '../lib/prisma/client'
@@ -38,4 +38,9 @@ export async function getProfile(userId: User['id']): Promise<UserProfile | null
     },
   })
   return userProfile
+}
+
+export async function getGoogleAuth(userId: User['id']): Promise<GoogleAuth | null> {
+  const prisma = await getPrismaClient(userId)
+  return prisma.googleAuth.findUnique({ where: { userId } })
 }

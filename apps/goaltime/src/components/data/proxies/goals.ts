@@ -8,13 +8,15 @@ import { calendarStore } from './calendar'
 export const goalStore = proxy<{
   goals: Goal[] | null,
   notifications: Record<string, NotificationSettings> | null,
+  goalAggregates: Record<string, number> | null,
   updateGoal(goal: Goal, input: GoalInput): Promise<void>,
   createGoal(input: GoalInput): Promise<void>,
   deleteGoal(goalId: string, userId: string): Promise<void>,
-  init(goals: Goal[], notifications: NotificationSettings[]): void,
+  init(goals: Goal[], notifications: NotificationSettings[], goalAggregates: Record<string, number>): void,
 }>({
   goals: null,
   notifications: null,
+  goalAggregates: null,
   async createGoal(input) {
     if (!goalStore.goals) {
       throw new Error('Invariant: goals not initialized in goalStore')
@@ -54,7 +56,7 @@ export const goalStore = proxy<{
       goalStore.goals.splice(index, 1)
     }
   },
-  init(goals, notifications) {
+  init(goals, notifications, goalAggregates) {
     goalStore.goals = goals
     for (const notification of notifications) {
       if (!goalStore.notifications) {
@@ -62,5 +64,6 @@ export const goalStore = proxy<{
       }
       goalStore.notifications[notification.goalId] = notification
     }
+    goalStore.goalAggregates = goalAggregates
   },
 })

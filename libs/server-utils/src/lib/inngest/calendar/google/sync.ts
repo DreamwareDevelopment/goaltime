@@ -28,6 +28,10 @@ interface CalendarEventsIterationResult {
 
 type CalendarSyncAction = "refresh" | "full-sync";
 
+export function getNextFullSync(lastFullSync: dayjs.Dayjs, timezone: string): dayjs.Dayjs {
+  return lastFullSync.tz(timezone).day(7).hour(15).minute(30);
+}
+
 async function incrementalSyncCalendarEvents(
   logger: Logger,
   googleAuth: GoogleAuth,
@@ -40,8 +44,7 @@ async function incrementalSyncCalendarEvents(
     throw new Error(`Invariant error: Google auth ${googleAuth.userId} has no last full sync date during incremental sync`);
   }
   const lastFullSyncAt = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
-  const preferredSleepTime = dayjs(profile.preferredSleepTime);
-  const nextSundayNight = lastFullSyncAt.day(7).hour(preferredSleepTime.hour()).minute(preferredSleepTime.minute());
+  const nextSundayNight = getNextFullSync(lastFullSyncAt, profile.timezone);
 
   try {
     // Schedule a full sync on the next Sunday night when the user is going to sleep
@@ -201,6 +204,8 @@ function logError(logger: Logger, message: string, error: unknown) {
 }
 
 function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string): CalendarEvent {
+  const start = event.start?.dateTime ? dayjs.utc(event.start.dateTime) : null;
+  const end = event.end?.dateTime ? dayjs.utc(event.end.dateTime) : null;
   return {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     id: event.id ?? event.iCalUID!,
@@ -209,8 +214,9 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
     subtitle: null,
     description: event.description ?? null,
     location: event.location ?? null,
-    startTime: event.start?.dateTime ? dayjs.utc(event.start.dateTime).toDate() : null,
-    endTime: event.end?.dateTime ? dayjs.utc(event.end.dateTime).toDate() : null,
+    duration: end ? end.diff(start, 'minutes') : null,
+    startTime: start?.toDate() ?? null,
+    endTime: end?.toDate() ?? null,
     timeZone: event.start?.timeZone ?? null,
     eventType: event.eventType as EventType | undefined ?? EventType.default,
     locked: Boolean(event.locked),

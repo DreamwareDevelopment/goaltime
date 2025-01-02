@@ -13,6 +13,7 @@ import { WebSocketClient } from './websocket'
 
 interface DashboardData {
   goals: Goal[]
+  goalAggregates: Record<string, number>
   profile: UserProfile
   user: SanitizedUser
   notifications: NotificationSettings[]
@@ -30,7 +31,7 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
   // Create stores once for the lifetime of the app
   const stores = useRef({ calendarStore, goalStore, userStore, milestoneDynamicStore }).current
   userStore.init(dashboardData.user, dashboardData.profile);
-  goalStore.init(dashboardData.goals, dashboardData.notifications);
+  goalStore.init(dashboardData.goals, dashboardData.notifications, dashboardData.goalAggregates);
   
   useEffect(() => {
     const client = WebSocketClient.getInstance()

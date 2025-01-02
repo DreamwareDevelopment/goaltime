@@ -5,6 +5,7 @@ import { CalendarEvent } from '@prisma/client'
 import { deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEventColorsAction } from '../../../app/actions/calendar'
 import { binarySearchInsert, dayjs } from '@/libs/shared/src'
 import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
+import { goalStore } from './goals'
 
 export const calendarStore = proxy<{
   events: Record<string, CalendarEvent[]>,
@@ -98,9 +99,13 @@ export const calendarStore = proxy<{
         }
       }
     }
+    const goalAggregates: Record<string, number> = {};
     for (const event of events) {
       const eventTime = dayjs(event.startTime || event.allDay);
       const eventDate = eventTime.toDate();
+      if (!event.allDay && event.goalId && event.duration) {
+        goalAggregates[event.goalId] = (goalAggregates[event.goalId] ?? 0) + event.duration;
+      }
       const eventDateString = eventDate.toDateString();
       if (!(eventDateString in calendarStore.events)) {
         continue;
@@ -117,10 +122,13 @@ export const calendarStore = proxy<{
             if (!a?.startTime || !b?.startTime) {
               return !a?.startTime ? -1 : 1;
             }
-            return a.startTime.getTime() - b.startTime.getTime();
+            return dayjs(a.startTime).diff(dayjs(b.startTime));
           });
         }
       }
+    }
+    if (goalStore.goalAggregates) {
+      Object.assign(goalStore.goalAggregates, goalAggregates);
     }
   },
 })

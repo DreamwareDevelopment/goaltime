@@ -6,6 +6,6 @@ export function processSyncEvent(event: SyncEvent) {
   console.log(`Processing ${calendarEvents?.length} sync event(s) for ${userId}`);
   if (calendarEvents) {
     const deserializedCalendarEvents = deserializeCalendarEvents(calendarEvents);
-    calendarStore.setCalendarEvents(deserializedCalendarEvents, calendarEventsToDelete);
+    calendarStore.setCalendarEvents(deserializedCalendarEvents, calendarEventsToDelete ?? []);
   }
 }

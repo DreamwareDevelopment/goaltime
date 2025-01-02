@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_calendar_event_indexes",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_calendar_event_duration",
         "cwd": "libs/shared"
       }
     },

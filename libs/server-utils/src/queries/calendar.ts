@@ -120,6 +120,32 @@ export async function deleteGoalEvents(userId: User['id'], interval: Interval<st
   return ids;
 }
 
+export async function getAggregateTimeByGoal(userId: User['id'], startDate: dayjs.Dayjs, endDate: dayjs.Dayjs): Promise<Record<string, number>> {
+  const prisma = await getPrismaClient(userId);
+  const aggregatedData = await prisma.calendarEvent.groupBy({
+    by: ['goalId'],
+    _sum: {
+      duration: true,
+    },
+    where: {
+      userId,
+      goalId: {
+        not: null,
+      },
+      startTime: {
+        gte: startDate.toDate(),
+        lte: endDate.toDate(),
+      },
+    },
+  });
+  const goalAggregates = aggregatedData.reduce((prev, curr) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    prev[curr.goalId!] = curr._sum.duration ?? 0;
+    return prev;
+  }, {} as Record<string, number>);
+  return goalAggregates;
+}
+
 export interface GoalSchedulingData {
   title: string;
   description: string | null;
@@ -138,6 +164,7 @@ export async function saveSchedule(
     userId,
     goalId,
     provider: CalendarProvider.goaltime,
+    duration: end.diff(start, 'minutes'),
     startTime: start.utc().toDate(),
     endTime: end.utc().toDate(),
     title: goalMap[goalId].title,

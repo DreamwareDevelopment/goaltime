@@ -1,5 +1,5 @@
 import React from 'react'
-import { getProfile, getSanitizedUser } from '@/server-utils/queries/user'
+import { getGoogleAuth, getProfile, getSanitizedUser } from '@/server-utils/queries/user'
 import { redirect } from 'next/navigation'
 import { getGoals, getNotifications } from '@/server-utils/queries/goal'
 
@@ -14,24 +14,33 @@ import { UserAvatar } from '../../components/UserAvatar'
 import GoalCreationButton from '../../components/GoalCreationButton'
 import { WelcomeCard } from '../../components/WelcomeCard'
 import { LogoButton } from '../../components/ActionButtons/LogoButton'
+import { getNextFullSync } from '@/server-utils/inngest'
+import { dayjs } from '@/shared/utils'
+import { getAggregateTimeByGoal } from '@/libs/server-utils/src/queries/calendar'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Dashboard() {
   const user = await getSanitizedUser()
-  const profile = await getProfile(user.id)
-  if (!profile) {
+  const profilePromise = getProfile(user.id)
+  const googleAuthPromise = getGoogleAuth(user.id)
+  const [profile, googleAuth] = await Promise.all([profilePromise, googleAuthPromise])
+  if (!profile || !googleAuth || !googleAuth.lastFullSyncAt) {
     redirect('/welcome')
   }
 
-  const [goals, notifications] = await Promise.all([
+  // TODO: Consider using now() instead of lastFullSyncAt
+  const lastFullSync = dayjs(googleAuth.lastFullSyncAt)
+  const nextFullSync = getNextFullSync(lastFullSync, profile.timezone)
+  const [goals, goalAggregates, notifications] = await Promise.all([
     getGoals(profile),
-    getNotifications(profile)
+    getAggregateTimeByGoal(user.id, lastFullSync, nextFullSync.endOf('day')),
+    getNotifications(profile),
   ])
   const hasGoals = goals.length > 0;
   return (
     <ValtioProvider 
-      dashboardData={{ goals, profile, user, notifications }}
+      dashboardData={{ goals, profile, user, notifications, goalAggregates }}
     >
       <div className="w-full 2xl:w-[67%] mx-auto p-1 pt-4 sm:p-4">
         <header className="flex justify-between items-center mb-5 px-4 sm:px-0">
