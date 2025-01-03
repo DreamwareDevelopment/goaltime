@@ -101,7 +101,7 @@ export async function deleteGoalEvents(userId: User['id'], interval: Interval<st
         not: null,
       },
       startTime: {
-        gte: dayjs(interval.start).utc().toDate(),
+        gte: dayjs(interval.start).subtract(1, 'hour').utc().toDate(), // This is a hack to ensure that goal events scheduled during the current user session are removed.
         lte: dayjs(interval.end).utc().toDate(),
       },
     },

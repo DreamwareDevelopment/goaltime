@@ -95,7 +95,8 @@ function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: Cal
       }
       if (event.startTime) {
         const startTime = dayjs(event.startTime);
-        return startTime.isAfter(currentTime) && startTime.isBefore(end);
+        const endTime = dayjs(event.endTime);
+        return (startTime.isAfter(currentTime) || endTime.isAfter(currentTime)) && startTime.isBefore(end);
       }
       console.warn(`No start time for event: ${JSON.stringify(event, null, 2)}`);
       return false;
@@ -203,16 +204,21 @@ function getFreeIntervals(logger: Logger, profile: UserProfile, timeframe: Inter
  * @returns The remaining commitment for the goal for the given period.
  */
 function getRemainingCommitmentForPeriod(goal: Goal, timeframe: Interval): number {
-  if (goal.commitment) {
-    return goal.commitment - goal.completed;
-  }
   // This function could also get the completed commitment so far to give some analytics
   // If the user has been on track or if they are having to work more per week to catch up
   const start = dayjs(timeframe.start);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const deadline = dayjs(goal.deadline!);
   const end = dayjs(timeframe.end);
   const daysRemainingThisPeriod = end.diff(start, 'days');
+  if (goal.commitment) {
+    if (goal.completed === 0) {
+      // This makes it so we don't rush to complete the commitment if the period is short
+      return goal.commitment * daysRemainingThisPeriod / 7;
+    }
+    // This makes it so the user is on track to complete the commitment if they have completed some of it
+    return (goal.commitment - goal.completed);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const deadline = dayjs(goal.deadline!);
   const daysUntilDeadline = deadline.diff(start, 'days');
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const remainingTime = goal.estimate! - goal.completed;
@@ -256,6 +262,8 @@ export const scheduleGoalEvents = inngest.createFunction(
         data: {
           goals: goals.map(goal => ({
             id: goal.id,
+            title: goal.title,
+            description: goal.description,
             allowMultiplePerDay: goal.allowMultiplePerDay,
             canDoDuringWork: goal.canDoDuringWork,
             priority: goal.priority,

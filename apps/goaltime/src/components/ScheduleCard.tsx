@@ -401,7 +401,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
               "md:hidden"
             )}
           >
-            {format(date, "dd/MM")}
+            {format(date, "MM/dd")}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">

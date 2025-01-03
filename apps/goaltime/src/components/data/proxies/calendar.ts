@@ -93,9 +93,11 @@ export const calendarStore = proxy<{
     if (eventsToDelete.length > 0) {
       // TODO: Improve performance of this
       for (const day of Object.keys(calendarStore.events)) {
-        const index = calendarStore.events[day].findIndex(e => eventsToDelete.includes(e.id));
-        if (index > -1) {
-          calendarStore.events[day].splice(index, 1);
+        for (const event of eventsToDelete) {
+          const index = calendarStore.events[day].findIndex(e => e.id === event);
+          if (index > -1) {
+            calendarStore.events[day].splice(index, 1);
+          }
         }
       }
     }
