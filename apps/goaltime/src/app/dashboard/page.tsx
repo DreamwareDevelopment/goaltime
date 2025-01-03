@@ -56,7 +56,7 @@ export default async function Dashboard() {
             <Card className="col-span-1 lg:col-span-2 xl:col-span-4">
               <ScheduleCard />
             </Card>
-            <Card className="col-span-1 xl:col-span-3">
+            <Card className="col-span-1 xl:col-span-3 lg:h-[704px]">
               <GoalProgressCard />
             </Card>
             <Card className="col-span-full overflow-hidden">

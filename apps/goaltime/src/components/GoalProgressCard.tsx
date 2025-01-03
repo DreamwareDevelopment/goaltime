@@ -29,7 +29,7 @@ export function GoalProgressCard() {
             <div key={goal.id} className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium">{goal.title}</span>
-                {aggregate && <span className="text-sm text-muted-foreground">{(aggregate / 60).toFixed(2)} hours scheduled</span>}
+                {aggregate && <span className="lg:hidden text-sm text-muted-foreground">{(aggregate / 60).toFixed(2)} hours scheduled</span>}
                 <span className="hidden md:block text-sm text-muted-foreground">
                   {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
                   {goal.completed}/{goal.commitment ?? goal.estimate!} hours

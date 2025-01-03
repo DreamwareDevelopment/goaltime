@@ -124,7 +124,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     return `${displayHour}:${minutes} ${period}`;
   };
 
-  const HOUR_HEIGHT = 60; // pixels per hour
+  const HOUR_HEIGHT = 180; // pixels per hour
   
   const getEventPosition = (startTime: dayjs.Dayjs) => {
     return (startTime.hour() * HOUR_HEIGHT) + ((startTime.minute() / 60) * HOUR_HEIGHT);
@@ -277,18 +277,18 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                       <div
                         role={event.event.provider === CalendarProvider.goaltime ? "button" : undefined}
                         className={cn(
-                          "absolute px-2 mt-2 rounded-md w-[calc(100%-8px)]",
+                          "absolute px-2 mt-2 rounded-sm w-[calc(100%-8px)] hover:z-50",
                           event.event.provider === CalendarProvider.goaltime ? "text-white hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
                         )}
                         style={{
                           backgroundColor: event.event.provider === CalendarProvider.goaltime ? event.event.color : "hsl(var(--accent-foreground))",
                           top: `${event.viewFields.top}px`,
-                          height: `${event.viewFields.height}px`,
-                          minHeight: '20px',
-                          left: event.viewFields.left
+                          height: `${event.viewFields.height - 2}px`,
+                          minHeight: '8px',
+                          left: event.viewFields.left,
                         }}
                       >
-                        <div className="flex justify-between pt-1">
+                        <div className="flex justify-between">
                           <div className="flex flex-col">
                             <span className="text-sm text-left">
                               {event.event.title}
