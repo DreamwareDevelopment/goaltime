@@ -26,6 +26,7 @@ import { Credenza, CredenzaTrigger } from "@/ui-components/credenza";
 import { EventModal } from "./Calendar/EventModal";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/ui-components/tooltip";
 import { syncCalendarAction } from "../app/actions/calendar";
+import { useMediaQuery } from "@/libs/ui-components/src/hooks/use-media-query";
 
 export interface ViewFields {
   top: number;
@@ -45,6 +46,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const day = date.toDateString();
   const now = new Date();
   const { calendarStore, userStore } = useValtio();
+  const isDesktop = useMediaQuery('(min-width: 500px)');
   calendarStore.ensureCalendarEvents(date);
   const schedule = useSnapshot(calendarStore.events[day]);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -124,7 +126,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     return `${displayHour}:${minutes} ${period}`;
   };
 
-  const HOUR_HEIGHT = 180; // pixels per hour
+  const HOUR_HEIGHT = isDesktop ? 220 : 280; // pixels per hour
 
   // Calculate marker heights
   const markerHeights: number[] = [];
@@ -261,7 +263,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                   >
                     <div className="flex justify-between">
                       <div className="flex flex-col">
-                        <span className="font-medium">{event.title}</span>
+                        <span className="font-semibold">{event.title}</span>
                         {event.subtitle && <span className="text-sm italic">{event.subtitle}</span>}
                         {event.description && <span className="text-sm">{truncateText(event.description, 100)}</span>}
                       </div>
@@ -316,7 +318,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                         style={{
                           backgroundColor: event.event.provider === CalendarProvider.goaltime ? event.event.color : "hsl(var(--accent-foreground))",
                           top: `${event.viewFields.top}px`,
-                          height: `${event.viewFields.height - 2}px`,
+                          height: `${event.viewFields.height - 8}px`,
                           minHeight: '8px',
                           left: event.viewFields.left,
                         }}
@@ -324,13 +326,15 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                         <div className="flex justify-between">
                           <div className="flex flex-col">
                             <span className="text-sm text-left">
-                              {event.event.title}
-                              {event.viewFields.height < 60 && (
-                                <span>, {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}</span>
+                              <span className="font-semibold">
+                                {isDesktop || event.viewFields.height >= 60 ? event.event.title : truncateText(event.event.title, 22)}
+                              </span>
+                              {(isDesktop && event.viewFields.height < 60) && (
+                                <span> {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}</span>
                               )}
                             </span>
                             {/* Show time on second row only if event is more than 60px */}
-                            {event.viewFields.height >= 60 && (
+                            {(!isDesktop || event.viewFields.height >= 60) && (
                               <span className="text-xs text-left">
                                 {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
                               </span>
@@ -367,35 +371,39 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
           const startTime = dayjs(event.startTime);
           const endTime = dayjs(event.endTime);
           return (
-            <div
-              key={event.id}
-              className={cn(
-                "flex-shrink-0 px-2 py-1 mb-2 rounded-md",
-                event.provider === CalendarProvider.goaltime ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
-              )}
-              style={{
-                backgroundColor: event.provider === CalendarProvider.goaltime ? event.color : "hsl(var(--accent-foreground))",
-              }}
-            >
-              <div className="flex justify-between">
-                <div className="flex flex-col">
-                  <span className="font-medium">{event.title}</span>
-                  {event.subtitle && <span className="text-sm italic">{event.subtitle}</span>}
-                  {event.description && <span className="text-xs">{truncateText(event.description, 100)}</span>}
-                  {!event.allDay && (
-                    <span className="text-xs mt-1">
-                      {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
-                    </span>
+            <Credenza key={event.id} open={modalOpen[event.id]} onOpenChange={(open) => setModalOpen({ ...modalOpen, [event.id]: open })}>
+              <CredenzaTrigger className="w-full">
+                <div
+                  className={cn(
+                    "flex-shrink-0 px-2 py-1 mb-2 rounded-md text-left",
+                    event.provider === CalendarProvider.goaltime ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
                   )}
-                  {event.allDay && <span className="text-sm mt-1">All Day</span>}
-                </div>
-                { event.provider === CalendarProvider.google && (
-                  <div className="text-xs">
-                    <span className="font-bold">Google</span>
+                  style={{
+                    backgroundColor: event.provider === CalendarProvider.goaltime ? event.color : "hsl(var(--accent-foreground))",
+                  }}
+                >
+                  <div className="flex justify-between">
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{event.title}</span>
+                      {event.subtitle && <span className="text-sm italic">{event.subtitle}</span>}
+                      {event.description && <span className="text-xs">{truncateText(event.description, 100)}</span>}
+                      {!event.allDay && (
+                        <span className="text-xs mt-1">
+                          {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
+                        </span>
+                      )}
+                      {event.allDay && <span className="text-sm mt-1">All Day</span>}
+                    </div>
+                    { event.provider === CalendarProvider.google && (
+                      <div className="text-xs">
+                        <span className="font-bold">Google</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              </CredenzaTrigger>
+              <EventModal event={event} is24Hour={is24Hour} isEditable={event.provider === CalendarProvider.goaltime} setOpen={(open) => setModalOpen({ ...modalOpen, [event.id]: open })} />
+            </Credenza>
           )
         })}
       </ScrollArea>

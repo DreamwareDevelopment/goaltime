@@ -74,6 +74,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
         variant: 'default',
         title: 'Profile updated',
       })
+      router.push('/dashboard')
     } catch (error) {
       console.error('error creating user profile', error)
       // TODO: Get better type checking on these error page params
@@ -97,7 +98,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
             <Separator />
             <PreferencesFields form={form} />
           </CardContent>
-          <CardFooter className="flex flex-wrap justify-between w-full gap-4">
+          <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
             <ShinyButton
               variant="expandIcon"
               Icon={ArrowLeft}
@@ -112,7 +113,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
               variant="gooeyLeft"
               type="submit"
               disabled={!isDirty}
-              className="ml-auto min-w-[178px]"
+              className="min-w-[178px]"
             >
               {isSubmitting || isValidating ? <LoadingSpinner className="h-4 w-4" /> : 'Save Changes'}
             </ShinyButton>

@@ -44,6 +44,7 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
             r={(size / 2) - 20}
             fill="transparent"
             stroke={goal.color}
+            strokeOpacity={hoveredGoal === goal ? 0.7 : 1}
             strokeWidth="35"
             strokeDasharray={`${endAngle - startAngle} ${circumference}`}
             strokeDashoffset={-startAngle}
@@ -62,7 +63,7 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
       <foreignObject x={0} y={0} width={size} height={size} pointerEvents="none">
         <div className="w-full p-8 h-full flex flex-col items-center justify-center text-center font-bold gap-2">
           <p style={{ fontSize: hoveredGoal ? getFontSize(hoveredGoal.title) : 48 }}>{hoveredGoal ? hoveredGoal.title : `${goals.length} Goals`}</p>
-          <p className="text-xs text-muted-foreground">{hoveredGoal ? hoveredGoal.commitment : goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0)} hours</p>
+          <p className="text-lg sm:text-xs text-muted-foreground">{hoveredGoal ? hoveredGoal.commitment : goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0)} hours</p>
         </div>
       </foreignObject>
     </svg>

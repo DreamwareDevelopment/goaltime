@@ -54,7 +54,7 @@ export const calendarStore = proxy<{
       if (!a.startTime || !b.startTime) {
         return !a.startTime ? -1 : 1
       }
-      return a.startTime.getTime() - b.startTime.getTime()
+      return dayjs(a.startTime).diff(dayjs(b.startTime))
     })
     const updatedEvent = await updateCalendarEventAction(original, updated)
     calendarStore.events[day].splice(newIndex, 1, updatedEvent)

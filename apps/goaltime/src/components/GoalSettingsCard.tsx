@@ -223,17 +223,17 @@ export function GoalSettingsCard({
               </Accordion>
               <div className="flex flex-col justify-center items-center mt-4 gap-4 w-full">
                 <div className="flex flex-row gap-4 w-full">
-                  <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[62px] text-white" style={{ backgroundColor: form.watch('color') }}>
+                  { goal && (
+                    <ShinyButton variant="outline" onClick={handleDelete} className="h-[34px] sm:h-[51px] text-destructive bg-destructive/10 hover:bg-destructive/20">
+                      Delete Goal
+                    </ShinyButton>
+                  )}
+                  <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[34px] md:h-[51px] text-white" style={{ backgroundColor: form.watch('color') }}>
                     {isSubmitting || isValidating ? 
                       <LoadingSpinner className="h-4 w-4" /> : 
                       "Save Goal"
                     }
                   </ShinyButton>
-                  { goal && (
-                    <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
-                      Delete Goal
-                    </ShinyButton>
-                  )}
                 </div>
                 <ColorPicker form={form} />
               </div>

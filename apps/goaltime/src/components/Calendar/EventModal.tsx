@@ -219,10 +219,10 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
                 />
               </div>
               <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
-                <ShinyButton variant="outline" onClick={handleDelete} className="h-[63px] text-destructive bg-destructive/10 hover:bg-destructive/20">
+                <ShinyButton variant="outline" onClick={handleDelete} className="w-28 h-[34px] sm:h-[51px] text-destructive bg-destructive/10 hover:bg-destructive/20">
                   Delete Event
                 </ShinyButton>
-                <ShinyButton className="w-28" variant="gooeyLeft" type="submit">
+                <ShinyButton className="w-28 h-[34px] sm:h-[51px]" variant="gooeyLeft" type="submit">
                   {isValidating || isSubmitting ? <LoadingSpinner /> : "Save"}
                 </ShinyButton>
               </div>

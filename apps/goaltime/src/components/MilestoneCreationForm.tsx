@@ -75,7 +75,7 @@ export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreatio
             variant="expandIcon"
             Icon={PlusIcon}
             iconPlacement="right"
-            className="h-[51px] flex-grow md:flex-none"
+            className="h-[34px] sm:h-[51px] flex-grow md:flex-none"
             type="submit"
           >Add</ShinyButton>
         </form>
