@@ -125,9 +125,40 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   const HOUR_HEIGHT = 180; // pixels per hour
+
+  // Calculate marker heights
+  const markerHeights: number[] = [];
+  let currentHeight = 0;
+  // Helper function to check if there are events between two hours
+  const hasEventsInHourRange = (startHour: number, endHour: number) => {
+    return schedule.some(
+      (event) => {
+        const startTime = dayjs(event.startTime);
+        const endTime = dayjs(event.endTime);
+        const markerStartHour = dayjs.tz(date, timezone).hour(startHour).minute(1);
+        const markerEndHour = dayjs.tz(date, timezone).hour(startHour).minute(59);
+        // Check if the event starts in the range
+        if (startTime.isSame(markerStartHour, 'hour')) return true;
+        // Check if the event ends in the range, accounting for events that end on the hour
+        if (endTime.isAfter(markerStartHour) && endTime.isBefore(markerEndHour)) return true;
+        // Check if the event spans beyond the current hour range
+        if (startTime.isBefore(markerStartHour) && endTime.isAfter(markerEndHour)) return true;
+        return false;
+      }
+    );
+  };
+  for (let i = 0; i < 24; i++) {
+    if (hasEventsInHourRange(i, i + 1)) {
+      markerHeights.push(currentHeight);
+      currentHeight += HOUR_HEIGHT;
+    } else {
+      markerHeights.push(currentHeight);
+      currentHeight += 60;
+    }
+  }
   
   const getEventPosition = (startTime: dayjs.Dayjs) => {
-    return (startTime.hour() * HOUR_HEIGHT) + ((startTime.minute() / 60) * HOUR_HEIGHT);
+    return markerHeights[startTime.hour()] + ((startTime.minute() / 60) * HOUR_HEIGHT);
   };
 
   const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
@@ -249,13 +280,15 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   
         {/* Scrollable Timeline */}
         <ScrollArea className="h-[500px] pr-4" scrollRef={scrollRef}>
-          <div className="relative" style={{ height: `${24 * HOUR_HEIGHT}px` }}>
+          <div className="relative" style={{ height: `${currentHeight}px` }}>
             {/* Hour markers and separators */}
             {Array.from({ length: 24 }, (_, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="absolute w-full"
-                style={{ top: `${i * HOUR_HEIGHT}px` }}
+                style={{
+                  top: `${markerHeights[i]}px`,
+                }}
               >
                 <div className="grid grid-cols-[72px_1fr] lg:grid-cols-[84px_1fr] gap-2">
                   <span className="text-sm text-muted-foreground text-nowrap sticky left-0">
