@@ -6,13 +6,15 @@ import { GoalCreationButton } from "./GoalCreationButton"
 import { useValtio } from "./data/valtio"
 import { useSnapshot } from "valtio"
 import { ScrollArea } from "@/ui-components/scroll-area"
+import CircularGauge from "./CircularGauge"
+import { Goal } from "@prisma/client"
 
 export function GoalProgressCard() {
   const { goalStore } = useValtio()
   if (!goalStore.goals) {
     throw new Error('Invariant: Goals not initialized before using GoalProgressCard')
   }
-  const goals = useSnapshot(goalStore.goals)
+  const goals = useSnapshot(goalStore.goals) as Goal[]
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const goalAggregates = useSnapshot(goalStore.goalAggregates!)
 
@@ -23,6 +25,9 @@ export function GoalProgressCard() {
         <CardDescription>Your current goals and progress</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="flex justify-center items-center">
+          <CircularGauge goals={goals} size={300} className="mb-6 pr-3" />
+        </div>
         {goals.map((goal) => {
           const aggregate = goalAggregates[goal.id]
           return (
