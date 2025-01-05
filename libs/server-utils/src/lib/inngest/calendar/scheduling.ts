@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { GoalSchedulingInput, scheduleGoal, ScheduleInputData } from "../agents/scheduling/scheduling";
+import { GoalSchedulingInput, scheduleGoal, ScheduleInputData, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -21,6 +21,7 @@ interface SchedulingData {
 
 interface PreparedSchedulingData {
   interval: Interval<string>;
+  externalEvents: CalendarEvent[];
   data: ScheduleInputData;
   goalMap: Record<string, GoalSchedulingData>;
   timezone: string;
@@ -124,8 +125,18 @@ function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: Cal
  * @param events - The existing events to get the free and work intervals around.
  * @returns The free and work intervals for the given timeframe.
  */
-function getFreeIntervals(logger: Logger, profile: UserProfile, timeframe: Interval, events: CalendarEvent[]): { freeIntervals: Interval[], freeWorkIntervals: Interval[] } {
+function getFreeIntervals(
+  logger: Logger,
+  profile: UserProfile,
+  timeframe: Interval,
+  events: CalendarEvent[],
+): {
+  freeIntervals: Interval[],
+  freeWorkIntervals: Interval[],
+  wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
+} {
   // logger.info(`Getting free intervals for ${JSON.stringify(timeframe, null, 2)}`);
+  const wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[] = [];
   const freeIntervals: Interval[] = [];
   const freeWorkIntervals: Interval[] = [];
   const start = dayjs(timeframe.start);
@@ -151,6 +162,14 @@ function getFreeIntervals(logger: Logger, profile: UserProfile, timeframe: Inter
     const upcomingEvents = events.filter(event => dayjs(event.startTime).isAfter(currentTime) && dayjs(event.startTime).isBefore(nextDay));
     const wakeUpTime = timeOffset(currentTime, dayjs(profile.preferredWakeUpTime).add(15, 'minutes')); // Add 15 minutes to the wake up time to account for getting out of bed
     const sleepTime = timeOffset(currentTime, dayjs(profile.preferredSleepTime).subtract(30, 'minutes')); // Subtract 30 minutes from the sleep time to account for getting ready to sleep
+    wakeUpOrSleepEvents.push({
+      type: 'wakeUp',
+      start: wakeUpTime.format(DATE_TIME_FORMAT),
+    });
+    wakeUpOrSleepEvents.push({
+      type: 'sleep',
+      start: sleepTime.format(DATE_TIME_FORMAT),
+    });
     // logger.info(`Wake up time: ${wakeUpTime.format(DATE_TIME_FORMAT)}`);
     // logger.info(`Sleep time: ${sleepTime.format(DATE_TIME_FORMAT)}`);
     let workStart: dayjs.Dayjs | null = null;
@@ -194,7 +213,7 @@ function getFreeIntervals(logger: Logger, profile: UserProfile, timeframe: Inter
       }
     }
   }
-  return { freeIntervals, freeWorkIntervals };
+  return { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents };
 }
 
 /**
@@ -248,10 +267,10 @@ export const scheduleGoalEvents = inngest.createFunction(
   async ({ step, event, logger }) => {
     logger.info('Scheduling goal events');
     const { userId } = event.data;
-    const { data, interval, goalMap, timezone } = await step.run('get-scheduling-data', async () => {
+    const { data, interval, goalMap, externalEvents, timezone } = await step.run('get-scheduling-data', async () => {
       const schedulingData = await getSchedulingData(userId);
       const { goals, interval, profile, schedule } = schedulingData as unknown as SchedulingData;
-      const { freeIntervals, freeWorkIntervals } = getFreeIntervals(logger, profile, interval, schedule);
+      const { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
       // freeIntervals.map(interval => logger.info(`Free interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       // freeWorkIntervals.map(interval => logger.info(`Free work interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       return {
@@ -259,7 +278,9 @@ export const scheduleGoalEvents = inngest.createFunction(
           start: interval.start.toISOString(),
           end: interval.end.toISOString(),
         },
+        externalEvents: schedule,
         data: {
+          wakeUpOrSleepEvents,
           goals: goals.map(goal => ({
             id: goal.id,
             title: goal.title,
@@ -306,6 +327,8 @@ export const scheduleGoalEvents = inngest.createFunction(
       logger.info(`Scheduling goal: ${goal.id}`);
       const input: GoalSchedulingInput = {
         goal,
+        externalEvents,
+        wakeUpOrSleepEvents: data.wakeUpOrSleepEvents,
         freeIntervals: freeIntervals.map(interval => ({
           start: interval.start.format(DATE_TIME_FORMAT),
           end: interval.end.format(DATE_TIME_FORMAT),

@@ -3,10 +3,18 @@ import { generateText, tool } from 'ai';
 import { z } from "zod";
 import { Interval } from '../../calendar/scheduling';
 import { dayjs } from '@/shared/utils';
+import { CalendarEvent } from '@prisma/client';
+import { CalendarEventSchema } from '@/shared/zod';
+import { Jsonify } from 'inngest/helpers/jsonify';
 
 export const IntervalSchema = z.object({
   start: z.string().describe('The start time of the interval in YYYY-MM-DD HH:mm format'),
   end: z.string().describe('The end time of the interval in YYYY-MM-DD HH:mm format'),
+});
+
+export const WakeUpOrSleepEventSchema = z.object({
+  type: z.enum(['wakeUp', 'sleep']),
+  start: z.string().describe('The time to wake up or sleep on a given day in YYYY-MM-DD HH:mm format'),
 });
 
 export const ScheduleableGoalSchema = z.object({
@@ -31,15 +39,19 @@ export const GoalSchedulingInputSchema = z.object({
   goal: ScheduleableGoalSchema.describe('The goal to schedule'),
   freeIntervals: z.array(IntervalSchema).describe('Free intervals outside of work hours'),
   freeWorkIntervals: z.array(IntervalSchema).describe('Free intervals during work hours'),
+  wakeUpOrSleepEvents: z.array(WakeUpOrSleepEventSchema).describe(`The times to wake up or sleep over the course of the free intervals' days`),
 });
 
-export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema>;
+export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema> & {
+  externalEvents: Jsonify<CalendarEvent>[];
+};
 
 export const ScheduleInputDataSchema = z.object({
   goals: z.array(ScheduleableGoalSchema),
-  interval: IntervalSchema,
+  schedule: z.array(CalendarEventSchema),
   freeIntervals: z.array(IntervalSchema),
   freeWorkIntervals: z.array(IntervalSchema),
+  wakeUpOrSleepEvents: z.array(WakeUpOrSleepEventSchema),
 }).required();
 
 export type ScheduleInputData = z.infer<typeof ScheduleInputDataSchema>;
@@ -202,3 +214,90 @@ function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], 
     errors,
   };
 }
+
+
+interface IntervalWithScore<T> extends Interval<T> {
+  score: number;
+}
+
+interface TypedIntervalWithScore<T> extends IntervalWithScore<T> {
+  type: 'work' | 'free';
+}
+
+export interface WakeUpOrSleepEvent<T> {
+  type: 'wakeUp' | 'sleep';
+  start: T;
+}
+
+type SortableCalendarEvent = CalendarEvent & Interval<dayjs.Dayjs>;
+
+type ScheduleEvent = CalendarEvent | Interval<dayjs.Dayjs> | WakeUpOrSleepEvent<dayjs.Dayjs>;
+
+function isCalendarEvent(event: ScheduleEvent): event is CalendarEvent {
+  return 'id' in event;
+}
+
+function neutralScore<T>(interval: Interval<T>): IntervalWithScore<T> {
+  return {
+    ...interval,
+    score: 0,
+  };
+}
+
+/*
+export async function scoreIntervals(
+  profile: UserProfile,
+  wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
+  events: CalendarEvent[],
+  goals: ScheduleableGoal[],
+  freeIntervals: Interval<string>[],
+  freeWorkIntervals: Interval<string>[],
+): Promise<{
+  scoredFreeWorkIntervals: IntervalWithScore<dayjs.Dayjs>[];
+  scoredFreeIntervals: IntervalWithScore<dayjs.Dayjs>[];
+}> {
+  const scoredFreeWorkIntervals: IntervalWithScore<dayjs.Dayjs>[] = [];
+  const scoredFreeIntervals: IntervalWithScore<dayjs.Dayjs>[] = [];
+  if (freeIntervals.length === 0 && freeWorkIntervals.length === 0) {
+    return {
+      scoredFreeWorkIntervals,
+      scoredFreeIntervals,
+    };
+  }
+
+  const allDayEvents: CalendarEvent[] = [];
+  const sortableEvents: SortableCalendarEvent[] = []
+  for (const event of events) {
+    if (event.allDay) {
+      allDayEvents.push(event);
+    } else {
+      sortableEvents.push({
+        ...event,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        start: dayjs(event.startTime!),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        end: dayjs(event.endTime!),
+      });
+    }
+  }
+  const sortedEvents: ScheduleEvent[] = [...sortableEvents, ...freeIntervals, ...freeWorkIntervals].sort((a, b) => a.start.diff(b.start));
+  if (sortedEvents.length <= 1) {
+    return {
+      scoredFreeWorkIntervals: freeIntervals.map(neutralScore),
+      scoredFreeIntervals: freeWorkIntervals.map(neutralScore),
+    };
+  }
+  let previous: ScheduleEvent | WakeUpOrSleepEvent | null =
+  let next: ScheduleEvent | WakeUpOrSleepEvent | null = sortedEvents[0];
+  let current: ScheduleEvent | null = sortedEvents[1];
+  while (current !== null) {
+    const currentStart = current.start;
+    const currentEnd = current.end;
+  }
+
+  return {
+    scoredFreeWorkIntervals,
+    scoredFreeIntervals,
+  };
+}
+*/
