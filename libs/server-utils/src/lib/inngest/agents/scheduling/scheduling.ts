@@ -217,7 +217,7 @@ function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], 
     }
   }
 
-  const priorityMultiplier = goal.priority === Priority.High ? 0.05 : goal.priority === Priority.Medium ? 0.15 : 0.3;
+  const priorityMultiplier = goal.priority === Priority.High ? 0.025 : goal.priority === Priority.Medium ? 0.075 : 0.15;
   const remainingCommitmentMinutes = goal.remainingCommitment * 60;
   console.log(`Remaining commitment: ${remainingCommitmentMinutes} minutes`);
   const priorityGracePeriod = remainingCommitmentMinutes * priorityMultiplier;
@@ -345,6 +345,7 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
 
   console.log('sortedStringEvents', sortedStringEvents);
   console.log(`Scoring intervals for goal ${data.goal.title}`);
+  const intervalsWithExplanations: Array<{ interval: TypedIntervalWithScore<string>; explanation: string }> = [];
   for (let i = 1; i < sortedStringEvents.length - 1; i++) {
     const current = sortedStringEvents[i];
     if (isCalendarEvent(current) || isWakeUpOrSleepEvent(current)) {
@@ -355,25 +356,27 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const allDayEventsToday = allDayEvents.filter(event => dayjs(event.allDay!).isSame(current.start, 'day'));
     const scoredIntervals = await scoreInterval(data.goal, current, previous, next, allDayEventsToday);
+    intervalsWithExplanations.push(...scoredIntervals);
     for (const interval of scoredIntervals) {
-      if (interval.type === 'work') {
+      if (interval.interval.type === 'work') {
         scoredFreeWorkIntervals.push({
-          start: interval.start,
-          end: interval.end,
-          score: interval.score,
+          start: interval.interval.start,
+          end: interval.interval.end,
+          score: interval.interval.score,
         });
       } else {
         scoredFreeIntervals.push({
-          start: interval.start,
-          end: interval.end,
-          score: interval.score,
+          start: interval.interval.start,
+          end: interval.interval.end,
+          score: interval.interval.score,
         });
       }
     }
   }
 
-  console.log('scoredFreeWorkIntervals', scoredFreeWorkIntervals);
-  console.log('scoredFreeIntervals', scoredFreeIntervals);
+  console.log('scoredFreeWorkIntervals count', scoredFreeWorkIntervals.length);
+  console.log('scoredFreeIntervals count', scoredFreeIntervals.length);
+  console.log('intervalsWithExplanations', intervalsWithExplanations);
   return {
     scoredFreeWorkIntervals,
     scoredFreeIntervals,
@@ -468,11 +471,20 @@ Here are some guidelines for scoring:
 - Given intervals all start with a score of 0.
 - If the current interval is during work hours and the goal cannot be done during work hours as shown by the "canDoDuringWork" field, it should get a score of -1.
 - If the current interval is outside of work hours and the goal can only be done during work hours as shown by the "canDoDuringWork" field, it should get a lower score, but not necessarily negative.
-- Do put yourself in the shoes of the user and think step by step to consider how feasible it is to complete the given goal during the current interval given the previous and next events.
 - If the current interval is a good time to complete the goal, it should get a positive score.
 - If the current interval is a bad time to complete the goal, it should get a negative score.
 - If you don't have enough information to make a judgement, you should return a score of 0.
 - If the interval may have a portion that seems like a bad time, please split it into two intervals and score them separately.
+
+Put yourself in the shoes of the user and think step by step to consider how feasible it is to complete the given goal during the current interval given the previous and next events.
+You should also consider the details within the previous and next events such as the title and description of the event if present. Try to infer the user's location / situation and whether or not accomplishing the goal at the current interval is practical.
+Furthermore, consider if the previous and next events may need some buffer time before and after them to travel or complete other tasks that may be needed before or after working on the goal.
+For example, if the goal is a physical activity like exercise, you should consider if the user is likely to exercise during the current interval given their sleep and work schedule and if they have had enough time to rest.
+If you think they may need rest between physical activity sessions, schedule rest day(s)/intervals for the goal by giving the intervals for those days a negative score.
+On the other hand, if the goal is a peaceful activity like meditation, you should consider if the user is likely to meditate during the current interval.
+Also consider if the goal makes sense to do closer to bedtime or shortly after waking up.
+
+Remember your reasoning when scoring, explanations for each scored interval should be returned at the end of the scoring process in the "explanations" field. Only explain if you have reasons other than the interval being outside of the goal's preferred times or the goal not being allowed during work hours.
 
 Return the scored intervals in the "intervals" field using the answer tool.
 `
@@ -483,20 +495,23 @@ async function scoreInterval(
   previous: ScheduleEvent<string>,
   next: ScheduleEvent<string>,
   allDayEvents: Jsonify<CalendarEvent>[],
-): Promise<Array<TypedIntervalWithScore<string>>> {
+): Promise<Array<{ interval: TypedIntervalWithScore<string>; explanation: string }>> {
   const response = await generateText({
     model: openai('gpt-4o'),
     messages: [
       { role: 'system', content: scoringSystemPrompt },
       { role: 'user', content: JSON.stringify({ goal, current, previous, next, allDayEvents }) },
     ],
-    maxSteps: 5,
+    maxSteps: 10,
     toolChoice: 'required',
     tools: {
       answer: tool({
         description: 'A tool for providing the final answer.',
         parameters: z.object({
-          intervals: z.array(TypedIntervalWithScoreSchema).describe('The scored intervals'),
+          intervalsWithExplanations: z.array(z.object({
+            interval: TypedIntervalWithScoreSchema.describe('The interval that was scored'),
+            explanation: z.string().describe('The explanation of the scoring for the interval'),
+          })).describe('An explanation of the scoring for each interval'),
         }),
       }),
       splitInterval: tool({
@@ -520,5 +535,5 @@ async function scoreInterval(
   if (!answerCall) {
     throw new Error('No answer call found');
   }
-  return answerCall.args.intervals;
+  return answerCall.args.intervalsWithExplanations;
 }

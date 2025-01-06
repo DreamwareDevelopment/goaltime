@@ -368,6 +368,7 @@ export const scheduleGoalEvents = inngest.createFunction(
           end: interval.end.format(DATE_TIME_FORMAT),
         })),
       }
+      console.log(`Scoring intervals for ${goal.title}`);
       const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap('score-intervals', scoreIntervals, input);
       input.freeIntervals = scoredFreeIntervals;
       input.freeWorkIntervals = scoredFreeWorkIntervals;

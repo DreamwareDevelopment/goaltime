@@ -14,6 +14,15 @@ export async function getNotifications(profile: UserProfile): Promise<Notificati
 
 export function sortGoals(a: Goal, b: Goal) {
   if (a.priority === b.priority) {
+    // Sort by the largest time required, if the difference is large
+    const aCommitment = a.commitment ?? a.estimate;
+    const bCommitment = b.commitment ?? b.estimate;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const diff = Math.abs(aCommitment! - bCommitment!);
+    if (diff > 3) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return aCommitment! - bCommitment!;
+    }
     // Sort by the number of preferred times, ascending
     // This is so that we are able to schedule more restrictive goals first
     const aPreferredTimes = Array.isArray(a.preferredTimes) ? a.preferredTimes : [];
