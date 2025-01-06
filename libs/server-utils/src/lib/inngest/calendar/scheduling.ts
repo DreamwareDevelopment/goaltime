@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { GoalSchedulingInput, scheduleGoal, ScheduleInputData, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -79,10 +79,6 @@ function parsePreferredTimes(profile: UserProfile, preferredTimes: JsonValue): I
       end: interval.end,
     };
   });
-}
-
-function timeOffset(date: dayjs.Dayjs, offset: dayjs.Dayjs): dayjs.Dayjs {
-  return date.set('hours', offset.hour()).set('minutes', offset.minute());
 }
 
 function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: CalendarEvent[]): Interval[] {
@@ -160,8 +156,17 @@ function getFreeIntervals(
     // logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
     // logger.info(`Next day: ${nextDay.format(DATE_TIME_FORMAT)}`);
     const upcomingEvents = events.filter(event => dayjs(event.startTime).isAfter(currentTime) && dayjs(event.startTime).isBefore(nextDay));
-    const wakeUpTime = timeOffset(currentTime, dayjs(profile.preferredWakeUpTime).add(15, 'minutes')); // Add 15 minutes to the wake up time to account for getting out of bed
-    const sleepTime = timeOffset(currentTime, dayjs(profile.preferredSleepTime).subtract(30, 'minutes')); // Subtract 30 minutes from the sleep time to account for getting ready to sleep
+    const preferredWakeUpTime = dayjs(profile.preferredWakeUpTime);
+    const wakeUpTime = currentTime
+      .hour(preferredWakeUpTime.hour())
+      .minute(preferredWakeUpTime.minute())
+      .add(15, 'minutes'); // Add 15 minutes to the wake up time to account for getting out of bed
+    const preferredSleepTime = dayjs(profile.preferredSleepTime);
+    const sleepHour = preferredSleepTime.hour();
+    const sleepTime = currentTime
+      .hour(sleepHour === 0 ? 24 : sleepHour)
+      .minute(preferredSleepTime.minute())
+      .add(30, 'seconds').subtract(30, 'minutes'); // Subtract 30 minutes from the sleep time to account for getting ready to sleep
     wakeUpOrSleepEvents.push({
       type: 'wakeUp',
       start: wakeUpTime.format(DATE_TIME_FORMAT),
@@ -175,8 +180,14 @@ function getFreeIntervals(
     let workStart: dayjs.Dayjs | null = null;
     let workEnd: dayjs.Dayjs | null = null;
     if (workdays.includes(currentTime.format('dddd'))) {
-      workStart = profile.startsWorkAt ? timeOffset(currentTime, dayjs(profile.startsWorkAt)) : null;
-      workEnd = profile.endsWorkAt ? timeOffset(currentTime, dayjs(profile.endsWorkAt)) : null;
+      const startsWorkAt = dayjs(profile.startsWorkAt);
+      workStart = currentTime
+        .hour(startsWorkAt.hour())
+        .minute(startsWorkAt.minute());
+      const endsWorkAt = dayjs(profile.endsWorkAt);
+      workEnd = currentTime
+        .hour(endsWorkAt.hour())
+        .minute(endsWorkAt.minute());
     }
 
     while (currentTime.isBefore(nextDay)) {
@@ -190,27 +201,36 @@ function getFreeIntervals(
       }
       // Find blocks before work
       if (workStart && currentTime.isBefore(workStart)) {
-        freeIntervals.push(...getTimeblocks(currentTime, workStart, upcomingEvents));
+        const intervals = getTimeblocks(currentTime, workStart, upcomingEvents);
+        freeIntervals.push(...intervals);
+        // console.log(`Found ${intervals.length} free intervals before work`);
         currentTime = workStart.add(1, 'second');
         continue;
       }
       // Find blocks during work
       if (workStart && workEnd && currentTime.isAfter(workStart) && currentTime.isBefore(workEnd)) {
-        freeWorkIntervals.push(...getTimeblocks(currentTime, workEnd, upcomingEvents));
+        const intervals = getTimeblocks(currentTime, workEnd, upcomingEvents);
+        freeWorkIntervals.push(...intervals);
+        // console.log(`Found ${intervals.length} free work intervals during work`);
         currentTime = workEnd.add(1, 'second');
         continue;
       }
       // Find blocks after work
       if (workEnd && currentTime.isAfter(workEnd)) {
-        freeIntervals.push(...getTimeblocks(currentTime, sleepTime, upcomingEvents));
+        const intervals = getTimeblocks(currentTime, sleepTime, upcomingEvents);
+        freeIntervals.push(...intervals);
+        // console.log(`Found ${intervals.length} free intervals after work`);
         currentTime = nextDay;
         continue;
       }
       if (!workStart && !workEnd) {
-        freeIntervals.push(...getTimeblocks(currentTime, sleepTime, upcomingEvents));
+        const intervals = getTimeblocks(currentTime, sleepTime, upcomingEvents);
+        freeIntervals.push(...intervals);
+        // console.log(`Found ${intervals.length} free intervals on day off`);
         currentTime = nextDay;
         continue;
       }
+      console.warn('Finished loop without finding any free intervals');
     }
   }
   return { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents };
@@ -229,12 +249,16 @@ function getRemainingCommitmentForPeriod(goal: Goal, timeframe: Interval): numbe
   const end = dayjs(timeframe.end);
   const daysRemainingThisPeriod = end.diff(start, 'days');
   if (goal.commitment) {
-    if (goal.completed === 0) {
+    if (goal.completed === 0 && daysRemainingThisPeriod < 6) {
       // This makes it so we don't rush to complete the commitment if the period is short
-      return goal.commitment * daysRemainingThisPeriod / 7;
+      const remaining = goal.commitment * daysRemainingThisPeriod / 7;
+      console.log(`Remaining commitment with no completed time for ${goal.title}: ${remaining}`);
+      return remaining;
     }
     // This makes it so the user is on track to complete the commitment if they have completed some of it
-    return (goal.commitment - goal.completed);
+    const remaining = goal.commitment - goal.completed;
+    console.log(`Remaining commitment with completed time for ${goal.title}: ${remaining}`);
+    return remaining;
   }
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const deadline = dayjs(goal.deadline!);
@@ -242,9 +266,12 @@ function getRemainingCommitmentForPeriod(goal: Goal, timeframe: Interval): numbe
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const remainingTime = goal.estimate! - goal.completed;
   if (daysUntilDeadline <= 0) {
+    console.log(`Remaining commitment with immediate deadline for ${goal.title}: ${remainingTime}`);
     return remainingTime;
   }
-  return remainingTime * daysRemainingThisPeriod / daysUntilDeadline;
+  const remaining = remainingTime * daysRemainingThisPeriod / daysUntilDeadline;
+  console.log(`Remaining commitment with deadline for ${goal.title}: ${remaining}`);
+  return remaining;
 }
 
 export const scheduleGoalEvents = inngest.createFunction(
@@ -270,7 +297,9 @@ export const scheduleGoalEvents = inngest.createFunction(
     const { data, interval, goalMap, externalEvents, timezone } = await step.run('get-scheduling-data', async () => {
       const schedulingData = await getSchedulingData(userId);
       const { goals, interval, profile, schedule } = schedulingData as unknown as SchedulingData;
+      console.log(`Finding free intervals for`, interval);
       const { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
+      console.log(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
       // freeIntervals.map(interval => logger.info(`Free interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       // freeWorkIntervals.map(interval => logger.info(`Free work interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       return {
@@ -324,7 +353,8 @@ export const scheduleGoalEvents = inngest.createFunction(
     }));
     const schedule: Array<Interval<dayjs.Dayjs> & { goalId: string }> = [];
     for (const goal of data.goals) {
-      logger.info(`Scheduling goal: ${goal.id}`);
+      logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals`);
+      logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals`);
       const input: GoalSchedulingInput = {
         goal,
         externalEvents,
@@ -338,6 +368,10 @@ export const scheduleGoalEvents = inngest.createFunction(
           end: interval.end.format(DATE_TIME_FORMAT),
         })),
       }
+      const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap('score-intervals', scoreIntervals, input);
+      input.freeIntervals = scoredFreeIntervals;
+      input.freeWorkIntervals = scoredFreeWorkIntervals;
+      logger.info(`Scheduling goal: ${goal.title}`);
       const intervals = await step.ai.wrap('schedule-goal', scheduleGoal, input);
       ({ freeIntervals, freeWorkIntervals } = updateIntervals(
         { freeIntervals, freeWorkIntervals },
@@ -346,6 +380,9 @@ export const scheduleGoalEvents = inngest.createFunction(
           end: dayjs.tz(interval.end, timezone),
         })).sort((a, b) => a.start.diff(b.start))
       ));
+      logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals after scheduling ${goal.title}`);
+      logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals after scheduling ${goal.title}`);
+      logger.info(`Scheduled ${intervals.reduce((acc, curr) => acc + dayjs(curr.end).diff(curr.start, 'minutes'), 0)} minutes of intervals for ${goal.title}`);
       schedule.push(...intervals.map(interval => ({ start: dayjs(interval.start), end: dayjs(interval.end), goalId: goal.id })));
     }
 
