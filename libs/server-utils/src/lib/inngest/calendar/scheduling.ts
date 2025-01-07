@@ -379,9 +379,6 @@ export const scheduleGoalEvents = inngest.createFunction(
       logger.info(`Scheduling goal: ${goal.title}...`);
       const input: GoalSchedulingInput = {
         goal,
-        instructions,
-        externalEvents,
-        wakeUpOrSleepEvents: data.wakeUpOrSleepEvents,
         freeIntervals: scoredFreeIntervals.map(interval => interval.interval).filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score),
         freeWorkIntervals: scoredFreeWorkIntervals.map(interval => interval.interval).filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score),
       }

@@ -47,13 +47,9 @@ export const GoalSchedulingInputSchema = z.object({
   goal: ScheduleableGoalSchema.describe('The goal to schedule'),
   freeIntervals: z.array(IntervalSchema).describe('Free intervals outside of work hours'),
   freeWorkIntervals: z.array(IntervalSchema).describe('Free intervals during work hours'),
-  wakeUpOrSleepEvents: z.array(WakeUpOrSleepEventSchema).describe(`The times to wake up or sleep over the course of the free intervals' days`),
-  instructions: z.string().describe('Instructions for scoring the goal'),
 });
 
-export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema> & {
-  externalEvents: Jsonify<CalendarEvent>[];
-};
+export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema>;
 
 export const ScheduleInputDataSchema = z.object({
   goals: z.array(ScheduleableGoalSchema),
