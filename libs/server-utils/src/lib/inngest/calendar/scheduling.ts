@@ -371,11 +371,11 @@ export const scheduleGoalEvents = inngest.createFunction(
           end: interval.end.format(DATE_TIME_FORMAT),
         })),
       }
-      logger.info(`Scoring intervals for ${goal.title}`);
+      logger.info(`Scoring intervals for ${goal.title}...`);
       const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap('score-intervals', scoreIntervals, input);
-      input.freeIntervals = scoredFreeIntervals;
-      input.freeWorkIntervals = scoredFreeWorkIntervals;
-      logger.info(`Scheduling goal: ${goal.title}`);
+      input.freeIntervals = scoredFreeIntervals.filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score);
+      input.freeWorkIntervals = scoredFreeWorkIntervals.filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score);
+      logger.info(`Scheduling goal: ${goal.title}...`);
       const intervals = await step.ai.wrap('schedule-goal', scheduleGoal, input);
       ({ freeIntervals, freeWorkIntervals } = updateIntervals(
         { freeIntervals, freeWorkIntervals },

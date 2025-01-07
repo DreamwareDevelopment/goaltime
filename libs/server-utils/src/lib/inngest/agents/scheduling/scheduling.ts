@@ -98,7 +98,7 @@ An example input might look like this:
 
 Notes on the input:
 - The free intervals both inside and outside of work hours contain "start" and "end" fields indicating the date and time in YYYY-MM-DD HH:mm format.
-- The free intervals also contain a "score" field indicating the score of the interval for that goal. Negative scores mean the user is less likely to complete the goal during that interval. A score of 0 means the interval is neutral. Positive scores mean the user is more likely to complete the goal during that interval.
+- The free intervals also contain a "score" field indicating the score of the interval for that goal. The higher the score, the more likely the user is to complete the goal during that interval.
 - You should use the score to help you determine which intervals to schedule the goal in, avoiding the ones with negative scores.
 - The free intervals can elapse over multiple days.
 - The preferred time intervals contain "start" and "end" fields indicating the time in HH:mm format.
@@ -146,8 +146,8 @@ export async function scheduleGoal(data: GoalSchedulingInput): Promise<Interval<
         parameters: z.object({
           goal: ScheduleableGoalSchema.describe('The goal to schedule'),
           schedule: z.array(IntervalSchema).describe('The schedule for the goal'),
-          freeIntervals: z.array(IntervalWithScoreSchema).describe('The free intervals outside of work hours'),
-          freeWorkIntervals: z.array(IntervalWithScoreSchema).describe('The free intervals during work hours'),
+          freeIntervals: z.array(IntervalWithScoreSchema).describe('The free intervals outside of work hours sorted by score descending'),
+          freeWorkIntervals: z.array(IntervalWithScoreSchema).describe('The free intervals during work hours sorted by score descending'),
         }),
         execute: async ({ goal, schedule, freeIntervals, freeWorkIntervals }) => {
           return validateSchedule(goal, schedule, freeIntervals, freeWorkIntervals);
@@ -523,7 +523,7 @@ async function scoreInterval(
           splitAt: z.string().describe('The time to split the interval at in YYYY-MM-DD HH:mm format'),
         }),
         execute: async ({ interval, splitAt }) => {
-          console.log(`splitting interval ${interval.start} - ${interval.end} at ${splitAt}`);
+          // console.log(`splitting interval ${interval.start} - ${interval.end} at ${splitAt}`);
           const splitAtDayjs = dayjs(splitAt);
           return [
             { start: interval.start, end: splitAtDayjs.format(DATE_TIME_FORMAT) },
