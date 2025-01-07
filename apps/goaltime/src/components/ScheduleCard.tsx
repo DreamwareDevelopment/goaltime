@@ -165,7 +165,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
 
   const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
     const startInMinutes = (startTime.hour() * 60) + startTime.minute();
-    const endInMinutes = (endTime.hour() * 60) + endTime.minute();
+    const endInMinutes = (endTime.hour() === 0 ? 24 * 60 : endTime.hour() * 60) + endTime.minute();
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
 

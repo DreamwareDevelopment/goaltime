@@ -5,6 +5,7 @@ import { dayjs } from "@/shared/utils";
 import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
 import { Interval } from "../lib/inngest/calendar/scheduling";
+import { GoalEvent } from "../lib/inngest/agents/scheduling/scheduling";
 
 export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const startOfDay = date.startOf('day').toDate()
@@ -156,7 +157,7 @@ export async function saveSchedule(
   userId: User['id'],
   goalMap: Record<string, GoalSchedulingData>,
   timezone: string,
-  schedule: Array<Interval<dayjs.Dayjs> & { goalId: string }>
+  schedule: Array<GoalEvent<dayjs.Dayjs>>
 ): Promise<CalendarEvent[]> {
   const prisma = await getPrismaClient(userId);
   const scheduleData = schedule.map(({ goalId, start, end }) => ({

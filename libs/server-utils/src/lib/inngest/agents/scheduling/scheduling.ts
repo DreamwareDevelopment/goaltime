@@ -248,6 +248,11 @@ interface IntervalWithScore<T> extends Interval<T> {
   score: number;
 }
 
+interface ScoringResult {
+  interval: IntervalWithScore<string>;
+  explanation: string;
+}
+
 export interface TypedIntervalWithScore<T> extends IntervalWithScore<T> {
   type: 'work' | 'free';
 }
@@ -257,9 +262,16 @@ export interface WakeUpOrSleepEvent<T> {
   start: T;
 }
 
+export interface GoalEvent<T> {
+  goalId: string;
+  title: string;
+  start: T;
+  end: T;
+}
+
 type SortableCalendarEvent<T> = Jsonify<CalendarEvent> & Interval<T>;
 
-type ScheduleEvent<T> = SortableCalendarEvent<T> | TypedIntervalWithScore<T> | WakeUpOrSleepEvent<T>;
+type ScheduleEvent<T> = SortableCalendarEvent<T> | TypedIntervalWithScore<T> | WakeUpOrSleepEvent<T> | GoalEvent<T>;
 
 function isCalendarEvent<T>(event: ScheduleEvent<T>): event is Jsonify<CalendarEvent> & Interval<T> {
   return 'id' in event;
@@ -267,6 +279,10 @@ function isCalendarEvent<T>(event: ScheduleEvent<T>): event is Jsonify<CalendarE
 
 function isWakeUpOrSleepEvent<T>(event: ScheduleEvent<T>): event is WakeUpOrSleepEvent<T> {
   return 'type' in event && (event.type === 'wakeUp' || event.type === 'sleep');
+}
+
+function isGoalEvent<T>(event: ScheduleEvent<T>): event is GoalEvent<T> {
+  return 'goalId' in event;
 }
 
 // TODO: Use reduced CalendarEvent type
@@ -277,12 +293,13 @@ export async function scoreIntervals(
   freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
   wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
   externalEvents: Jsonify<CalendarEvent>[],
+  goalEvents: GoalEvent<dayjs.Dayjs>[],
 ): Promise<{
-  scoredFreeWorkIntervals: IntervalWithScore<string>[];
-  scoredFreeIntervals: IntervalWithScore<string>[];
+  scoredFreeWorkIntervals: ScoringResult[];
+  scoredFreeIntervals: ScoringResult[];
 }> {
-  const scoredFreeWorkIntervals: IntervalWithScore<string>[] = [];
-  const scoredFreeIntervals: IntervalWithScore<string>[] = [];
+  const scoredFreeWorkIntervals: ScoringResult[] = [];
+  const scoredFreeIntervals: ScoringResult[] = [];
   if (freeIntervals.length === 0 && freeWorkIntervals.length === 0) {
     console.log('No free intervals to score');
     return {
@@ -312,19 +329,31 @@ export async function scoreIntervals(
     }
   }
 
-  const sortedEvents: ScheduleEvent<dayjs.Dayjs>[] = [...sortableWakeUpOrSleepEvents, ...sortableEvents, ...freeIntervals, ...freeWorkIntervals].sort((a, b) => a.start.diff(b.start));
+  const sortedEvents: ScheduleEvent<dayjs.Dayjs>[] = [
+    ...sortableWakeUpOrSleepEvents,
+    ...sortableEvents,
+    ...goalEvents,
+    ...freeIntervals,
+    ...freeWorkIntervals,
+  ].sort((a, b) => a.start.diff(b.start));
   if (sortedEvents.length <= 2) {
     console.log('Not enough events to score');
     return {
       scoredFreeWorkIntervals: freeWorkIntervals.map(interval => ({
-        start: interval.start.format(DATE_TIME_FORMAT),
-        end: interval.end.format(DATE_TIME_FORMAT),
-        score: interval.score,
+        interval: {
+          start: interval.start.format(DATE_TIME_FORMAT),
+          end: interval.end.format(DATE_TIME_FORMAT),
+          score: interval.score,
+        },
+        explanation: 'Not enough events to score',
       })),
       scoredFreeIntervals: freeIntervals.map(interval => ({
-        start: interval.start.format(DATE_TIME_FORMAT),
-        end: interval.end.format(DATE_TIME_FORMAT),
-        score: interval.score,
+        interval: {
+          start: interval.start.format(DATE_TIME_FORMAT),
+          end: interval.end.format(DATE_TIME_FORMAT),
+          score: interval.score,
+        },
+        explanation: 'Not enough events to score',
       })),
     };
   }
@@ -341,7 +370,7 @@ export async function scoreIntervals(
   const intervalsWithExplanations: Array<{ interval: TypedIntervalWithScore<string>; explanation: string }> = [];
   for (let i = 1; i < sortedStringEvents.length - 1; i++) {
     const current = sortedStringEvents[i];
-    if (isCalendarEvent(current) || isWakeUpOrSleepEvent(current)) {
+    if (isCalendarEvent(current) || isWakeUpOrSleepEvent(current) || isGoalEvent(current)) {
       continue;
     }
     const previous = sortedStringEvents[i - 1];
@@ -352,38 +381,20 @@ export async function scoreIntervals(
     intervalsWithExplanations.push(...scoredIntervals);
     for (const interval of scoredIntervals) {
       if (interval.interval.type === 'work') {
-        scoredFreeWorkIntervals.push({
-          start: interval.interval.start,
-          end: interval.interval.end,
-          score: interval.interval.score,
-        });
+        scoredFreeWorkIntervals.push(interval);
       } else {
-        scoredFreeIntervals.push({
-          start: interval.interval.start,
-          end: interval.interval.end,
-          score: interval.interval.score,
-        });
+        scoredFreeIntervals.push(interval);
       }
     }
   }
 
   console.log('scoredFreeWorkIntervals count', scoredFreeWorkIntervals.length);
   console.log('scoredFreeIntervals count', scoredFreeIntervals.length);
-  console.log('intervalsWithExplanations', intervalsWithExplanations);
   return {
     scoredFreeWorkIntervals,
     scoredFreeIntervals,
   };
 }
-
-
-// Put yourself in the shoes of the user and think step by step to consider how feasible it is to complete the given goal during the current interval given the previous and next events.
-// You should also consider the details within the previous and next events such as the title and description of the event if present. Try to infer the user's location / situation and whether or not accomplishing the goal at the current interval is practical.
-// Furthermore, consider if the previous and next events may need some buffer time before and after them to travel or complete other tasks that may be needed before or after working on the goal.
-// For example, if the goal is a physical activity like exercise, you should consider if the user is likely to exercise during the current interval given their sleep and work schedule and if they have had enough time to rest.
-// If you think they may need rest between physical activity sessions, schedule rest day(s)/intervals for the goal by giving the intervals for those days a negative score.
-// On the other hand, if the goal is a peaceful activity like meditation, you should consider if the user is likely to meditate during the current interval.
-// Also consider if the goal makes sense to do closer to bedtime or shortly after waking up.
 
 const getScoringSystemPrompt = (instructions: string) => `
 You are a scheduling assistant for a busy professional, you handle all of their scheduling needs.
@@ -446,9 +457,10 @@ Some example inputs:
     canDoDuringWork: false,
   },
   previous: {
-    start: "2025-01-01 8:00",
+    goalId: "<goal-id>",
+    title: "Exercise Regularly",
+    start: "2025-01-01 16:00",
     end: "2025-01-01 17:00",
-    type: "work",
   },
   current: {
     start: "2025-01-01 17:00",
