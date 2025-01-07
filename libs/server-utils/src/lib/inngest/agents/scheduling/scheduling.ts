@@ -48,6 +48,7 @@ export const GoalSchedulingInputSchema = z.object({
   freeIntervals: z.array(IntervalSchema).describe('Free intervals outside of work hours'),
   freeWorkIntervals: z.array(IntervalSchema).describe('Free intervals during work hours'),
   wakeUpOrSleepEvents: z.array(WakeUpOrSleepEventSchema).describe(`The times to wake up or sleep over the course of the free intervals' days`),
+  instructions: z.string().describe('Instructions for scoring the goal'),
 });
 
 export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema> & {
@@ -343,8 +344,6 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
     end: event.end.format(DATE_TIME_FORMAT),
   }));
 
-  console.log('sortedStringEvents', sortedStringEvents);
-  console.log(`Scoring intervals for goal ${data.goal.title}`);
   const intervalsWithExplanations: Array<{ interval: TypedIntervalWithScore<string>; explanation: string }> = [];
   for (let i = 1; i < sortedStringEvents.length - 1; i++) {
     const current = sortedStringEvents[i];
@@ -355,7 +354,7 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
     const next = sortedStringEvents[i + 1];
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const allDayEventsToday = allDayEvents.filter(event => dayjs(event.allDay!).isSame(current.start, 'day'));
-    const scoredIntervals = await scoreInterval(data.goal, current, previous, next, allDayEventsToday);
+    const scoredIntervals = await scoreInterval(data.goal, data.instructions, current, previous, next, allDayEventsToday);
     intervalsWithExplanations.push(...scoredIntervals);
     for (const interval of scoredIntervals) {
       if (interval.interval.type === 'work') {
@@ -384,7 +383,15 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
 }
 
 
-const scoringSystemPrompt = `
+// Put yourself in the shoes of the user and think step by step to consider how feasible it is to complete the given goal during the current interval given the previous and next events.
+// You should also consider the details within the previous and next events such as the title and description of the event if present. Try to infer the user's location / situation and whether or not accomplishing the goal at the current interval is practical.
+// Furthermore, consider if the previous and next events may need some buffer time before and after them to travel or complete other tasks that may be needed before or after working on the goal.
+// For example, if the goal is a physical activity like exercise, you should consider if the user is likely to exercise during the current interval given their sleep and work schedule and if they have had enough time to rest.
+// If you think they may need rest between physical activity sessions, schedule rest day(s)/intervals for the goal by giving the intervals for those days a negative score.
+// On the other hand, if the goal is a peaceful activity like meditation, you should consider if the user is likely to meditate during the current interval.
+// Also consider if the goal makes sense to do closer to bedtime or shortly after waking up.
+
+const getScoringSystemPrompt = (instructions: string) => `
 You are a scheduling assistant for a busy professional, you handle all of their scheduling needs.
 
 You are to consider a current interval and the previous and next events to determine the score of the current interval.
@@ -476,13 +483,7 @@ Here are some guidelines for scoring:
 - If you don't have enough information to make a judgement, you should return a score of 0.
 - If the interval may have a portion that seems like a bad time, please split it into two intervals and score them separately.
 
-Put yourself in the shoes of the user and think step by step to consider how feasible it is to complete the given goal during the current interval given the previous and next events.
-You should also consider the details within the previous and next events such as the title and description of the event if present. Try to infer the user's location / situation and whether or not accomplishing the goal at the current interval is practical.
-Furthermore, consider if the previous and next events may need some buffer time before and after them to travel or complete other tasks that may be needed before or after working on the goal.
-For example, if the goal is a physical activity like exercise, you should consider if the user is likely to exercise during the current interval given their sleep and work schedule and if they have had enough time to rest.
-If you think they may need rest between physical activity sessions, schedule rest day(s)/intervals for the goal by giving the intervals for those days a negative score.
-On the other hand, if the goal is a peaceful activity like meditation, you should consider if the user is likely to meditate during the current interval.
-Also consider if the goal makes sense to do closer to bedtime or shortly after waking up.
+${instructions}
 
 Remember your reasoning when scoring, explanations for each scored interval should be returned at the end of the scoring process in the "explanations" field. Only explain if you have reasons other than the interval being outside of the goal's preferred times or the goal not being allowed during work hours.
 
@@ -491,6 +492,7 @@ Return the scored intervals in the "intervals" field using the answer tool.
 
 async function scoreInterval(
   goal: ScheduleableGoal,
+  instructions: string,
   current: TypedIntervalWithScore<string>,
   previous: ScheduleEvent<string>,
   next: ScheduleEvent<string>,
@@ -499,7 +501,7 @@ async function scoreInterval(
   const response = await generateText({
     model: openai('gpt-4o'),
     messages: [
-      { role: 'system', content: scoringSystemPrompt },
+      { role: 'system', content: getScoringSystemPrompt(instructions) },
       { role: 'user', content: JSON.stringify({ goal, current, previous, next, allDayEvents }) },
     ],
     maxSteps: 10,
@@ -536,4 +538,33 @@ async function scoreInterval(
     throw new Error('No answer call found');
   }
   return answerCall.args.intervalsWithExplanations;
+}
+
+const goalScoringInstructionsPrompt = `
+You are assisting a scheduling assistant for a busy professional with a well rounded lifestyle albeit with their own quirks.
+The scheduling assistant is tasked with scoring potential scheduling intervals for goal related activities given the user's schedule.
+The schedule the scheduling assistant is using consists of either free intervals, work intervals, wake up / sleep events, or external calendar events from the user's calendar.
+The calendar events also have "title" and "description" fields which the scheduling assistant should be informed of how to use to help determine the score of the interval.
+These events should be used to infer the user's location / situation and whether or not accomplishing the goal at the current interval is practical / appropriate.
+
+You are given a goal and asked to provide the considerations for the assistant to use when scoring the goal.
+You should consider the goal's title and description to help you determine the considerations for scoring the goal.
+You should also consider telling the scheduling assistant how to spread out the goal activity sessions if it seems necessary for the user to have some rest or buffer time between sessions.
+You are speaking directly to the scheduling assistant so use "you" instead of "the scheduling assistant".
+`
+
+export async function getGoalScoringInstructions(goal: ScheduleableGoal): Promise<string> {
+  const response = await generateText({
+    model: openai('gpt-4o'),
+    messages: [{ role: 'system', content: goalScoringInstructionsPrompt }, { role: 'user', content: JSON.stringify({
+      title: goal.title,
+      description: goal.description,
+      preferredTimes: goal.preferredTimes,
+      allowMultiplePerDay: goal.allowMultiplePerDay,
+      canDoDuringWork: goal.canDoDuringWork,
+      minimumTime: goal.minimumTime,
+      maximumTime: goal.maximumTime,
+    })}],
+  });
+  return response.text;
 }

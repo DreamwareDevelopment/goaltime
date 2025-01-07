@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { getGoalScoringInstructions, GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -353,10 +353,13 @@ export const scheduleGoalEvents = inngest.createFunction(
     }));
     const schedule: Array<Interval<dayjs.Dayjs> & { goalId: string }> = [];
     for (const goal of data.goals) {
+      const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, goal);
+      logger.info(`${instructions}`);
       logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals`);
       logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals`);
       const input: GoalSchedulingInput = {
         goal,
+        instructions,
         externalEvents,
         wakeUpOrSleepEvents: data.wakeUpOrSleepEvents,
         freeIntervals: freeIntervals.map(interval => ({
@@ -368,7 +371,7 @@ export const scheduleGoalEvents = inngest.createFunction(
           end: interval.end.format(DATE_TIME_FORMAT),
         })),
       }
-      console.log(`Scoring intervals for ${goal.title}`);
+      logger.info(`Scoring intervals for ${goal.title}`);
       const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap('score-intervals', scoreIntervals, input);
       input.freeIntervals = scoredFreeIntervals;
       input.freeWorkIntervals = scoredFreeWorkIntervals;
