@@ -46,7 +46,7 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
             stroke={goal.color}
             strokeOpacity={hoveredGoal === goal ? 0.7 : 1}
             strokeWidth="35"
-            strokeDasharray={`${endAngle - startAngle} ${circumference}`}
+            strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
             strokeDashoffset={-startAngle}
             onMouseEnter={() => handleMouseEnter(goal)}
             onMouseLeave={handleMouseLeave}
