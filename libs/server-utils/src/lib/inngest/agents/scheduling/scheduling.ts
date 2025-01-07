@@ -167,9 +167,16 @@ function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], 
   console.log('freeIntervals', freeIntervals);
   console.log('freeWorkIntervals', freeWorkIntervals);
   let totalTime = 0;
+  const dayLookup = new Map<string, Interval<string>[]>();
   for (let i = 0; i < schedule.length; i++) {
     const interval = schedule[i];
     const start = dayjs(interval.start);
+    const day = start.format('YYYY-MM-DD');
+    if (!dayLookup.has(day)) {
+      dayLookup.set(day, []);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    dayLookup.get(day)!.push(interval);
     const end = dayjs(interval.end);
     const duration = end.diff(start, 'minute');
     if (duration < goal.minimumTime) {
@@ -227,6 +234,16 @@ function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], 
     errors.push(`Scheduled interval total time ${totalTime} minutes is ${totalTime - remainingCommitmentMinutes} minutes greater than the remaining commitment ${remainingCommitmentMinutes} minutes`);
   } else if (totalTime < remainingCommitmentMinutes - priorityGracePeriod) {
     errors.push(`Scheduled interval total time ${totalTime} minutes is ${remainingCommitmentMinutes - totalTime} minutes less than the remaining commitment ${remainingCommitmentMinutes} minutes`);
+  }
+
+  if (!goal.allowMultiplePerDay) {
+    for (const day of dayLookup.keys()) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const intervals = dayLookup.get(day)!;
+      if (intervals.length > 1) {
+        errors.push(`Multiple intervals scheduled for day ${day}: ${intervals.map(interval => `${interval.start} - ${interval.end}`).join(', ')} which is not allowed for this goal`);
+      }
+    }
   }
 
   console.log('Schedule validation errors', errors);
