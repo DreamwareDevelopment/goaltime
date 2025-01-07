@@ -18,7 +18,7 @@ export function sortGoals(a: Goal, b: Goal) {
     const aCommitment = a.commitment ?? a.estimate;
     const bCommitment = b.commitment ?? b.estimate;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const commitmentDiff = aCommitment! - bCommitment!;
+    const commitmentDiff = bCommitment! - aCommitment!;
     if (Math.abs(commitmentDiff) > 3) {
       return commitmentDiff;
     }

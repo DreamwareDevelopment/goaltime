@@ -248,7 +248,7 @@ interface IntervalWithScore<T> extends Interval<T> {
   score: number;
 }
 
-interface TypedIntervalWithScore<T> extends IntervalWithScore<T> {
+export interface TypedIntervalWithScore<T> extends IntervalWithScore<T> {
   type: 'work' | 'free';
 }
 
@@ -270,23 +270,17 @@ function isWakeUpOrSleepEvent<T>(event: ScheduleEvent<T>): event is WakeUpOrSlee
 }
 
 // TODO: Use reduced CalendarEvent type
-export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
+export async function scoreIntervals(
+  instructions: string,
+  goal: ScheduleableGoal,
+  freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
+  freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
+  wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
+  externalEvents: Jsonify<CalendarEvent>[],
+): Promise<{
   scoredFreeWorkIntervals: IntervalWithScore<string>[];
   scoredFreeIntervals: IntervalWithScore<string>[];
 }> {
-  const freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[] = data.freeIntervals.map(interval => ({
-    start: dayjs(interval.start),
-    end: dayjs(interval.end),
-    score: 0,
-    type: 'free',
-  }));
-  const freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[] = data.freeWorkIntervals.map(interval => ({
-    start: dayjs(interval.start),
-    end: dayjs(interval.end),
-    score: 0,
-    type: 'work',
-  }));
-
   const scoredFreeWorkIntervals: IntervalWithScore<string>[] = [];
   const scoredFreeIntervals: IntervalWithScore<string>[] = [];
   if (freeIntervals.length === 0 && freeWorkIntervals.length === 0) {
@@ -297,14 +291,14 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
     };
   }
 
-  const wakeUpOrSleepEvents: WakeUpOrSleepEvent<dayjs.Dayjs>[] = data.wakeUpOrSleepEvents.map(event => ({
+  const sortableWakeUpOrSleepEvents: WakeUpOrSleepEvent<dayjs.Dayjs>[] = wakeUpOrSleepEvents.map(event => ({
     ...event,
     start: dayjs(event.start),
   }));
 
   const allDayEvents: Jsonify<CalendarEvent>[] = [];
   const sortableEvents: SortableCalendarEvent<dayjs.Dayjs>[] = []
-  for (const event of data.externalEvents) {
+  for (const event of externalEvents) {
     if (event.allDay) {
       allDayEvents.push(event);
     } else {
@@ -318,7 +312,7 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
     }
   }
 
-  const sortedEvents: ScheduleEvent<dayjs.Dayjs>[] = [...wakeUpOrSleepEvents, ...sortableEvents, ...freeIntervals, ...freeWorkIntervals].sort((a, b) => a.start.diff(b.start));
+  const sortedEvents: ScheduleEvent<dayjs.Dayjs>[] = [...sortableWakeUpOrSleepEvents, ...sortableEvents, ...freeIntervals, ...freeWorkIntervals].sort((a, b) => a.start.diff(b.start));
   if (sortedEvents.length <= 2) {
     console.log('Not enough events to score');
     return {
@@ -354,7 +348,7 @@ export async function scoreIntervals(data: GoalSchedulingInput): Promise<{
     const next = sortedStringEvents[i + 1];
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const allDayEventsToday = allDayEvents.filter(event => dayjs(event.allDay!).isSame(current.start, 'day'));
-    const scoredIntervals = await scoreInterval(data.goal, data.instructions, current, previous, next, allDayEventsToday);
+    const scoredIntervals = await scoreInterval(instructions, goal, current, previous, next, allDayEventsToday);
     intervalsWithExplanations.push(...scoredIntervals);
     for (const interval of scoredIntervals) {
       if (interval.interval.type === 'work') {
@@ -491,8 +485,8 @@ Return the scored intervals in the "intervals" field using the answer tool.
 `
 
 async function scoreInterval(
-  goal: ScheduleableGoal,
   instructions: string,
+  goal: ScheduleableGoal,
   current: TypedIntervalWithScore<string>,
   previous: ScheduleEvent<string>,
   next: ScheduleEvent<string>,
@@ -544,13 +538,22 @@ const goalScoringInstructionsPrompt = `
 You are assisting a scheduling assistant for a busy professional with a well rounded lifestyle albeit with their own quirks.
 The scheduling assistant is tasked with scoring potential scheduling intervals for goal related activities given the user's schedule.
 The schedule the scheduling assistant is using consists of either free intervals, work intervals, wake up / sleep events, or external calendar events from the user's calendar.
-The calendar events also have "title" and "description" fields which the scheduling assistant should be informed of how to use to help determine the score of the interval.
+The calendar events also have "title" and "description" fields which the scheduling assistant should use to help determine the score of the interval.
 These events should be used to infer the user's location / situation and whether or not accomplishing the goal at the current interval is practical / appropriate.
 
-You are given a goal and asked to provide the considerations for the assistant to use when scoring the goal.
-You should consider the goal's title and description to help you determine the considerations for scoring the goal.
+The scheduling assistant should consider the following when scoring an interval:
+
+1. The goal's title and description to understand the nature of the activity.
+2. The previous and next events to determine if the user might be busy or in transit during the current interval.
+3. The duration of the previous and next events, as the user may need buffer time before or after those events.
+4. The location of the previous and next events, as the user may need travel time between locations.
+5. The type of the previous and next events (e.g., work, personal, exercise) to understand the user's potential state of mind or physical condition.
+6. Any additional context provided in the title or description of the previous and next events.
+
 You should also consider telling the scheduling assistant how to spread out the goal activity sessions if it seems necessary for the user to have some rest or buffer time between sessions.
-You are speaking directly to the scheduling assistant so use "you" instead of "the scheduling assistant".
+For example, if the goal is a physical activity like exercise, you should consider if the user is likely to exercise during the current interval given their sleep and work schedule, and if they have had enough time to rest.
+
+You are speaking directly to the scheduling assistant, so use "you" instead of "the scheduling assistant".
 `
 
 export async function getGoalScoringInstructions(goal: ScheduleableGoal): Promise<string> {

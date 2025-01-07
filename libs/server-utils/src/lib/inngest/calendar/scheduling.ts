@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { getGoalScoringInstructions, GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { getGoalScoringInstructions, GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -343,39 +343,47 @@ export const scheduleGoalEvents = inngest.createFunction(
       } as PreparedSchedulingData;
     });
 
-    let freeIntervals = data.freeIntervals.map(interval => ({
+    let freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[] = data.freeIntervals.map(interval => ({
       start: dayjs(interval.start),
       end: dayjs(interval.end),
+      type: 'free',
+      score: 0,
     }));
-    let freeWorkIntervals = data.freeWorkIntervals.map(interval => ({
+    let freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[] = data.freeWorkIntervals.map(interval => ({
       start: dayjs(interval.start),
       end: dayjs(interval.end),
+      type: 'work',
+      score: 0,
     }));
     const schedule: Array<Interval<dayjs.Dayjs> & { goalId: string }> = [];
+    console.log(`Scheduling ${data.goals.length} goals...`, data.goals.map(goal => goal.title));
     for (const goal of data.goals) {
       const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, goal);
       logger.info(`${instructions}`);
       logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals`);
       logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals`);
+
+      logger.info(`Scoring intervals for ${goal.title}...`);
+      const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap(
+        'score-intervals',
+        scoreIntervals,
+        instructions,
+        goal,
+        freeIntervals,
+        freeWorkIntervals,
+        data.wakeUpOrSleepEvents,
+        externalEvents,
+      );
+
+      logger.info(`Scheduling goal: ${goal.title}...`);
       const input: GoalSchedulingInput = {
         goal,
         instructions,
         externalEvents,
         wakeUpOrSleepEvents: data.wakeUpOrSleepEvents,
-        freeIntervals: freeIntervals.map(interval => ({
-          start: interval.start.format(DATE_TIME_FORMAT),
-          end: interval.end.format(DATE_TIME_FORMAT),
-        })),
-        freeWorkIntervals: freeWorkIntervals.map(interval => ({
-          start: interval.start.format(DATE_TIME_FORMAT),
-          end: interval.end.format(DATE_TIME_FORMAT),
-        })),
+        freeIntervals: scoredFreeIntervals.filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score),
+        freeWorkIntervals: scoredFreeWorkIntervals.filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score),
       }
-      logger.info(`Scoring intervals for ${goal.title}...`);
-      const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap('score-intervals', scoreIntervals, input);
-      input.freeIntervals = scoredFreeIntervals.filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score);
-      input.freeWorkIntervals = scoredFreeWorkIntervals.filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score);
-      logger.info(`Scheduling goal: ${goal.title}...`);
       const intervals = await step.ai.wrap('schedule-goal', scheduleGoal, input);
       ({ freeIntervals, freeWorkIntervals } = updateIntervals(
         { freeIntervals, freeWorkIntervals },
@@ -408,8 +416,8 @@ export const scheduleGoalEvents = inngest.createFunction(
 )
 
 interface Intervals {
-  freeIntervals: Interval<dayjs.Dayjs>[];
-  freeWorkIntervals: Interval<dayjs.Dayjs>[];
+  freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[];
+  freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[];
 }
 function updateIntervals(intervals: Intervals, schedule: Array<Interval<dayjs.Dayjs>>): Intervals {
   let { freeIntervals, freeWorkIntervals } = { ...intervals };
@@ -418,21 +426,21 @@ function updateIntervals(intervals: Intervals, schedule: Array<Interval<dayjs.Da
     freeIntervals = freeIntervals.flatMap(freeInterval => {
       if (freeInterval.start.isAfter(scheduledInterval.end)) {
         // Free interval starts after the scheduled interval ends
-        return [freeInterval];
+        return [{ ...freeInterval, score: 0 }];
       } else if (freeInterval.end.isBefore(scheduledInterval.start)) {
         // Free interval ends before the scheduled interval starts
-        return [freeInterval];
+        return [{ ...freeInterval, type: 'free', score: 0 }];
       } else if (freeInterval.start.isSame(scheduledInterval.start, 'minute') && freeInterval.end.isAfter(scheduledInterval.end)) {
         // Free interval starts at the same time as the scheduled interval and ends after it
-        return [{ start: scheduledInterval.end, end: freeInterval.end }];
+        return [{ start: scheduledInterval.end, end: freeInterval.end, type: 'free', score: 0 }];
       } else if (freeInterval.end.isSame(scheduledInterval.start, 'minute') && freeInterval.start.isBefore(scheduledInterval.start)) {
         // Free interval ends at the same time as the scheduled interval and starts before it
-        return [{ start: freeInterval.start, end: scheduledInterval.start }];
+        return [{ start: freeInterval.start, end: scheduledInterval.start, type: 'free', score: 0 }];
       } else if (freeInterval.start.isBefore(scheduledInterval.start) && freeInterval.end.isAfter(scheduledInterval.end)) {
         // Free interval contains the scheduled interval
         return [
-          { start: freeInterval.start, end: scheduledInterval.start },
-          { start: scheduledInterval.end, end: freeInterval.end },
+          { start: freeInterval.start, end: scheduledInterval.start, type: 'free', score: 0 },
+          { start: scheduledInterval.end, end: freeInterval.end, type: 'free', score: 0 },
         ];
       } else {
         // Free interval is fully covered by the scheduled interval
@@ -443,21 +451,21 @@ function updateIntervals(intervals: Intervals, schedule: Array<Interval<dayjs.Da
     freeWorkIntervals = freeWorkIntervals.flatMap(freeInterval => {
       if (freeInterval.start.isAfter(scheduledInterval.end)) {
         // Free interval starts after the scheduled interval ends
-        return [freeInterval];
+        return [{ ...freeInterval, score: 0 }];
       } else if (freeInterval.end.isBefore(scheduledInterval.start)) {
         // Free interval ends before the scheduled interval starts
-        return [freeInterval];
+        return [{ ...freeInterval, score: 0 }];
       } else if (freeInterval.start.isSame(scheduledInterval.start, 'minute') && freeInterval.end.isAfter(scheduledInterval.end)) {
         // Free interval starts at the same time as the scheduled interval and ends after it
-        return [{ start: scheduledInterval.end, end: freeInterval.end }];
+        return [{ start: scheduledInterval.end, end: freeInterval.end, type: 'work', score: 0 }];
       } else if (freeInterval.end.isSame(scheduledInterval.start, 'minute') && freeInterval.start.isBefore(scheduledInterval.start)) {
         // Free interval ends at the same time as the scheduled interval and starts before it
-        return [{ start: freeInterval.start, end: scheduledInterval.start }];
+        return [{ start: freeInterval.start, end: scheduledInterval.start, type: 'work', score: 0 }];
       } else if (freeInterval.start.isBefore(scheduledInterval.start) && freeInterval.end.isAfter(scheduledInterval.end)) {
         // Free interval contains the scheduled interval
         return [
-          { start: freeInterval.start, end: scheduledInterval.start },
-          { start: scheduledInterval.end, end: freeInterval.end },
+          { start: freeInterval.start, end: scheduledInterval.start, type: 'work', score: 0 },
+          { start: scheduledInterval.end, end: freeInterval.end, type: 'work', score: 0 },
         ];
       } else {
         // Free interval is fully covered by the scheduled interval
