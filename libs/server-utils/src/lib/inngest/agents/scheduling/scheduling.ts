@@ -45,8 +45,8 @@ export type ScheduleableGoal = z.infer<typeof ScheduleableGoalSchema>;
 
 export const GoalSchedulingInputSchema = z.object({
   goal: ScheduleableGoalSchema.describe('The goal to schedule'),
-  freeIntervals: z.array(IntervalSchema).describe('Free intervals outside of work hours'),
-  freeWorkIntervals: z.array(IntervalSchema).describe('Free intervals during work hours'),
+  freeIntervals: z.array(IntervalWithScoreSchema).describe('Free intervals outside of work hours'),
+  freeWorkIntervals: z.array(IntervalWithScoreSchema).describe('Free intervals during work hours'),
 });
 
 export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema>;
@@ -275,6 +275,15 @@ export interface WakeUpOrSleepEvent<T> {
   start: T;
 }
 
+export interface ExternalEvent<T> extends Interval<T> {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  location?: string;
+  allDay?: T;
+}
+
 export interface GoalEvent<T> {
   goalId: string;
   title: string;
@@ -282,11 +291,9 @@ export interface GoalEvent<T> {
   end: T;
 }
 
-type SortableCalendarEvent<T> = Jsonify<CalendarEvent> & Interval<T>;
+type ScheduleEvent<T> = ExternalEvent<T> | TypedIntervalWithScore<T> | WakeUpOrSleepEvent<T> | GoalEvent<T>;
 
-type ScheduleEvent<T> = SortableCalendarEvent<T> | TypedIntervalWithScore<T> | WakeUpOrSleepEvent<T> | GoalEvent<T>;
-
-function isCalendarEvent<T>(event: ScheduleEvent<T>): event is Jsonify<CalendarEvent> & Interval<T> {
+function isExternalEvent<T>(event: ScheduleEvent<T>): event is ExternalEvent<T> {
   return 'id' in event;
 }
 
@@ -298,7 +305,6 @@ function isGoalEvent<T>(event: ScheduleEvent<T>): event is GoalEvent<T> {
   return 'goalId' in event;
 }
 
-// TODO: Use reduced CalendarEvent type
 export async function scoreIntervals(
   instructions: string,
   goal: ScheduleableGoal,
@@ -326,18 +332,31 @@ export async function scoreIntervals(
     start: dayjs(event.start),
   }));
 
-  const allDayEvents: Jsonify<CalendarEvent>[] = [];
-  const sortableEvents: SortableCalendarEvent<dayjs.Dayjs>[] = []
+  const allDayEvents: ExternalEvent<dayjs.Dayjs>[] = [];
+  const sortableEvents: ExternalEvent<dayjs.Dayjs>[] = []
   for (const event of externalEvents) {
     if (event.allDay) {
-      allDayEvents.push(event);
+      const allDay = dayjs(event.allDay);
+      allDayEvents.push({
+        title: event.title,
+        subtitle: event.subtitle ?? undefined,
+        description: event.description ?? undefined,
+        location: event.location ?? undefined,
+        start: allDay.startOf('day'),
+        end: allDay.endOf('day'),
+        id: event.id,
+      });
     } else {
       sortableEvents.push({
-        ...event,
+        title: event.title,
+        subtitle: event.subtitle ?? undefined,
+        description: event.description ?? undefined,
+        location: event.location ?? undefined,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         start: dayjs(event.startTime!),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         end: dayjs(event.endTime!),
+        id: event.id,
       });
     }
   }
@@ -374,6 +393,11 @@ export async function scoreIntervals(
   const sortedStringEvents: ScheduleEvent<string>[] = sortedEvents.map(event => (isWakeUpOrSleepEvent(event) ? {
     ...event,
     start: event.start.format(DATE_TIME_FORMAT),
+  } : isExternalEvent(event) ? {
+    ...event,
+    start: event.start.format(DATE_TIME_FORMAT),
+    end: event.end.format(DATE_TIME_FORMAT),
+    allDay: undefined,
   } : {
     ...event,
     start: event.start.format(DATE_TIME_FORMAT),
@@ -383,13 +407,17 @@ export async function scoreIntervals(
   const intervalsWithExplanations: Array<{ interval: TypedIntervalWithScore<string>; explanation: string }> = [];
   for (let i = 1; i < sortedStringEvents.length - 1; i++) {
     const current = sortedStringEvents[i];
-    if (isCalendarEvent(current) || isWakeUpOrSleepEvent(current) || isGoalEvent(current)) {
+    if (isExternalEvent(current) || isWakeUpOrSleepEvent(current) || isGoalEvent(current)) {
       continue;
     }
     const previous = sortedStringEvents[i - 1];
     const next = sortedStringEvents[i + 1];
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const allDayEventsToday = allDayEvents.filter(event => dayjs(event.allDay!).isSame(current.start, 'day'));
+    const allDayEventsToday = allDayEvents.filter(event => dayjs(event.allDay!).isSame(current.start, 'day')).map(event => ({
+      ...event,
+      start: event.start.format(DATE_TIME_FORMAT),
+      end: event.end.format(DATE_TIME_FORMAT),
+    })) as ExternalEvent<string>[];
     const scoredIntervals = await scoreInterval(instructions, goal, current, previous, next, allDayEventsToday);
     intervalsWithExplanations.push(...scoredIntervals);
     for (const interval of scoredIntervals) {
@@ -515,7 +543,7 @@ async function scoreInterval(
   current: TypedIntervalWithScore<string>,
   previous: ScheduleEvent<string>,
   next: ScheduleEvent<string>,
-  allDayEvents: Jsonify<CalendarEvent>[],
+  allDayEvents: ExternalEvent<string>[],
 ): Promise<Array<{ interval: TypedIntervalWithScore<string>; explanation: string }>> {
   const response = await generateText({
     model: openai('gpt-4o'),

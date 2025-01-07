@@ -247,6 +247,7 @@ function getRemainingCommitmentForPeriod(goal: Goal, timeframe: Interval): numbe
   // If the user has been on track or if they are having to work more per week to catch up
   const start = dayjs(timeframe.start);
   const end = dayjs(timeframe.end);
+  // TODO: Get more granular to the hour, will need to take sleep into account
   const daysRemainingThisPeriod = end.diff(start, 'days');
   if (goal.commitment) {
     if (goal.completed === 0 && daysRemainingThisPeriod < 6) {
