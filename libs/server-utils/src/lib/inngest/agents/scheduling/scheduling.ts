@@ -3,7 +3,7 @@ import { generateText, tool } from 'ai';
 import { z } from "zod";
 import { DATE_TIME_FORMAT, Interval } from '../../calendar/scheduling';
 import { dayjs } from '@/shared/utils';
-import { CalendarEvent, Priority } from '@prisma/client';
+import { CalendarEvent } from '@prisma/client';
 import { CalendarEventSchema } from '@/shared/zod';
 import { Jsonify } from 'inngest/helpers/jsonify';
 
@@ -221,14 +221,11 @@ function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], 
     }
   }
 
-  const priorityMultiplier = goal.priority === Priority.High ? 0.025 : goal.priority === Priority.Medium ? 0.075 : 0.15;
   const remainingCommitmentMinutes = goal.remainingCommitment * 60;
   console.log(`Remaining commitment: ${remainingCommitmentMinutes} minutes`);
-  const priorityGracePeriod = remainingCommitmentMinutes * priorityMultiplier;
-  console.log(`Priority grace period: ${priorityGracePeriod} minutes`);
   if (totalTime > remainingCommitmentMinutes) {
     errors.push(`Scheduled interval total time ${totalTime} minutes is ${totalTime - remainingCommitmentMinutes} minutes greater than the remaining commitment ${remainingCommitmentMinutes} minutes`);
-  } else if (totalTime < remainingCommitmentMinutes - priorityGracePeriod) {
+  } else if (totalTime < remainingCommitmentMinutes) {
     errors.push(`Scheduled interval total time ${totalTime} minutes is ${remainingCommitmentMinutes - totalTime} minutes less than the remaining commitment ${remainingCommitmentMinutes} minutes`);
   }
 
@@ -566,7 +563,7 @@ async function scoreInterval(
       splitInterval: tool({
         description: 'A tool for splitting an interval into two intervals',
         parameters: z.object({
-          interval: IntervalSchema.describe('The interval to split'),
+          interval: TypedIntervalWithScoreSchema.describe('The interval to split'),
           splitAt: z.string().describe('The time to split the interval at in YYYY-MM-DD HH:mm format'),
         }),
         execute: async ({ interval, splitAt }) => {
