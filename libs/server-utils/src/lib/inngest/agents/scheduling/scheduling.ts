@@ -300,6 +300,17 @@ function isGoalEvent<T>(event: ScheduleEvent<T>): event is GoalEvent<T> {
   return 'goalId' in event;
 }
 
+function serializeEvent(event: ExternalEvent<string>): ExternalEvent<dayjs.Dayjs> {
+  return {
+    ...event,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    start: dayjs(event.start!),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    end: dayjs(event.end!),
+    allDay: event.allDay ? dayjs(event.allDay) : undefined,
+  }
+}
+
 export async function scoreIntervals(
   instructions: string,
   goal: ScheduleableGoal,
@@ -331,28 +342,9 @@ export async function scoreIntervals(
   const sortableEvents: ExternalEvent<dayjs.Dayjs>[] = []
   for (const event of externalEvents) {
     if (event.allDay) {
-      const allDay = dayjs(event.allDay);
-      allDayEvents.push({
-        title: event.title,
-        subtitle: event.subtitle ?? undefined,
-        description: event.description ?? undefined,
-        location: event.location ?? undefined,
-        start: allDay.startOf('day'),
-        end: allDay.endOf('day'),
-        id: event.id,
-      });
+      allDayEvents.push(serializeEvent(event));
     } else {
-      sortableEvents.push({
-        title: event.title,
-        subtitle: event.subtitle ?? undefined,
-        description: event.description ?? undefined,
-        location: event.location ?? undefined,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        start: dayjs(event.start!),
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        end: dayjs(event.end!),
-        id: event.id,
-      });
+      sortableEvents.push(serializeEvent(event));
     }
   }
 

@@ -5,7 +5,7 @@ import { dayjs } from "@/shared/utils";
 import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
 import { Interval } from "../lib/inngest/calendar/scheduling";
-import { GoalEvent } from "../lib/inngest/agents/scheduling/scheduling";
+import { ExternalEvent, GoalEvent } from "../lib/inngest/agents/scheduling/scheduling";
 
 export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const startOfDay = date.startOf('day').toDate()
@@ -42,7 +42,7 @@ export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promis
 }
 
 export async function getSchedulingData(userId: User['id']): Promise<{
-  schedule: CalendarEvent[];
+  schedule: ExternalEvent<dayjs.Dayjs>[];
   profile: UserProfile;
   goals: Goal[];
   interval: Interval;
@@ -74,11 +74,20 @@ export async function getSchedulingData(userId: User['id']): Promise<{
     where: {
       userId,
       goalId: null,
-      startTime: {
-        gte: start,
-        lte: end,
-        not: null,
-      },
+      OR: [
+        {
+          startTime: {
+            gte: start,
+            lte: end,
+          },
+        },
+        {
+          allDay: {
+            gte: start,
+            lte: end,
+          },
+        }
+      ]
     },
     orderBy: {
       startTime: "asc",
@@ -90,7 +99,19 @@ export async function getSchedulingData(userId: User['id']): Promise<{
     },
   });
   goals.sort(sortGoals);
-  return { schedule, profile, goals, interval: { start, end } };
+  const events: ExternalEvent<dayjs.Dayjs>[] = schedule.map(({ startTime, endTime, ...rest }) => ({
+    id: rest.id,
+    title: rest.title,
+    subtitle: rest.subtitle ?? undefined,
+    description: rest.description ?? undefined,
+    location: rest.location ?? undefined,
+    allDay: rest.allDay ? dayjs.tz(rest.allDay, profile.timezone) : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    start: startTime ? dayjs.tz(startTime, profile.timezone) : dayjs.tz(rest.allDay!, profile.timezone).startOf('day'),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    end: endTime ? dayjs.tz(endTime, profile.timezone) : dayjs.tz(rest.allDay!, profile.timezone).endOf('day'),
+  }));
+  return { schedule: events, profile, goals, interval: { start, end } };
 }
 
 export async function deleteGoalEvents(userId: User['id'], interval: Interval<string>): Promise<string[]> {

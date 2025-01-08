@@ -12,13 +12,6 @@ export interface Interval<T = Date> {
   end: T;
 }
 
-interface SchedulingData {
-  goals: Goal[];
-  interval: Interval;
-  profile: UserProfile;
-  schedule: ExternalEvent<dayjs.Dayjs>[];
-}
-
 interface PreparedSchedulingData {
   interval: Interval<string>;
   externalEvents: ExternalEvent<string>[];
@@ -355,8 +348,7 @@ export const scheduleGoalEvents = inngest.createFunction(
     logger.info('Scheduling goal events');
     const { userId } = event.data;
     const { data, interval, goalMap, externalEvents, timezone } = await step.run('get-scheduling-data', async () => {
-      const schedulingData = await getSchedulingData(userId);
-      const { goals, interval, profile, schedule } = schedulingData as unknown as SchedulingData;
+      const { goals, interval, profile, schedule } = await getSchedulingData(userId);
       console.log(`Finding free intervals for`, interval);
       const { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
       console.log(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
