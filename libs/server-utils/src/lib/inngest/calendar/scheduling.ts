@@ -1,11 +1,11 @@
 import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
 import { inngest, InngestEvent } from "../client";
-import { CalendarEvent, Goal, UserProfile } from "@prisma/client";
+import { Goal, UserProfile } from "@prisma/client";
 import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { getGoalScoringInstructions, GoalEvent, GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { ExternalEvent, getGoalScoringInstructions, GoalEvent, GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -16,12 +16,12 @@ interface SchedulingData {
   goals: Goal[];
   interval: Interval;
   profile: UserProfile;
-  schedule: CalendarEvent[];
+  schedule: ExternalEvent<dayjs.Dayjs>[];
 }
 
 interface PreparedSchedulingData {
   interval: Interval<string>;
-  externalEvents: CalendarEvent[];
+  externalEvents: ExternalEvent<string>[];
   data: ScheduleInputData;
   goalMap: Record<string, GoalSchedulingData>;
   timezone: string;
@@ -107,31 +107,22 @@ function parsePreferredTimes(profile: UserProfile, preferredTimes: JsonValue): I
   return mergedPreferredTimes;
 }
 
-function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: CalendarEvent[]): Interval[] {
+function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: ExternalEvent<dayjs.Dayjs>[]): Interval[] {
   const timeblocks: Interval[] = [];
   let currentTime = start;
   while (currentTime.isBefore(end)) {
     // eslint-disable-next-line no-loop-func
     const nextEvent = upcomingEvents.find(event => {
       if (event.allDay) {
-        return false;
+        throw new Error('Invariant: All day events should not be in the upcoming events');
       }
-      if (event.startTime) {
-        const startTime = dayjs(event.startTime);
-        const endTime = dayjs(event.endTime);
-        return (startTime.isAfter(currentTime) || endTime.isAfter(currentTime)) && startTime.isBefore(end);
-      }
-      console.warn(`No start time for event: ${JSON.stringify(event, null, 2)}`);
-      return false;
+      return (event.start.isAfter(currentTime) || event.end.isAfter(currentTime)) && event.start.isBefore(end);
     });
     if (nextEvent) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (dayjs(nextEvent.startTime!).diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        timeblocks.push({ start: currentTime.toDate(), end: nextEvent.startTime! });
+      if (nextEvent.start.diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
+        timeblocks.push({ start: currentTime.toDate(), end: nextEvent.start.toDate() });
       }
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      currentTime = dayjs(nextEvent.endTime!);
+      currentTime = nextEvent.end;
       continue;
     }
     timeblocks.push({ start: currentTime.toDate(), end: end.toDate() });
@@ -151,7 +142,7 @@ function getFreeIntervals(
   logger: Logger,
   profile: UserProfile,
   timeframe: Interval,
-  events: CalendarEvent[],
+  events: ExternalEvent<dayjs.Dayjs>[],
 ): {
   freeIntervals: Interval[],
   freeWorkIntervals: Interval[],
@@ -181,7 +172,7 @@ function getFreeIntervals(
     }
     // logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
     // logger.info(`Next day: ${nextDay.format(DATE_TIME_FORMAT)}`);
-    const upcomingEvents = events.filter(event => dayjs(event.startTime).isAfter(currentTime) && dayjs(event.startTime).isBefore(nextDay));
+    const upcomingEvents = events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay));
     const preferredWakeUpTime = dayjs(profile.preferredWakeUpTime);
     const wakeUpTime = currentTime
       .hour(preferredWakeUpTime.hour())
@@ -390,7 +381,12 @@ export const scheduleGoalEvents = inngest.createFunction(
           start: timeframe.start.format(DATE_TIME_FORMAT),
           end: timeframe.end.format(DATE_TIME_FORMAT),
         },
-        externalEvents: schedule,
+        externalEvents: schedule.map(event => ({
+          ...event,
+          start: event.start.format(DATE_TIME_FORMAT),
+          end: event.end.format(DATE_TIME_FORMAT),
+          allDay: event.allDay ? event.allDay.format(DATE_TIME_FORMAT) : undefined,
+        })),
         data: {
           wakeUpOrSleepEvents,
           goals: goals.map(goal => 
@@ -447,8 +443,9 @@ export const scheduleGoalEvents = inngest.createFunction(
     }));
     const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];
     logger.info(`Scheduling ${data.goals.length} goals...`, data.goals.map(goal => goal.title));
+    const goalsScheduledSoFar: string[] = [];
     for (const goal of data.goals) {
-      const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, goal);
+      const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, goal, goalsScheduledSoFar, externalEvents);
       logger.info(`${instructions}`);
       logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals`);
       logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals`);
@@ -491,6 +488,7 @@ export const scheduleGoalEvents = inngest.createFunction(
         goalId: goal.id,
         title: goal.title,
       })));
+      goalsScheduledSoFar.push(goal.title);
     }
 
     const { deletedEvents, newEvents } = await step.run('save-schedule', async () => {

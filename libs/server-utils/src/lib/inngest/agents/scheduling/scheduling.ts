@@ -3,9 +3,7 @@ import { generateText, tool } from 'ai';
 import { z } from "zod";
 import { DATE_TIME_FORMAT, Interval } from '../../calendar/scheduling';
 import { dayjs } from '@/shared/utils';
-import { CalendarEvent } from '@prisma/client';
 import { CalendarEventSchema } from '@/shared/zod';
-import { Jsonify } from 'inngest/helpers/jsonify';
 
 export const IntervalSchema = z.object({
   start: z.string().describe('The start time of the interval in YYYY-MM-DD HH:mm format'),
@@ -308,7 +306,7 @@ export async function scoreIntervals(
   freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
   freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
   wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
-  externalEvents: Jsonify<CalendarEvent>[],
+  externalEvents: ExternalEvent<string>[],
   goalEvents: GoalEvent<dayjs.Dayjs>[],
 ): Promise<{
   scoredFreeWorkIntervals: ScoringResult[];
@@ -350,9 +348,9 @@ export async function scoreIntervals(
         description: event.description ?? undefined,
         location: event.location ?? undefined,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        start: dayjs(event.startTime!),
+        start: dayjs(event.start!),
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        end: dayjs(event.endTime!),
+        end: dayjs(event.end!),
         id: event.id,
       });
     }
@@ -601,22 +599,31 @@ The scheduling assistant should consider the following when scoring an interval:
 6. Any additional context provided in the title or description of the previous and next events.
 
 You should also consider telling the scheduling assistant how to spread out the goal activity sessions if it seems necessary for the user to have some rest or buffer time between sessions.
-For example, if the goal is a physical activity like exercise, you should consider if the user is likely to exercise during the current interval given their sleep and work schedule, and if they have had enough time to rest.
+You are given the calendar events and names of previously scheduled goal events to help you advice the scheduling assistant on what to look out for regarding scheduling the given goal in context of the other events.
+For example, if there are events like "Flight to New York" or "Exercise Regularly" in the schedule, you should inform the scheduling assistant to be aware of the user's travel time and the user's physical condition before scoring an interval.
 
 You are speaking directly to the scheduling assistant, so use "you" instead of "the scheduling assistant".
 `
 
-export async function getGoalScoringInstructions(goal: ScheduleableGoal): Promise<string> {
+export async function getGoalScoringInstructions(
+  goal: ScheduleableGoal,
+  previouslyScheduledGoalEvents: string[],
+  calendarEvents: ExternalEvent<string>[],
+): Promise<string> {
   const response = await generateText({
     model: openai('gpt-4o'),
     messages: [{ role: 'system', content: goalScoringInstructionsPrompt }, { role: 'user', content: JSON.stringify({
-      title: goal.title,
-      description: goal.description,
-      preferredTimes: goal.preferredTimes,
-      allowMultiplePerDay: goal.allowMultiplePerDay,
-      canDoDuringWork: goal.canDoDuringWork,
-      minimumTime: goal.minimumTime,
-      maximumTime: goal.maximumTime,
+      currentGoal: {
+        title: goal.title,
+        description: goal.description,
+        preferredTimes: goal.preferredTimes,
+        allowMultiplePerDay: goal.allowMultiplePerDay,
+        canDoDuringWork: goal.canDoDuringWork,
+        minimumTime: goal.minimumTime,
+        maximumTime: goal.maximumTime,
+      },
+      calendarEvents,
+      previouslyScheduledGoalEvents,
     })}],
   });
   return response.text;
