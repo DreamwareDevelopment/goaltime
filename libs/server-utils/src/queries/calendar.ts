@@ -6,6 +6,7 @@ import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
 import { Interval } from "../lib/inngest/calendar/scheduling";
 import { ExternalEvent, GoalEvent } from "../lib/inngest/agents/scheduling/scheduling";
+import { getNextFullSync } from "../lib/inngest";
 
 export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const startOfDay = date.startOf('day').toDate()
@@ -41,6 +42,16 @@ export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promis
   return schedule;
 }
 
+function getNextQuarterHour(date: dayjs.Dayjs): dayjs.Dayjs {
+  const now = dayjs(date);
+  const minutes = now.minute();
+  const roundedMinutes = Math.ceil(minutes / 15) * 15;
+  if (roundedMinutes === 60) {
+    return now.hour(now.hour() + 1).minute(0).second(0);
+  }
+  return now.minute(roundedMinutes).second(0);
+}
+
 export async function getSchedulingData(userId: User['id']): Promise<{
   schedule: ExternalEvent<dayjs.Dayjs>[];
   profile: UserProfile;
@@ -67,8 +78,8 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   }
   const lastFullSync = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
   const now = dayjs.tz(new Date(), profile.timezone);
-  const start = now.toDate();
-  const nextFullSync = lastFullSync.day(7).hour(profile.preferredSleepTime.getHours()).minute(profile.preferredSleepTime.getMinutes());
+  const start = getNextQuarterHour(now).toDate();
+  const nextFullSync = getNextFullSync(lastFullSync, profile.timezone);
   const end = nextFullSync.toDate();
   const schedule = await prisma.calendarEvent.findMany({
     where: {

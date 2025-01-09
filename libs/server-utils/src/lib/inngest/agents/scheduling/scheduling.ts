@@ -312,8 +312,6 @@ export async function scoreIntervals(
     }
   }
 
-  console.log('scoredFreeWorkIntervals count', scoredFreeWorkIntervals.length);
-  console.log('scoredFreeIntervals count', scoredFreeIntervals.length);
   return {
     scoredFreeWorkIntervals,
     scoredFreeIntervals,

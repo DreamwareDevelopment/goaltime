@@ -14,21 +14,15 @@ export async function getNotifications(profile: UserProfile): Promise<Notificati
 
 export function sortGoals(a: Goal, b: Goal) {
   if (a.priority === b.priority) {
-    // If the time difference is large, give it to the larger goal
-    const aCommitment = a.commitment ?? a.estimate;
-    const bCommitment = b.commitment ?? b.estimate;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const commitmentDiff = bCommitment! - aCommitment!;
-    if (Math.abs(commitmentDiff) > 3) {
-      return commitmentDiff;
-    }
-    // Sort by the number of preferred times, ascending
+    // Sort by the goal that has fewer exclusive preferred times
     // This is so that we are able to schedule more restrictive goals first
     const aPreferredTimes = Array.isArray(a.preferredTimes) ? a.preferredTimes : [];
     const bPreferredTimes = Array.isArray(b.preferredTimes) ? b.preferredTimes : [];
-    const preferredTimesDiff = aPreferredTimes.length - bPreferredTimes.length;
-    if (preferredTimesDiff !== 0) {
-      return preferredTimesDiff;
+    const intersection = aPreferredTimes.filter(time => bPreferredTimes.includes(time));
+    const aDiff = aPreferredTimes.length - intersection.length;
+    const bDiff = bPreferredTimes.length - intersection.length;
+    if (intersection.length > 0) {
+      return aDiff - bDiff;
     }
     // Sort by the goal that allows multiple per day
     const aCanDoMultiple = a.allowMultiplePerDay;
