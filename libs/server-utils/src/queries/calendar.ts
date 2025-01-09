@@ -80,7 +80,7 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   const now = dayjs.tz(new Date(), profile.timezone);
   const start = getNextQuarterHour(now).toDate();
   const nextFullSync = getNextFullSync(lastFullSync, profile.timezone);
-  const end = nextFullSync.toDate();
+  const end = nextFullSync.add(1, 'hour').toDate();
   const schedule = await prisma.calendarEvent.findMany({
     where: {
       userId,
@@ -146,6 +146,7 @@ export async function deleteGoalEvents(userId: User['id'], interval: Interval<st
   const ids = idsToDelete.map(({ id }) => id);
   await prisma.calendarEvent.deleteMany({
     where: {
+      userId,
       id: { in: ids },
     },
   });

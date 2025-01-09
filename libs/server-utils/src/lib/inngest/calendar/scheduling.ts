@@ -176,6 +176,7 @@ function getFreeIntervals(
       // Adjust the next day to the start of the day, otherwise it will be the start of the timeframe for the second day
       nextDay = nextDay.subtract(start.hour(), 'hours').subtract(start.minute(), 'minutes');
     }
+    const isLastDay = i === daysBetween;
     // logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
     // logger.info(`Next day: ${nextDay.format(DATE_TIME_FORMAT)}`);
     const upcomingEvents = events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay));
@@ -183,7 +184,8 @@ function getFreeIntervals(
     const wakeUpTime = currentTime
       .hour(preferredWakeUpTime.hour())
       .minute(preferredWakeUpTime.minute())
-    const preferredSleepTime = dayjs(profile.preferredSleepTime);
+    // This makes sure we don't schedule past the next full sync
+    const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(profile.preferredSleepTime);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
       .hour(sleepHour === 0 ? 24 : sleepHour)
@@ -192,10 +194,12 @@ function getFreeIntervals(
       type: 'wakeUp',
       start: wakeUpTime.format(DATE_TIME_FORMAT),
     });
-    wakeUpOrSleepEvents.push({
-      type: 'sleep',
-      start: sleepTime.format(DATE_TIME_FORMAT),
-    });
+    if (!isLastDay) {
+      wakeUpOrSleepEvents.push({
+        type: 'sleep',
+        start: sleepTime.format(DATE_TIME_FORMAT),
+      });
+    }
     // logger.info(`Wake up time: ${wakeUpTime.format(DATE_TIME_FORMAT)}`);
     // logger.info(`Sleep time: ${sleepTime.format(DATE_TIME_FORMAT)}`);
     let workStart: dayjs.Dayjs | null = null;
@@ -325,7 +329,7 @@ function getRemainingCommitmentForPeriod(
   timeframe: Interval<dayjs.Dayjs>,
 ): number {
   if (!goal.allowMultiplePerDay) {
-    const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
+    const daysBetween = timeframe.end.diff(timeframe.start, 'days');
     const maxDuration = daysBetween * goal.maximumTime;
     return Math.floor(maxDuration / 5) * 5 / 60;
   }
@@ -506,9 +510,9 @@ export const scheduleGoalEvents = inngest.createFunction(
       );
       ({ freeIntervals, freeWorkIntervals } = updateIntervals({ freeIntervals, freeWorkIntervals }, intervals));
 
+      logger.info(`Scheduled ${intervals.reduce((acc, curr) => acc + dayjs(curr.end).diff(curr.start, 'minutes'), 0)} minutes of intervals for ${goal.title}`);
       logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals after scheduling ${goal.title}`);
       logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals after scheduling ${goal.title}`);
-      logger.info(`Scheduled ${intervals.reduce((acc, curr) => acc + dayjs(curr.end).diff(curr.start, 'minutes'), 0)} minutes of intervals for ${goal.title}`);
 
       schedule.push(...intervals.map(interval => ({
         start: interval.start,
@@ -601,8 +605,8 @@ function updateIntervals(intervals: Intervals, schedule: Array<GoalEvent<dayjs.D
 function scheduleGoalInternal(
   logger: Logger,
   goal: ScheduleableGoal,
-  interval: Interval<dayjs.Dayjs>,
   remainingCommitment: number,
+  interval: Interval<dayjs.Dayjs>,
   scheduledDayLookup: Record<string, boolean>,
 ): { scheduled: GoalEvent<dayjs.Dayjs> | null, duration: number } {
   if (interval.start.format('YYYY-MM-DD') in scheduledDayLookup && !goal.allowMultiplePerDay) {
@@ -617,10 +621,8 @@ function scheduleGoalInternal(
   const goalMinimumTime = Math.ceil(goal.minimumTime / 5) * 5;
   const goalMaximumTime = Math.floor(goal.maximumTime / 5) * 5;
   logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is ${intervalDuration} minutes long`);
-  const softDuration = (Math.ceil((remainingCommitment - goalMinimumTime) / 5) * 5);
-  logger.info(`softDuration: ${softDuration}`);
-  const maxDuration = Math.max(goalMinimumTime, Math.min(goalMaximumTime, softDuration));
-  logger.info(`Max duration for ${goal.title} is ${maxDuration} minutes`);
+  const maxDuration = Math.max(goalMinimumTime, Math.min(goalMaximumTime, intervalDuration, remainingCommitment));
+  // logger.info(`Max duration for ${goal.title} is ${maxDuration} minutes`);
   if (intervalDuration < goalMinimumTime) {
     logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is less than the minimum time ${goalMinimumTime} minutes`);
     return { scheduled: null, duration: 0 };
@@ -658,7 +660,7 @@ function scheduleGoalRecursively(
   }
   const middle = Math.floor(intervals.length / 2);
   const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];  
-  const middleResult = scheduleGoalInternal(logger, goal, intervals[middle], remainingCommitment, scheduledDayLookup);
+  const middleResult = scheduleGoalInternal(logger, goal, remainingCommitment, intervals[middle], scheduledDayLookup);
   remainingCommitment -= middleResult.duration;
   if (middleResult.scheduled) schedule.push(middleResult.scheduled);
   if (remainingCommitment < goal.minimumTime || intervals.length === 1) return { scheduled: schedule, duration: middleResult.duration };
@@ -682,27 +684,60 @@ interface IntervalsState {
   score: number;
 }
 
+// TODO: Get the break duration from the goal
 const DEFAULT_BREAK_DURATION = 10;
 
-function splitInterval(interval: Interval<dayjs.Dayjs>, duration: number): { first: Interval<dayjs.Dayjs>, second: Interval<dayjs.Dayjs> } {
-  return {
-    first: { start: interval.start, end: interval.start.add(duration, 'minutes') },
-    second: { start: interval.start.add(duration, 'minutes'), end: interval.end },
-  };
+function splitInterval(logger: Logger, interval: Interval<dayjs.Dayjs>, durations: number[]): Interval<dayjs.Dayjs>[] {
+  const intervals: Interval<dayjs.Dayjs>[] = [];
+  let currentStart = interval.start;
+
+  for (const duration of durations) {
+    if (duration === 0) {
+      continue;
+    }
+    const end = currentStart.add(duration, 'minutes');
+    if (end.isAfter(interval.end.add(1, 'minute'))) {
+      logger.error(`Split interval ${currentStart.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)} at ${duration} minutes is after the end of the interval`);
+      intervals.push({ start: currentStart, end: interval.end });
+      continue;
+    }
+    intervals.push({ start: currentStart, end });
+    currentStart = end.add(DEFAULT_BREAK_DURATION, 'minutes');
+  }
+
+  return intervals;
 }
 
-function splitIntervals(logger: Logger, goal: ScheduleableGoal, intervals: Interval<dayjs.Dayjs>[]): { intervals: Interval<dayjs.Dayjs>[], splitIntervals: Interval<dayjs.Dayjs>[] } {
+function splitIntervals(
+  logger: Logger,
+  goal: ScheduleableGoal,
+  intervals: Interval<dayjs.Dayjs>[]
+): {
+  intervals: Interval<dayjs.Dayjs>[],
+  splitIntervals: Interval<dayjs.Dayjs>[],
+} {
   const minDuration = Math.ceil(goal.minimumTime / 5) * 5;
   const maxDuration = Math.floor(goal.maximumTime / 5) * 5;
   const result: { intervals: Interval<dayjs.Dayjs>[], splitIntervals: Interval<dayjs.Dayjs>[] } = { intervals: [], splitIntervals: [] };
   for (const interval of intervals) {
-    const intervalDuration = interval.end.diff(interval.start, 'minutes');
+    let intervalDuration = interval.end.diff(interval.start, 'minutes');
     logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is ${intervalDuration} minutes long`);
-    if (intervalDuration > minDuration + maxDuration + DEFAULT_BREAK_DURATION * 2) {
-      logger.info(`Splitting interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} at the ${maxDuration} minute mark`);
-      const { first, second } = splitInterval(interval, maxDuration);
+    if (intervalDuration >= maxDuration + minDuration + DEFAULT_BREAK_DURATION) {
+      const splitDurations = [maxDuration]
+      intervalDuration -= maxDuration;
+      while (intervalDuration >= maxDuration + DEFAULT_BREAK_DURATION ) {
+        splitDurations.push(maxDuration);
+        intervalDuration -= (maxDuration + DEFAULT_BREAK_DURATION);
+      }
+      if (intervalDuration >= minDuration + DEFAULT_BREAK_DURATION) {
+        splitDurations.push(intervalDuration - DEFAULT_BREAK_DURATION);
+      }
+      
+      const [first, ...rest] = splitInterval(logger, interval, splitDurations);
+      logger.info(`Split interval: ${first.start.format(DATE_TIME_FORMAT)} - ${first.end.format(DATE_TIME_FORMAT)} duration: ${first.end.diff(first.start, 'minutes')} minutes`);
       result.intervals.push(first);
-      result.splitIntervals.push(second);
+      result.splitIntervals.push(...rest);
+      logger.info(`${rest.map(interval => `Split interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} duration: ${interval.end.diff(interval.start, 'minutes')} minutes`).join('\n')}`);
     } else {
       result.intervals.push(interval);
     }
@@ -725,7 +760,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
   let currentWorkIndex = 0;
   let nextFreeIndex = -1;
   let nextWorkIndex = -1;
-  let totalTimeAvailable = 0;
+  let totalPreferredTime = 0;
   const splitFreeIntervals: Interval<dayjs.Dayjs>[] = [];
   const splitWorkIntervals: Interval<dayjs.Dayjs>[] = [];
   do {
@@ -752,10 +787,13 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
       } else {
         preferredFreeIntervals.push(intersection);
       }
-      totalTimeAvailable += intersection.end.diff(intersection.start, 'minutes');
+      totalPreferredTime += intersection.end.diff(intersection.start, 'minutes');
     });
-    const freeSplitResult = splitIntervals(logger, goal, preferredFreeIntervals);
-    const workSplitResult = splitIntervals(logger, goal, preferredWorkIntervals);
+    if (goal.allowMultiplePerDay) {
+      logger.info(`Splitting intervals with score ${currentHighScore}`);
+    }
+    const freeSplitResult = goal.allowMultiplePerDay ? splitIntervals(logger, goal, preferredFreeIntervals) : { intervals: preferredFreeIntervals, splitIntervals: [] };
+    const workSplitResult = goal.canDoDuringWork ? splitIntervals(logger, goal, preferredWorkIntervals) : { intervals: preferredWorkIntervals, splitIntervals: [] };
     preferredIntervals.push({
       freeIntervals: freeSplitResult.intervals,
       freeWorkIntervals: workSplitResult.intervals,
@@ -766,11 +804,11 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
     currentFreeIndex = nextFreeIndex;
     currentWorkIndex = nextWorkIndex;
   } while (nextFreeIndex !== -1 || nextWorkIndex !== -1);
+  logger.info(`Total preferred time: ${totalPreferredTime} minutes`);
 
-  logger.info(`Preferred intervals:\n${preferredIntervals.map(interval => `Score: ${interval.score}\n freeIntervals: ${interval.freeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}\n freeWorkIntervals: ${interval.freeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}\n`).join('\n')}`);
-  logger.info(`Total time available: ${totalTimeAvailable} minutes`);
   let remainingCommitment = Math.floor(goal.remainingCommitment * 60);
   const scheduledDayLookup: Record<string, boolean> = {};
+  let totalTimeAvailable = 0;
   for (let i = 0; i < preferredIntervals.length; i++) {
     const { freeIntervals, freeWorkIntervals, score } = preferredIntervals[i];
     if (i === preferredIntervals.length - 1) {
@@ -778,55 +816,78 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
       freeIntervals.push(...splitFreeIntervals);
       freeWorkIntervals.push(...splitWorkIntervals);
     }
+    logger.info(`Scheduling ${goal.title} in preferred intervals with score ${score} and remaining commitment ${remainingCommitment}`);
     // Sort intervals by duration descending
     function sortIntervals(a: Interval<dayjs.Dayjs>, b: Interval<dayjs.Dayjs>) {
       return b.end.diff(b.start, 'minutes') - a.end.diff(a.start, 'minutes');
     }
+    totalTimeAvailable += freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0);
     if (goal.canDoDuringWork) {
+      totalTimeAvailable += freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0);
       const sortedFreeWorkIntervals = freeWorkIntervals.sort(sortIntervals);
-      logger.info(`Scheduling goal ${goal.title} during work intervals with score ${score} and remaining commitment ${remainingCommitment}`);
+      logger.info(`Free work intervals:\n${sortedFreeWorkIntervals.map(interval => `  ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
       let { scheduled, duration } = scheduleGoalRecursively(logger, goal, sortedFreeWorkIntervals.slice(0, 1), remainingCommitment, scheduledDayLookup);
       remainingCommitment -= duration;
       schedule.push(...scheduled);
-      logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
-      if (remainingCommitment < goal.minimumTime) return schedule;
+      logger.info(`Scheduled ${duration} minutes and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+      if (remainingCommitment < goal.minimumTime) {
+        logger.info(`Total time available: ${totalTimeAvailable} minutes`);
+        return schedule;
+      }
       if (sortedFreeWorkIntervals.length > 1) {
         ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, sortedFreeWorkIntervals.slice(-1), remainingCommitment, scheduledDayLookup));
         remainingCommitment -= duration;
         schedule.push(...scheduled);
-        logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+        logger.info(`Scheduled ${duration} minutes and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
       }
-      if (remainingCommitment < goal.minimumTime) return schedule;
+      if (remainingCommitment < goal.minimumTime) {
+        logger.info(`Total time available: ${totalTimeAvailable} minutes`);
+        return schedule;
+      }
       if (sortedFreeWorkIntervals.length > 2) {
         ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, sortedFreeWorkIntervals.slice(1, -1), remainingCommitment, scheduledDayLookup));
         remainingCommitment -= duration;
         schedule.push(...scheduled);
-        logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+        logger.info(`Scheduled ${duration} minutes and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
       }
-      if (remainingCommitment < goal.minimumTime) return schedule;
+      if (remainingCommitment < goal.minimumTime) {
+        logger.info(`Total time available: ${totalTimeAvailable} minutes`);
+        return schedule;
+      }
     }
     const sortedFreeIntervals = freeIntervals.sort(sortIntervals);
-    logger.info(`Scheduling goal ${goal.title} during free intervals with score ${score} and remaining commitment ${remainingCommitment}`);
+    logger.info(`Free intervals:\n${sortedFreeIntervals.map(interval => `  ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     let { scheduled, duration } = scheduleGoalRecursively(logger, goal, sortedFreeIntervals.slice(0, 1), remainingCommitment, scheduledDayLookup);
     remainingCommitment -= duration;
     schedule.push(...scheduled);
-    logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
-    if (remainingCommitment < goal.minimumTime) return schedule;
+    logger.info(`Scheduled ${duration} minutes and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+    if (remainingCommitment < goal.minimumTime) {
+      logger.info(`Total time available: ${totalTimeAvailable} minutes`);
+      return schedule;
+    }
     if (sortedFreeIntervals.length > 1) {
       ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, sortedFreeIntervals.slice(-1), remainingCommitment, scheduledDayLookup));
       remainingCommitment -= duration;
       schedule.push(...scheduled);
-      logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+      logger.info(`Scheduled ${duration} minutes and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
     }
-    if (remainingCommitment < goal.minimumTime) return schedule;
+    if (remainingCommitment < goal.minimumTime) {
+      logger.info(`Total time available: ${totalTimeAvailable} minutes`);
+      return schedule;
+    }
     if (sortedFreeIntervals.length > 2) {
       ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, sortedFreeIntervals.slice(1, -1), remainingCommitment, scheduledDayLookup));
       remainingCommitment -= duration;
       schedule.push(...scheduled);
-      logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+      logger.info(`Scheduled ${duration} minutes and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
     }
-    if (remainingCommitment < goal.minimumTime) return schedule;
+    if (remainingCommitment < goal.minimumTime) {
+      logger.info(`Total time available: ${totalTimeAvailable} minutes`);
+      return schedule;
+    }
   }
+
+  logger.info(`Total time available: ${totalTimeAvailable} minutes`);
   return schedule;
 }
 
