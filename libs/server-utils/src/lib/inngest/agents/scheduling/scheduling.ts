@@ -3,7 +3,6 @@ import { generateText, tool } from 'ai';
 import { z } from "zod";
 import { DATE_TIME_FORMAT, Interval } from '../../calendar/scheduling';
 import { dayjs } from '@/shared/utils';
-import { CalendarEventSchema } from '@/shared/zod';
 
 export const IntervalSchema = z.object({
   start: z.string().describe('The start time of the interval in YYYY-MM-DD HH:mm format'),
@@ -41,17 +40,8 @@ export const ScheduleableGoalSchema = z.object({
 
 export type ScheduleableGoal = z.infer<typeof ScheduleableGoalSchema>;
 
-export const GoalSchedulingInputSchema = z.object({
-  goal: ScheduleableGoalSchema.describe('The goal to schedule'),
-  freeIntervals: z.array(IntervalWithScoreSchema).describe('Free intervals outside of work hours'),
-  freeWorkIntervals: z.array(IntervalWithScoreSchema).describe('Free intervals during work hours'),
-});
-
-export type GoalSchedulingInput = z.infer<typeof GoalSchedulingInputSchema>;
-
 export const ScheduleInputDataSchema = z.object({
   goals: z.array(ScheduleableGoalSchema),
-  schedule: z.array(CalendarEventSchema),
   freeIntervals: z.array(IntervalSchema),
   freeWorkIntervals: z.array(IntervalSchema),
   wakeUpOrSleepEvents: z.array(WakeUpOrSleepEventSchema),
@@ -59,101 +49,7 @@ export const ScheduleInputDataSchema = z.object({
 
 export type ScheduleInputData = z.infer<typeof ScheduleInputDataSchema>;
 
-const systemPrompt = `
-You are a scheduling assistant for a busy professional, you handle all of their scheduling needs.
-
-You are given a goal as well as free time intervals outside of work hours and free time intervals during work hours.
-An example input might look like this:
-
-<example input>
-{
-  goal: {
-    id: "<goal-id>",
-    title: "Meditate more often",
-    description: "Meditation is a great way to clear your mind and focus on the present moment.",
-    remainingCommitment: 1.5,
-    priority: "High",
-    preferredTimes: [
-      { start: "5:00", end: "8:00" },
-      { start: "20:00", end: "23:00" },
-    ],
-    allowMultiplePerDay: false,
-    canDoDuringWork: false,
-  },
-  freeIntervals: [
-    { start: "2025-01-01 7:00", end: "2025-01-01 8:00", score: 0 },
-    { start: "2025-01-01 18:00", end: "2025-01-01 22:30", score: -0.5 },
-  ],
-  freeWorkIntervals: [
-    { start: "2025-01-01 10:00", end: "2025-01-01 11:00", score: 0.7 },
-  ],
-}
-</example input>
-
-Notes on the input:
-- The free intervals both inside and outside of work hours contain "start" and "end" fields indicating the date and time in YYYY-MM-DD HH:mm format.
-- The free intervals also contain a "score" field indicating the score of the interval for that goal. The higher the score, the more likely the user is to complete the goal during that interval.
-- You should use the score to help you determine which intervals to schedule the goal in, avoiding the ones with negative scores.
-- The free intervals can elapse over multiple days.
-- The preferred time intervals contain "start" and "end" fields indicating the time in HH:mm format.
-- Each goal has a remaining time commitment in hours over the period of the free intervals indicated by the "remainingCommitment" field.
-- Each goal has a list of preferred times throughout the day indicated by the "preferredTimes" field.
-- Each goal indicates if multiple sessions are allowed in a day via the "allowMultiplePerDay" field.
-- Each goal indicates if it can be done during work hours via the "canDoDuringWork" field.
-
-Here are some guidelines for scheduling:
-
-- Do not schedule any intervals that are outside of the free intervals.
-- Do not schedule any overlapping intervals.
-- Try to distribute sessions evenly amongst the days of the free intervals, so don't greedily schedule all sessions on the first day.
-- If you can, try to schedule sessions for the goal at the same time of day when scheduling across multiple days.
-- Make your best judgement to determine if rest days are appropriate for the given goal if it is a physical activity.
-- You should make a best effort to schedule sessions for the goal during its preferred times, but they are not strict ranges so you can deviate from them somewhat.
-- If the goal can be done during work hours, you should prefer to schedule it during the free work intervals but can schedule it during the free intervals outside of work hours if needed.
-- If the goal can't be done during work hours, you should only schedule it during the free intervals outside of work hours.
-- If the goal does not allow multiple sessions in a day, you should only schedule one session during that day's free intervals including the free work intervals.
-- Prefer to schedule on increments of 5 minute marks, don't do random minute times like 17:34.
-
-When you're done scheduling for a given goal, you should validate the schedule.
-If the schedule is invalid you should adjust the schedule accordingly, otherwise you should return the answer.
-`;
-
-export async function scheduleGoal(data: GoalSchedulingInput): Promise<Interval<string>[]> {
-  const response = await generateText({
-    model: openai('gpt-4o'),
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: JSON.stringify(data) },
-    ],
-    maxSteps: 10,
-    toolChoice: 'required',
-    tools: {
-      answer: tool({
-        description: 'A tool for providing the final answer.',
-        parameters: z.object({
-          schedule: z.array(IntervalSchema).describe('The schedule for the goal'),
-        }),
-        // no execute function - invoking it will terminate the agent
-      }),
-      validateSchedule: tool({
-        description: 'A tool for validating the schedule',
-        parameters: z.object({
-          goal: ScheduleableGoalSchema.describe('The goal to schedule'),
-          schedule: z.array(IntervalSchema).describe('The schedule for the goal'),
-          freeIntervals: z.array(IntervalWithScoreSchema).describe('The free intervals outside of work hours sorted by score descending'),
-          freeWorkIntervals: z.array(IntervalWithScoreSchema).describe('The free intervals during work hours sorted by score descending'),
-        }),
-        execute: async ({ goal, schedule, freeIntervals, freeWorkIntervals }) => {
-          return validateSchedule(goal, schedule, freeIntervals, freeWorkIntervals);
-        },
-      }),
-    }
-  });
-
-  return response.toolCalls[0].args.schedule;
-}
-
-function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], freeIntervals: IntervalWithScore<string>[], freeWorkIntervals: IntervalWithScore<string>[]) {
+export function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], freeIntervals: IntervalWithScore<string>[], freeWorkIntervals: IntervalWithScore<string>[]) {
   const errors: string[] = [];
 
   console.log('validating schedule for goal', goal);
@@ -252,7 +148,7 @@ function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], 
 }
 
 
-interface IntervalWithScore<T> extends Interval<T> {
+export interface IntervalWithScore<T> extends Interval<T> {
   score: number;
 }
 
@@ -595,6 +491,7 @@ You are given the calendar events and names of previously scheduled goal events 
 For example, if there are events like "Flight to New York" or "Exercise Regularly" in the schedule, you should inform the scheduling assistant to be aware of the user's travel time and the user's physical condition before scoring an interval.
 
 You are speaking directly to the scheduling assistant, so use "you" instead of "the scheduling assistant".
+This is a one time immediate operation, so don't tell the scheduling assistant to look out for changes in the future.
 `
 
 export async function getGoalScoringInstructions(

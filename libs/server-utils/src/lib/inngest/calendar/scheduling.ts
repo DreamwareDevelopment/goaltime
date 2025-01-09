@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { ExternalEvent, getGoalScoringInstructions, GoalEvent, GoalSchedulingInput, scheduleGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { ExternalEvent, getGoalScoringInstructions, GoalEvent, IntervalWithScore, ScheduleableGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -23,43 +23,53 @@ interface PreparedSchedulingData {
 export const MIN_BLOCK_SIZE = 10;
 export const DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
 
-const timeToInterval: Record<PreferredTimesEnumType, Interval<dayjs.Dayjs>> = {
-  'Early Morning': {
-    start: dayjs().hour(5).minute(0),
-    end: dayjs().hour(8).minute(0),
-  },
-  'Morning': {
-    start: dayjs().hour(8).minute(0),
-    end: dayjs().hour(11).minute(0),
-  },
-  'Midday': {
-    start: dayjs().hour(11).minute(0),
-    end: dayjs().hour(14).minute(0),
-  },
-  'Afternoon': {
-    start: dayjs().hour(14).minute(0),
-    end: dayjs().hour(17).minute(0),
-  },
-  'Evening': {
-    start: dayjs().hour(17).minute(0),
-    end: dayjs().hour(20).minute(0),
-  },
-  'Night': {
-    start: dayjs().hour(20).minute(0),
-    end: dayjs().hour(23).minute(0),
-  },
+const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumType, Interval<dayjs.Dayjs>> => {
+  const five = start.hour(5).minute(0);
+  const eight = start.hour(8).minute(0);
+  const eleven = start.hour(11).minute(0);
+  const fourteen = start.hour(14).minute(0);
+  const seventeen = start.hour(17).minute(0);
+  const twenty = start.hour(20).minute(0);
+  const twentyThree = start.hour(23).minute(0);
+  return {
+    'Early Morning': {
+      start: five,
+      end: eight,
+    },
+    'Morning': {
+      start: eight,
+      end: eleven,
+    },
+    'Midday': {
+      start: eleven,
+      end: fourteen,
+    },
+    'Afternoon': {
+      start: fourteen,
+      end: seventeen,
+    },
+    'Evening': {
+      start: seventeen,
+      end: twenty,
+    },
+    'Night': {
+      start: twenty,
+      end: twentyThree,
+    },
+  };
 }
 
 // Get the preferred times for a goal in the format of HH:mm-HH:mm, merging time blocks and adhering to the preferred wake up and sleep times
-function parsePreferredTimes(profile: UserProfile, preferredTimes: JsonValue): Interval<dayjs.Dayjs>[] {
+function parsePreferredTimes(logger: Logger, profile: UserProfile, start: dayjs.Dayjs, preferredTimes: JsonValue): Interval<dayjs.Dayjs>[] {
   if (!Array.isArray(preferredTimes)) {
     throw new Error('Preferred times must be an array');
   }
   const preferredWakeUpTime = dayjs(profile.preferredWakeUpTime);
   const preferredSleepTime = dayjs(profile.preferredSleepTime);
-  console.log(`Preferred times: ${JSON.stringify(preferredTimes, null, 2)}`);
+  logger.info(`Preferred times: ${JSON.stringify(preferredTimes, null, 2)}`);
+  const timeToIntervalLookup = getTimeToIntervalLookup(start);
   const adjustedPreferredTimes = preferredTimes.map(time => {
-    const interval = timeToInterval[time as PreferredTimesEnumType];
+    const interval = timeToIntervalLookup[time as PreferredTimesEnumType];
     if (preferredWakeUpTime.isAfter(interval.start) && preferredWakeUpTime.isBefore(interval.end)) {
       return {
         start: preferredWakeUpTime,
@@ -77,9 +87,10 @@ function parsePreferredTimes(profile: UserProfile, preferredTimes: JsonValue): I
       end: interval.end,
     };
   })
-  console.log(`Adjusted preferred times: ${JSON.stringify(adjustedPreferredTimes, null, 2)}`);
+  // for (const time of adjustedPreferredTimes) {
+  //   logger.info(`Adjusted preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
+  // }
   const sortedPreferredTimes = adjustedPreferredTimes.sort((a, b) => a.start.diff(b.start, 'minutes'))
-  console.log(`Sorted preferred times: ${JSON.stringify(sortedPreferredTimes, null, 2)}`);
   const mergedPreferredTimes = sortedPreferredTimes.reduce((prev, curr) => {
     if (!prev.length) {
       prev.push(curr);
@@ -96,7 +107,9 @@ function parsePreferredTimes(profile: UserProfile, preferredTimes: JsonValue): I
     }
     return prev;
   }, [] as Interval<dayjs.Dayjs>[]);
-  console.log(`Merged preferred times: ${JSON.stringify(mergedPreferredTimes, null, 2)}`);
+  // for (const time of mergedPreferredTimes) {
+  //   logger.info(`Merged preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
+  // }
   return mergedPreferredTimes;
 }
 
@@ -170,13 +183,11 @@ function getFreeIntervals(
     const wakeUpTime = currentTime
       .hour(preferredWakeUpTime.hour())
       .minute(preferredWakeUpTime.minute())
-      .add(15, 'minutes'); // Add 15 minutes to the wake up time to account for getting out of bed
     const preferredSleepTime = dayjs(profile.preferredSleepTime);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
       .hour(sleepHour === 0 ? 24 : sleepHour)
       .minute(preferredSleepTime.minute())
-      .add(30, 'seconds').subtract(30, 'minutes'); // Subtract 30 minutes from the sleep time to account for getting ready to sleep
     wakeUpOrSleepEvents.push({
       type: 'wakeUp',
       start: wakeUpTime.format(DATE_TIME_FORMAT),
@@ -213,7 +224,7 @@ function getFreeIntervals(
       if (workStart && currentTime.isBefore(workStart)) {
         const intervals = getTimeblocks(currentTime, workStart, upcomingEvents);
         freeIntervals.push(...intervals);
-        // console.log(`Found ${intervals.length} free intervals before work`);
+        // logger.info(`Found ${intervals.length} free intervals before work`);
         currentTime = workStart.add(1, 'second');
         continue;
       }
@@ -221,7 +232,7 @@ function getFreeIntervals(
       if (workStart && workEnd && currentTime.isAfter(workStart) && currentTime.isBefore(workEnd)) {
         const intervals = getTimeblocks(currentTime, workEnd, upcomingEvents);
         freeWorkIntervals.push(...intervals);
-        // console.log(`Found ${intervals.length} free work intervals during work`);
+        // logger.info(`Found ${intervals.length} free work intervals during work`);
         currentTime = workEnd.add(1, 'second');
         continue;
       }
@@ -229,59 +240,52 @@ function getFreeIntervals(
       if (workEnd && currentTime.isAfter(workEnd)) {
         const intervals = getTimeblocks(currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
-        // console.log(`Found ${intervals.length} free intervals after work`);
+        // logger.info(`Found ${intervals.length} free intervals after work`);
         currentTime = nextDay;
         continue;
       }
       if (!workStart && !workEnd) {
         const intervals = getTimeblocks(currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
-        // console.log(`Found ${intervals.length} free intervals on day off`);
+        // logger.info(`Found ${intervals.length} free intervals on day off`);
         currentTime = nextDay;
         continue;
       }
-      console.warn('Finished loop without finding any free intervals');
+      logger.warn('Finished loop without finding any free intervals');
     }
   }
   return { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents };
 }
 
 function getIntersection(a: Interval<dayjs.Dayjs>, b: Interval<dayjs.Dayjs>): Interval<dayjs.Dayjs> | null {
-  const start = a.start.isAfter(b.start) ? a.start : b.start;
-  const end = a.end.isBefore(b.end) ? a.end : b.end;
-  if (start.isBefore(end)) {
+  const start = a.start.add(1, 'second').isAfter(b.start) ? a.start : b.start;
+  const end = a.end.isBefore(b.end.subtract(1, 'second')) ? a.end : b.end;
+  if (start.isBefore(end) && !start.isSame(end, 'minute')) {
     return { start, end };
   }
   return null;
 }
 
-function getTimeRemainingInPreferredTimes(
-  goal: Goal,
+function iterateOverPreferredTimes(
+  logger: Logger,
+  canDoDuringWork: boolean,
   preferredTimes: Interval<dayjs.Dayjs>[],
   freeIntervals: Interval<dayjs.Dayjs>[],
   freeWorkIntervals: Interval<dayjs.Dayjs>[],
   timeframe: Interval<dayjs.Dayjs>,
-): number {
+  callback: (intersection: Interval<dayjs.Dayjs>, duringWork: boolean) => void,
+): void {
+  // logger.info(`Preferred times:\n${preferredTimes.map(time => `Preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
   function getPreferredTimesForDay(day: dayjs.Dayjs): Interval<dayjs.Dayjs>[] {
     return preferredTimes.map(time => ({
-      start: time.start.year(day.year()).month(day.month()).date(day.date()).subtract(1, 'second'),
-      end: time.end.year(day.year()).month(day.month()).date(day.date()).add(1, 'second'),
+      start: time.start.year(day.year()).month(day.month()).date(day.date()),
+      end: time.end.year(day.year()).month(day.month()).date(day.date()),
     }));
   }
-  let totalMinutes = 0;
   let preferredTimesToday: Interval<dayjs.Dayjs>[] = getPreferredTimesForDay(timeframe.start);
   let currentDay = timeframe.start.date();
-  for (const interval of freeIntervals) {
-    if (interval.start.date() !== currentDay) {
-      preferredTimesToday = getPreferredTimesForDay(interval.start);
-      currentDay = interval.start.date();
-    }
-    const preferredTimesIntersections = preferredTimesToday.map(preferredTime => getIntersection(preferredTime, interval)).filter(Boolean) as Interval<dayjs.Dayjs>[];
-    if (preferredTimesIntersections.length > 0) {
-      totalMinutes += preferredTimesIntersections.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0);
-    }
-  }
-  if (goal.canDoDuringWork) {
+  if (canDoDuringWork) {
+    // logger.info(`Free work intervals:\n${freeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     for (const interval of freeWorkIntervals) {
       if (interval.start.date() !== currentDay) {
         preferredTimesToday = getPreferredTimesForDay(interval.start);
@@ -289,11 +293,21 @@ function getTimeRemainingInPreferredTimes(
       }
       const preferredTimesIntersections = preferredTimesToday.map(preferredTime => getIntersection(preferredTime, interval)).filter(Boolean) as Interval<dayjs.Dayjs>[];
       if (preferredTimesIntersections.length > 0) {
-        totalMinutes += preferredTimesIntersections.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0);
+        preferredTimesIntersections.forEach(intersection => callback(intersection, true));
       }
     }
   }
-  return totalMinutes;
+  // logger.info(`Free intervals:\n${freeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+  for (const interval of freeIntervals) {
+    if (interval.start.date() !== currentDay) {
+      preferredTimesToday = getPreferredTimesForDay(interval.start);
+      currentDay = interval.start.date();
+    }
+    const preferredTimesIntersections = preferredTimesToday.map(preferredTime => getIntersection(preferredTime, interval)).filter(Boolean) as Interval<dayjs.Dayjs>[];
+    if (preferredTimesIntersections.length > 0) {
+      preferredTimesIntersections.forEach(intersection => callback(intersection, false));
+    }
+  }
 }
 
 /**
@@ -303,24 +317,28 @@ function getTimeRemainingInPreferredTimes(
  * @returns The remaining commitment for the goal for the given period.
  */
 function getRemainingCommitmentForPeriod(
+  logger: Logger,
   goal: Goal,
   preferredTimes: Interval<dayjs.Dayjs>[],
   freeIntervals: Interval<dayjs.Dayjs>[],
   freeWorkIntervals: Interval<dayjs.Dayjs>[],
   timeframe: Interval<dayjs.Dayjs>,
 ): number {
-  const totalMinutes = getTimeRemainingInPreferredTimes(goal, preferredTimes, freeIntervals, freeWorkIntervals, timeframe);
+  let totalMinutes = 0;
+  iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, timeframe, (intersection, duringWork) => {
+    totalMinutes += intersection.end.diff(intersection.start, 'minutes');
+  });
   const priorityRestFactor = goal.priority === 'High' ? 1 : goal.priority === 'Medium' ? 0.85 : 0.75;
   const adjustedMinutesRemaining = totalMinutes * priorityRestFactor;
   if (goal.commitment) {
     if ((goal.commitment - goal.completed) * 60 > adjustedMinutesRemaining) {
       // If there isn't enough time to complete the commitment, we return how much time there is available
-      console.log(`Adjusted remaining commitment for ${goal.title}: ${adjustedMinutesRemaining}`);
+      logger.info(`Adjusted remaining commitment for ${goal.title}: ${adjustedMinutesRemaining}`);
       return adjustedMinutesRemaining / 60;
     }
     // Return how much time is left to complete the commitment
     const remaining = goal.commitment - goal.completed;
-    console.log(`Remaining commitment for ${goal.title}: ${remaining}`);
+    logger.info(`Remaining commitment for ${goal.title}: ${remaining}`);
     return remaining;
   }
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -349,9 +367,9 @@ export const scheduleGoalEvents = inngest.createFunction(
     const { userId } = event.data;
     const { data, interval, goalMap, externalEvents, timezone } = await step.run('get-scheduling-data', async () => {
       const { goals, interval, profile, schedule } = await getSchedulingData(userId);
-      console.log(`Finding free intervals for`, interval);
+      logger.info(`Finding free intervals for`, interval);
       const { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
-      console.log(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
+      logger.info(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
       // freeIntervals.map(interval => logger.info(`Free interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       // freeWorkIntervals.map(interval => logger.info(`Free work interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       const dayJsFreeIntervals = freeIntervals.map(interval => ({
@@ -383,7 +401,7 @@ export const scheduleGoalEvents = inngest.createFunction(
           wakeUpOrSleepEvents,
           goals: goals.map(goal => 
             {
-              const preferredTimes = parsePreferredTimes(profile, goal.preferredTimes as JsonValue);
+              const preferredTimes = parsePreferredTimes(logger, profile, timeframe.start, goal.preferredTimes as JsonValue);
               return {
                 id: goal.id,
                 title: goal.title,
@@ -392,10 +410,10 @@ export const scheduleGoalEvents = inngest.createFunction(
                 canDoDuringWork: goal.canDoDuringWork,
                 priority: goal.priority,
                 preferredTimes: preferredTimes.map(time => ({
-                  start: time.start.format('HH:mm'),
-                  end: time.end.format('HH:mm'),
+                  start: time.start.format(DATE_TIME_FORMAT),
+                  end: time.end.format(DATE_TIME_FORMAT),
                 })),
-                remainingCommitment: getRemainingCommitmentForPeriod(goal, preferredTimes, dayJsFreeIntervals, dayJsFreeWorkIntervals, timeframe),
+                remainingCommitment: getRemainingCommitmentForPeriod(logger, goal, preferredTimes, dayJsFreeIntervals, dayJsFreeWorkIntervals, timeframe),
                 minimumTime: goal.minimumTime,
                 maximumTime: goal.maximumTime,
             }
@@ -456,27 +474,36 @@ export const scheduleGoalEvents = inngest.createFunction(
       );
 
       logger.info(`Scheduling goal: ${goal.title}...`);
-      const input: GoalSchedulingInput = {
-        goal,
-        freeIntervals: scoredFreeIntervals.map(interval => interval.interval).filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score),
-        freeWorkIntervals: scoredFreeWorkIntervals.map(interval => interval.interval).filter(interval => interval.score >= 0).sort((a, b) => b.score - a.score),
+
+      const sortIntervals = (a: IntervalWithScore<dayjs.Dayjs>, b: IntervalWithScore<dayjs.Dayjs>) => {
+        const scoreDiff = b.score - a.score;
+        if (scoreDiff !== 0) return scoreDiff;
+        return a.start.diff(b.start)
       }
-      const intervals = await step.ai.wrap('schedule-goal', scheduleGoal, input);
-      ({ freeIntervals, freeWorkIntervals } = updateIntervals(
-        { freeIntervals, freeWorkIntervals },
-        intervals.map(interval => ({
-          start: dayjs.tz(interval.start, timezone),
-          end: dayjs.tz(interval.end, timezone),
-        })).sort((a, b) => a.start.diff(b.start))
-      ));
+
+      const intervals = scheduleGoal(
+        logger,
+        goal,
+        scoredFreeIntervals.map(interval => ({
+          ...interval.interval,
+          start: dayjs(interval.interval.start),
+          end: dayjs(interval.interval.end),
+        })).filter(interval => interval.score >= 0).sort(sortIntervals),
+        scoredFreeWorkIntervals.map(interval => ({
+          ...interval.interval,
+          start: dayjs(interval.interval.start),
+          end: dayjs(interval.interval.end),
+        })).filter(interval => interval.score >= 0).sort(sortIntervals),
+      );
+      ({ freeIntervals, freeWorkIntervals } = updateIntervals({ freeIntervals, freeWorkIntervals }, intervals));
 
       logger.info(`${freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free intervals after scheduling ${goal.title}`);
       logger.info(`${freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of free work intervals after scheduling ${goal.title}`);
       logger.info(`Scheduled ${intervals.reduce((acc, curr) => acc + dayjs(curr.end).diff(curr.start, 'minutes'), 0)} minutes of intervals for ${goal.title}`);
 
       schedule.push(...intervals.map(interval => ({
-        start: dayjs(interval.start),
-        end: dayjs(interval.end),
+        start: interval.start,
+        end: interval.end,
         goalId: goal.id,
         title: goal.title,
       })));
@@ -504,7 +531,7 @@ interface Intervals {
   freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[];
   freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[];
 }
-function updateIntervals(intervals: Intervals, schedule: Array<Interval<dayjs.Dayjs>>): Intervals {
+function updateIntervals(intervals: Intervals, schedule: Array<GoalEvent<dayjs.Dayjs>>): Intervals {
   let { freeIntervals, freeWorkIntervals } = { ...intervals };
 
   for (const scheduledInterval of schedule) {
@@ -560,4 +587,194 @@ function updateIntervals(intervals: Intervals, schedule: Array<Interval<dayjs.Da
   }
 
   return { freeIntervals, freeWorkIntervals };
+}
+
+function scheduleGoalInternal(
+  logger: Logger,
+  goal: ScheduleableGoal,
+  interval: Interval<dayjs.Dayjs>,
+  remainingCommitment: number,
+  scheduledDayLookup: Record<string, boolean>,
+): { scheduled: GoalEvent<dayjs.Dayjs> | null, duration: number } {
+  if (interval.start.format('YYYY-MM-DD') in scheduledDayLookup && !goal.allowMultiplePerDay) {
+    logger.info(`Goal ${goal.title} is not allowed to be scheduled multiple times per day`);
+    return { scheduled: null, duration: 0 };
+  }
+  const intervalDuration = interval.end.diff(interval.start, 'minutes');
+  if (intervalDuration === 0) {
+    logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is 0 minutes long`);
+    return { scheduled: null, duration: 0 };
+  }
+  logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is ${intervalDuration} minutes long`);
+  const softDuration = (Math.floor((remainingCommitment - goal.minimumTime) / 5) * 5);
+  logger.info(`softDuration: ${softDuration}`);
+  const maxDuration = Math.max(goal.minimumTime, Math.min(goal.maximumTime, softDuration));
+  logger.info(`Max duration for ${goal.title} is ${maxDuration} minutes`);
+  if (intervalDuration < goal.minimumTime) {
+    logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is less than the minimum time ${goal.minimumTime} minutes`);
+    return { scheduled: null, duration: 0 };
+  } else if (intervalDuration <= maxDuration) {
+    scheduledDayLookup[interval.start.format('YYYY-MM-DD')] = true;
+    return { scheduled: {
+      start: interval.start,
+      end: interval.end,
+      goalId: goal.id,
+      title: goal.title,
+    }, duration: intervalDuration };
+  }
+  // Interval is longer than the maximum time, so put the goal in the middle of the interval
+  scheduledDayLookup[interval.start.format('YYYY-MM-DD')] = true;
+  const offset = (intervalDuration - maxDuration) / 2;
+  return { scheduled: {
+    start: interval.start.add(offset, 'minute'),
+    end: interval.start.add(offset + maxDuration, 'minute'),
+    goalId: goal.id,
+    title: goal.title,
+  }, duration: maxDuration };
+}
+
+function scheduleGoalRecursively(
+  logger: Logger,
+  goal: ScheduleableGoal,
+  intervals: Interval<dayjs.Dayjs>[],
+  remainingCommitment: number,
+  scheduledDayLookup: Record<string, boolean>,
+): { scheduled: Array<GoalEvent<dayjs.Dayjs>>, duration: number} {
+  const originalRemainingCommitment = remainingCommitment;
+  if (intervals.length === 0) {
+    return { scheduled: [], duration: 0 };
+  }
+  const middle = Math.floor(intervals.length / 2);
+  const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];  
+  const middleResult = scheduleGoalInternal(logger, goal, intervals[middle], remainingCommitment, scheduledDayLookup);
+  remainingCommitment -= middleResult.duration;
+  if (middleResult.scheduled) schedule.push(middleResult.scheduled);
+  if (remainingCommitment <= 0 || intervals.length === 1) return { scheduled: schedule, duration: middleResult.duration };
+  
+  let recursiveResult = scheduleGoalRecursively(logger, goal, intervals.slice(0, middle), remainingCommitment, scheduledDayLookup);
+  remainingCommitment -= recursiveResult.duration;
+  schedule.push(...recursiveResult.scheduled);
+  if (remainingCommitment <= 0) return { scheduled: schedule, duration: originalRemainingCommitment - remainingCommitment };
+  recursiveResult = scheduleGoalRecursively(logger, goal, intervals.slice(middle), remainingCommitment, scheduledDayLookup);
+  remainingCommitment -= recursiveResult.duration;
+  schedule.push(...recursiveResult.scheduled);
+  return { scheduled: schedule, duration: originalRemainingCommitment - remainingCommitment };
+}
+
+interface IntervalsState {
+  freeIntervals: Interval<dayjs.Dayjs>[];
+  freeWorkIntervals: Interval<dayjs.Dayjs>[];
+  score: number;
+}
+
+function splitIntervals(goal: ScheduleableGoal, intervals: IntervalWithScore<dayjs.Dayjs>[]): IntervalWithScore<dayjs.Dayjs>[] {
+  const minDuration = goal.minimumTime;
+  const maxDuration = goal.maximumTime;
+  const result: IntervalWithScore<dayjs.Dayjs>[] = [];
+  for (const interval of intervals) {
+    const intervalDuration = interval.end.diff(interval.start, 'minutes');
+    const optimalDuration = Math.min(maxDuration, Math.max(minDuration, Math.floor(goal.remainingCommitment / 10) * 5));
+    const offset = (intervalDuration - optimalDuration) / 2;
+    result.push({
+      start: interval.start,
+      end: interval.start.add(offset + optimalDuration, 'minute'),
+      score: interval.score,
+    });
+  }
+  return result;
+}
+
+function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: IntervalWithScore<dayjs.Dayjs>[], freeWorkIntervals: IntervalWithScore<dayjs.Dayjs>[]): Array<GoalEvent<dayjs.Dayjs>> {
+  const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];
+  const preferredTimes = goal.preferredTimes.map(interval => ({
+    start: dayjs(interval.start),
+    end: dayjs(interval.end),
+  }));
+
+  const preferredIntervals: IntervalsState[] = [];
+  let currentFreeIndex = 0;
+  let currentWorkIndex = 0;
+  let nextFreeIndex = -1;
+  let nextWorkIndex = -1;
+  do {
+    const currentFree = currentFreeIndex < freeIntervals.length ? freeIntervals[currentFreeIndex] : undefined; // TODO: Check if undefined
+    const currentWork = currentWorkIndex < freeWorkIntervals.length ? freeWorkIntervals[currentWorkIndex] : undefined; // TODO: Check if undefined
+    if (!currentFree && !currentWork) {
+      break;
+    }
+    const currentHighScore = Math.max(currentFree?.score ?? 0, currentWork?.score ?? 0);
+    nextFreeIndex = freeIntervals.findIndex(interval => interval.score < currentHighScore);
+    nextWorkIndex = freeWorkIntervals.findIndex(interval => interval.score < currentHighScore);
+    const sameScoreFreeIntervals = currentFree ? freeIntervals.slice(currentFreeIndex, nextFreeIndex === -1 ? freeIntervals.length : nextFreeIndex) : [];
+    const sameScoreWorkIntervals = currentFree ? freeWorkIntervals.slice(currentWorkIndex, nextWorkIndex === -1 ? freeWorkIntervals.length : nextWorkIndex) : [];
+    if (sameScoreFreeIntervals.length <= 0 && sameScoreWorkIntervals.length <= 0) {
+      continue;
+    }
+    const firstInterval = sameScoreFreeIntervals.length > 0 ? sameScoreFreeIntervals[0] : sameScoreWorkIntervals[0];
+    const preferredFreeIntervals: Interval<dayjs.Dayjs>[] = []
+    const preferredWorkIntervals: Interval<dayjs.Dayjs>[] = []
+    iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, sameScoreFreeIntervals, sameScoreWorkIntervals, firstInterval, (intersection, duringWork) => {
+      logger.info(`Score: ${currentHighScore} interval: ${intersection.start.format(DATE_TIME_FORMAT)} - ${intersection.end.format(DATE_TIME_FORMAT)} - ${duringWork}`);
+      if (duringWork) {
+        preferredWorkIntervals.push(intersection);
+      } else {
+        preferredFreeIntervals.push(intersection);
+      }
+    });
+    preferredIntervals.push({
+      freeIntervals: preferredFreeIntervals,
+      freeWorkIntervals: preferredWorkIntervals,
+      score: currentHighScore,
+    });
+    currentFreeIndex = nextFreeIndex;
+    currentWorkIndex = nextWorkIndex;
+  } while (nextFreeIndex !== -1 || nextWorkIndex !== -1);
+
+  let remainingCommitment = Math.floor(goal.remainingCommitment * 60);
+  const scheduledDayLookup: Record<string, boolean> = {};
+  for (const { freeIntervals, freeWorkIntervals, score } of preferredIntervals) {
+    if (goal.canDoDuringWork) {
+      logger.info(`Scheduling goal ${goal.title} during work intervals with score ${score} and remaining commitment ${remainingCommitment}`);
+      let { scheduled, duration } = scheduleGoalRecursively(logger, goal, freeWorkIntervals.slice(0, 1), remainingCommitment, scheduledDayLookup);
+      remainingCommitment -= duration;
+      schedule.push(...scheduled);
+      logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+      if (remainingCommitment <= 0) return schedule;
+      if (freeWorkIntervals.length > 1) {
+        ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, freeWorkIntervals.slice(-1), remainingCommitment, scheduledDayLookup));
+        remainingCommitment -= duration;
+        schedule.push(...scheduled);
+        logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+      }
+      if (remainingCommitment <= 0) return schedule;
+      if (freeWorkIntervals.length > 2) {
+        ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, freeWorkIntervals.slice(1, -1), remainingCommitment, scheduledDayLookup));
+        remainingCommitment -= duration;
+        schedule.push(...scheduled);
+        logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+      }
+      if (remainingCommitment <= 0) return schedule;
+    }
+    logger.info(`Scheduling goal ${goal.title} during free intervals with score ${score} and remaining commitment ${remainingCommitment}`);
+    let { scheduled, duration } = scheduleGoalRecursively(logger, goal, freeIntervals.slice(0, 1), remainingCommitment, scheduledDayLookup);
+    remainingCommitment -= duration;
+    schedule.push(...scheduled);
+    logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+    if (remainingCommitment <= 0) return schedule;
+    if (freeIntervals.length > 1) {
+      ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, freeIntervals.slice(-1), remainingCommitment, scheduledDayLookup));
+      remainingCommitment -= duration;
+      schedule.push(...scheduled);
+      logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+    }
+    if (remainingCommitment <= 0) return schedule;
+    if (freeIntervals.length > 2) {
+      ({ scheduled, duration } = scheduleGoalRecursively(logger, goal, freeIntervals.slice(1, -1), remainingCommitment, scheduledDayLookup));
+      remainingCommitment -= duration;
+      schedule.push(...scheduled);
+      logger.info(`Schedule updated with duration ${duration} and remaining commitment ${remainingCommitment} - ${scheduled.length} events`);
+    }
+    if (remainingCommitment <= 0) return schedule;
+  }
+  return schedule;
 }
