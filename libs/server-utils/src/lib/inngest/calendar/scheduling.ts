@@ -310,8 +310,8 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   logger: Logger,
   canDoDuringWork: boolean,
   preferredTimes: Interval<dayjs.Dayjs>[],
-  freeIntervals: T[],
-  freeWorkIntervals: T[],
+  freeIntervals: T[] | null,
+  freeWorkIntervals: T[] | null,
   timeframe: Interval<dayjs.Dayjs>,
   callback: (intersection: T, duringWork: boolean) => void,
 ): void {
@@ -320,6 +320,18 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
       start: time.start.year(day.year()).month(day.month()).date(day.date()),
       end: time.end.year(day.year()).month(day.month()).date(day.date()),
     }));
+  }
+  if (!freeIntervals || !freeWorkIntervals) {
+    if (freeIntervals || freeWorkIntervals) {
+      throw new Error('Invariant: freeIntervals or freeWorkIntervals is null during iteration over preferred times');
+    }
+    let currentDay = timeframe.start;
+    while (currentDay.isBefore(timeframe.end) || currentDay.isSame(timeframe.end, 'day')) {
+      const preferredTimesToday = getPreferredTimesForDay(currentDay);
+      preferredTimesToday.forEach(preferredTime => callback(preferredTime as T, false));
+      currentDay = currentDay.add(1, 'day');
+    }
+    return;
   }
   let preferredTimesToday: Interval<dayjs.Dayjs>[] = getPreferredTimesForDay(timeframe.start);
   let currentDay = timeframe.start.date();
@@ -350,12 +362,96 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
 }
 
 /**
- * Get the remaining commitment for a goal for a given period.
+ * Get the remaining commitment for a goal for a given period, this does not take into account the amount completed.
  * @param goal - The goal to get the remaining commitment for.
  * @param timeframe - The timeframe to get the remaining commitment for.
  * @returns The remaining commitment for the goal for the given period.
  */
 function getRemainingCommitmentForPeriod(
+  logger: Logger,
+  goal: Goal,
+  preferredTimes: Interval<dayjs.Dayjs>[],
+  freeIntervals: Interval<dayjs.Dayjs>[],
+  freeWorkIntervals: Interval<dayjs.Dayjs>[],
+  timeframe: Interval<dayjs.Dayjs>,
+  fullSyncTimeframe: Interval<dayjs.Dayjs>,
+): number {
+  if (!goal.allowMultiplePerDay) {
+    const daysBetween = timeframe.end.diff(timeframe.start, 'days');
+    const maxDuration = daysBetween * goal.maximumTime;
+    return Math.floor(maxDuration / 5) * 5 / 60;
+  }
+  const priorityRestFactor = goal.priority === 'High' ? 1 : goal.priority === 'Medium' ? 0.985 : 0.95;
+  let remainingMinutesThisPeriod = 0;
+  iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, timeframe, (intersection, duringWork) => {
+    if (duringWork && goal.canDoDuringWork) {
+      remainingMinutesThisPeriod += intersection.end.diff(intersection.start, 'minutes');
+    } else if (!duringWork) {
+      remainingMinutesThisPeriod += intersection.end.diff(intersection.start, 'minutes');
+    }
+  });
+  const getScalingFactor = (timeframe: Interval<dayjs.Dayjs>) => {
+    const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
+    const scalingFactor = Math.pow(0.95, daysBetween); // The more days between, the higher likelihood that we are accounting for non-free intervals
+    logger.info(`Scaling factor for ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}: ${scalingFactor}`);
+    return scalingFactor;
+  }
+  if (goal.commitment) {
+    const periodScalingFactor = getScalingFactor(fullSyncTimeframe);
+    let totalMinutesThisPeriod = 0;
+    iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, null, null, fullSyncTimeframe, (intersection, duringWork) => {
+      if (duringWork && goal.canDoDuringWork) {
+        totalMinutesThisPeriod += intersection.end.diff(intersection.start, 'minutes');
+      } else if (!duringWork) {
+        totalMinutesThisPeriod += intersection.end.diff(intersection.start, 'minutes');
+      }
+    });
+    logger.info(`Remaining minutes this period: ${remainingMinutesThisPeriod}`);
+    logger.info(`Total minutes this period: ${totalMinutesThisPeriod * periodScalingFactor}`);
+    const adjustmentFactor = remainingMinutesThisPeriod / totalMinutesThisPeriod * periodScalingFactor;
+    logger.info(`Adjustment factor: ${adjustmentFactor}`);
+    const amountToComplete = (goal.commitment - goal.completed) * 60;
+    logger.info(`Amount to complete: ${amountToComplete}`);
+    const minutesToComplete = Math.ceil(adjustmentFactor * priorityRestFactor * amountToComplete / 5) * 5;
+    logger.info(`Minutes to complete: ${minutesToComplete}`);
+    return Math.max(goal.minimumTime, minutesToComplete) / 60;
+  }
+  const start = dayjs(goal.createdAt);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const end = dayjs(goal.deadline!)
+  let minutesSoFar = 0;
+  iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, { start, end: timeframe.start }, (intersection, duringWork) => {
+    if (duringWork && goal.canDoDuringWork) {
+      minutesSoFar += intersection.end.diff(intersection.start, 'minutes');
+    } else if (!duringWork) {
+      minutesSoFar += intersection.end.diff(intersection.start, 'minutes');
+    }
+  });
+  let totalMinutes = 0;
+  iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, { start, end }, (intersection, duringWork) => {
+    if (duringWork && goal.canDoDuringWork) {
+      totalMinutes += intersection.end.diff(intersection.start, 'minutes');
+    } else if (!duringWork) {
+      totalMinutes += intersection.end.diff(intersection.start, 'minutes');
+    }
+  });
+  const previousPeriodScalingFactor = getScalingFactor({ start, end: timeframe.start });
+  const totalScalingFactor = getScalingFactor({ start, end });
+  const remainingMinutes = totalMinutes * totalScalingFactor - minutesSoFar * previousPeriodScalingFactor;
+  const adjustmentFactor = remainingMinutesThisPeriod / remainingMinutes;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const amountToComplete = (goal.estimate! - goal.completed) * 60;
+  const minutesToComplete = Math.floor(adjustmentFactor * priorityRestFactor * amountToComplete / 5) * 5;
+  return Math.max(goal.minimumTime, Math.min(minutesToComplete, remainingMinutes)) / 60;
+}
+
+/**
+ * Get the remaining commitment for a goal for a given period, this tries to catch up on the goal if running behind.
+ * @param goal - The goal to get the remaining commitment for.
+ * @param timeframe - The timeframe to get the remaining commitment for.
+ * @returns The remaining commitment for the goal for the given period.
+ */
+export function getRemainingCommitmentForCatchup(
   logger: Logger,
   goal: Goal,
   preferredTimes: Interval<dayjs.Dayjs>[],
@@ -410,7 +506,7 @@ export const scheduleGoalEvents = inngest.createFunction(
     logger.info('Scheduling goal events');
     const { userId } = event.data;
     const { data, interval, goalMap, externalEvents, timezone } = await step.run('get-scheduling-data', async () => {
-      const { goals, interval, profile, schedule } = await getSchedulingData(userId);
+      const { goals, interval, profile, schedule, fullSyncTimeframe } = await getSchedulingData(userId);
       const { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
       logger.info(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
       // freeIntervals.map(interval => logger.info(`Free interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
@@ -456,7 +552,15 @@ export const scheduleGoalEvents = inngest.createFunction(
                   start: time.start.format(DATE_TIME_FORMAT),
                   end: time.end.format(DATE_TIME_FORMAT),
                 })),
-                remainingCommitment: getRemainingCommitmentForPeriod(logger, goal, preferredTimes, dayJsFreeIntervals, dayJsFreeWorkIntervals, timeframe),
+                remainingCommitment: getRemainingCommitmentForPeriod(
+                  logger,
+                  goal,
+                  preferredTimes,
+                  dayJsFreeIntervals,
+                  dayJsFreeWorkIntervals,
+                  timeframe,
+                  fullSyncTimeframe,
+                ),
                 minimumTime: goal.minimumTime,
                 maximumTime: goal.maximumTime,
             }
@@ -563,8 +667,8 @@ export const scheduleGoalEvents = inngest.createFunction(
       const splitFreeWorkIntervals = splitIntervals(logger, goal, filteredFreeWorkIntervals);
       const sortedFreeWorkIntervals = splitFreeWorkIntervals.sort(sortIntervals);
 
-      logger.info(`${sortedFreeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of filtered free intervals:\n${sortedFreeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
-      logger.info(`${sortedFreeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of filtered free work intervals:\n${sortedFreeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      logger.info(`${sortedFreeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of allowed free intervals:\n${sortedFreeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      logger.info(`${sortedFreeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of allowed free work intervals:\n${sortedFreeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
 
       const intervals = scheduleGoal(
         logger,

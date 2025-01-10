@@ -57,6 +57,7 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   profile: UserProfile;
   goals: Goal[];
   interval: Interval;
+  fullSyncTimeframe: Interval<dayjs.Dayjs>;
 }> {
   const prisma = await getPrismaClient(userId);
   const googleAuthPromise = prisma.googleAuth.findUnique({
@@ -80,6 +81,10 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   const now = dayjs.tz(new Date(), profile.timezone);
   const start = getNextQuarterHour(now).toDate();
   const nextFullSync = getNextFullSync(lastFullSync, profile.timezone);
+  const fullSyncTimeframe = {
+    start: lastFullSync,
+    end: nextFullSync,
+  };
   const end = nextFullSync.add(1, 'hour').toDate();
   const schedule = await prisma.calendarEvent.findMany({
     where: {
@@ -122,7 +127,7 @@ export async function getSchedulingData(userId: User['id']): Promise<{
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     end: endTime ? dayjs.tz(endTime, profile.timezone) : dayjs.tz(rest.allDay!, profile.timezone).endOf('day'),
   }));
-  return { schedule: events, profile, goals, interval: { start, end } };
+  return { schedule: events, profile, goals, interval: { start, end }, fullSyncTimeframe };
 }
 
 export async function deleteGoalEvents(userId: User['id'], interval: Interval<string>): Promise<string[]> {
