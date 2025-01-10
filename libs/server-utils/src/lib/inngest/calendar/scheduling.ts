@@ -408,7 +408,7 @@ function getRemainingCommitmentForPeriod(
     });
     logger.info(`Remaining minutes this period: ${remainingMinutesThisPeriod}`);
     logger.info(`Total minutes this period: ${totalMinutesThisPeriod * periodScalingFactor}`);
-    const adjustmentFactor = remainingMinutesThisPeriod / totalMinutesThisPeriod * periodScalingFactor;
+    const adjustmentFactor = Math.min(1, remainingMinutesThisPeriod / totalMinutesThisPeriod * periodScalingFactor);
     logger.info(`Adjustment factor: ${adjustmentFactor}`);
     const amountToComplete = (goal.commitment - goal.completed) * 60;
     logger.info(`Amount to complete: ${amountToComplete}`);
@@ -438,7 +438,7 @@ function getRemainingCommitmentForPeriod(
   const previousPeriodScalingFactor = getScalingFactor({ start, end: timeframe.start });
   const totalScalingFactor = getScalingFactor({ start, end });
   const remainingMinutes = totalMinutes * totalScalingFactor - minutesSoFar * previousPeriodScalingFactor;
-  const adjustmentFactor = remainingMinutesThisPeriod / remainingMinutes;
+  const adjustmentFactor = Math.min(1, remainingMinutesThisPeriod / remainingMinutes);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const amountToComplete = (goal.estimate! - goal.completed) * 60;
   const minutesToComplete = Math.floor(adjustmentFactor * priorityRestFactor * amountToComplete / 5) * 5;
