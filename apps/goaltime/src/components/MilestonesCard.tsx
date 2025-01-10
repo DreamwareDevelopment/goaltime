@@ -72,9 +72,11 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
           <MilestoneCreationForm key={`${goalId}-${view}-creation`} goalId={goalId} userId={userId} view={view} />
         </ul>
       </CardContent>
-      <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
-        <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
-      </CardFooter>
+      { milestones.length > 0 &&
+        <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
+          <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
+        </CardFooter>
+      }
     </Card>
   )
 } 

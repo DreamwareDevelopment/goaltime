@@ -22,8 +22,8 @@ export function GoalProgressCard() {
 
   return (
     <ScrollArea className="h-full w-full">
-      <CardHeader>
-        <CardTitle>Goals</CardTitle>
+      <CardHeader className="py-2">
+        <CardTitle className="text-xl">Goals</CardTitle>
         <CardDescription>Your current goals and progress</CardDescription>
       </CardHeader>
       <CardContent>

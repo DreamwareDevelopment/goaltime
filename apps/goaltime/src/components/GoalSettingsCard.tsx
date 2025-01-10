@@ -12,7 +12,7 @@ import { MaximumTimeInput, MinimumTimeInput, PreferredTimes } from './Settings/T
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
 import { AllowMultiplePerDayCheckbox, CanDoDuringWorkCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
-import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
 import { getDistinctColor } from '@/libs/shared/src'
@@ -190,7 +190,7 @@ export function GoalSettingsCard({
               Are you sure you want to delete this goal? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-4">
             <Button className={isDeleting ? "hidden" : ""} variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
@@ -247,7 +247,7 @@ export function GoalSettingsCard({
                       Delete Goal
                     </ShinyButton>
                   )}
-                  <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[34px] md:h-[51px] text-white" style={{ backgroundColor: form.watch('color') }}>
+                  <ShinyButton variant="gooeyLeft" className="flex-1 max-w-[707px] ml-[2px] h-[34px] sm:h-[51px] text-white" style={{ backgroundColor: form.watch('color') }}>
                     {isSubmitting || isValidating ? 
                       <LoadingSpinner className="h-4 w-4" /> : 
                       "Save Goal"

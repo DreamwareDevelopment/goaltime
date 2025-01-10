@@ -51,10 +51,10 @@ export default async function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-6">
-                <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild>
+                <ShinyButton className="h-[34px] sm:h-[51px]" variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild>
                   <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Start Free Trial</Link>
                 </ShinyButton>
-                <ShinyButton variant="expandIcon" Icon={Play} iconPlacement="right" asChild className="bg-accent hover:bg-accent/80 text-accent-foreground h-[63px]">
+                <ShinyButton variant="expandIcon" Icon={Play} iconPlacement="right" asChild className="bg-accent hover:bg-accent/80 text-accent-foreground h-[36px] sm:h-[53px]">
                   <Link href="/demo">Watch Demo</Link>
                 </ShinyButton>
               </div>

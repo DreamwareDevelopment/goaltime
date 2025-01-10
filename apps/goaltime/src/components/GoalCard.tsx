@@ -17,21 +17,21 @@ import { useValtio } from "./data/valtio";
 
 const PlateEditor = dynamic(() => import('./plate-ui/plate-editor.tsx').then(mod => mod.PlateEditor), {
   loading: () => (
-    <div className="w-full h-full flex justify-center items-center">
+    <div className="w-full h-full flex justify-center items-center pt-2">
       <LoadingSpinner />
     </div>
   )
 })
 const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.MilestonesCard), {
   loading: () => (
-    <div className="w-full h-full flex justify-center items-center">
+    <div className="w-full h-full flex justify-center items-center pt-2">
       <LoadingSpinner />
     </div>
   )
 })
 const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod => mod.GoalSettingsCard), {
   loading: () => (
-    <div className="w-full h-full flex justify-center items-center">
+    <div className="w-full h-full flex justify-center items-center pt-2">
       <LoadingSpinner />
     </div>
   )
@@ -73,7 +73,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
           <AccordionContent className="w-full h-full">
             <Tabs defaultValue="daily" className="w-full flex flex-col items-center">
-              <div className="w-full px-4 md:pl-6 md:pr-8">
+              <div className="w-full p-2 sm:px-6 pb-2 pt-0">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="daily">Today</TabsTrigger>
                   <TabsTrigger value="lifetime">Lifetime</TabsTrigger>
@@ -96,8 +96,8 @@ export function GoalCard({ goal, className }: GoalCardProps) {
           <AccordionTrigger className="text-xl font-bold px-8">
             <span>Today&apos;s Notes</span>
           </AccordionTrigger>
-          <AccordionContent className="p-6 pt-0">
-            <div className="h-full w-full" data-registry="plate">
+          <AccordionContent className="px-4 pt-0">
+            <div className="h-full w-full bg-secondary-foreground px-2 pb-2" data-registry="plate">
               <PlateEditor key={goal.id} />
             </div>
           </AccordionContent>
@@ -107,7 +107,7 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         </div>
         <AccordionItem value="settings" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
-          <AccordionContent className="p-6 pt-0">
+          <AccordionContent className="p-2 sm:px-6 pb-2 pt-0">
             <GoalSettingsCard
               goal={getMutableGoal(goal, notifications)}
               handleSubmit={handleSubmit}
