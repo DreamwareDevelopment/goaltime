@@ -3,6 +3,7 @@ import { generateText, tool } from 'ai';
 import { z } from "zod";
 import { DATE_TIME_FORMAT, Interval } from '../../calendar/scheduling';
 import { dayjs } from '@/shared/utils';
+import { Logger } from 'inngest/middleware/logger';
 
 export const IntervalSchema = z.object({
   start: z.string().describe('The start time of the interval in YYYY-MM-DD HH:mm format'),
@@ -22,20 +23,25 @@ export const WakeUpOrSleepEventSchema = z.object({
   start: z.string().describe('The time to wake up or sleep on a given day in YYYY-MM-DD HH:mm format'),
 });
 
-export const ScheduleableGoalSchema = z.object({
-  id: z.string().describe('The unique identifier for the goal'),
+export const MinimalScheduleableGoalSchema = z.object({
   title: z.string().describe('The title of the goal'),
   description: z.string().describe('The description of the goal'),
+  allowMultiplePerDay: z.boolean().describe('If the goal allows multiple sessions in a day'),
+  canDoDuringWork: z.boolean().describe('If the goal can also be done during work hours'),
+  minimumTime: z.number().describe('The minimum time in minutes that the goal can be scheduled for'),
+  maximumTime: z.number().describe('The maximum time in minutes that the goal can be scheduled for'),
+});
+
+export type MinimalScheduleableGoal = z.infer<typeof MinimalScheduleableGoalSchema>;
+
+export const ScheduleableGoalSchema = MinimalScheduleableGoalSchema.extend({
+  id: z.string().describe('The unique identifier for the goal'),
   remainingCommitment: z.number().describe('The remaining time commitment in hours to be scheduled over the period of the free intervals'),
   priority: z.enum(['High', 'Medium', 'Low']).describe('The priority of the goal'),
   preferredTimes: z.array(z.object({
     start: z.string().describe('The start time of the preferred time interval in HH:mm format'),
     end: z.string().describe('The end time of the preferred time interval in HH:mm format'),
   })).describe('The preferred times for the goal'),
-  allowMultiplePerDay: z.boolean().describe('If the goal allows multiple sessions in a day'),
-  canDoDuringWork: z.boolean().describe('If the goal can also be done during work hours'),
-  minimumTime: z.number().describe('The minimum time in minutes that the goal can be scheduled for'),
-  maximumTime: z.number().describe('The maximum time in minutes that the goal can be scheduled for'),
 })
 
 export type ScheduleableGoal = z.infer<typeof ScheduleableGoalSchema>;
@@ -208,8 +214,9 @@ function serializeEvent(event: ExternalEvent<string>): ExternalEvent<dayjs.Dayjs
 }
 
 export async function scoreIntervals(
+  logger: Logger,
   instructions: string,
-  goal: ScheduleableGoal,
+  goal: MinimalScheduleableGoal,
   freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
   freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[],
   wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
@@ -287,22 +294,23 @@ export async function scoreIntervals(
     end: event.end.format(DATE_TIME_FORMAT),
   }));
 
-  const intervalsWithExplanations: Array<{ interval: TypedIntervalWithScore<string>; explanation: string }> = [];
-  for (let i = 1; i < sortedStringEvents.length - 1; i++) {
+  // logger.info(`Sorted string events: ${sortedStringEvents.map(event => `${event.start} - ${(event as any).end ?? ''}`).join(', ')}`);
+
+  for (let i = 1; i < sortedStringEvents.length; i++) {
     const current = sortedStringEvents[i];
     if (isExternalEvent(current) || isWakeUpOrSleepEvent(current) || isGoalEvent(current)) {
       continue;
     }
     const previous = sortedStringEvents[i - 1];
-    const next = sortedStringEvents[i + 1];
+    const next = i === sortedStringEvents.length - 1 ? null : sortedStringEvents[i + 1];
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const allDayEventsToday = allDayEvents.filter(event => dayjs(event.allDay!).isSame(current.start, 'day')).map(event => ({
       ...event,
       start: event.start.format(DATE_TIME_FORMAT),
       end: event.end.format(DATE_TIME_FORMAT),
     })) as ExternalEvent<string>[];
+    // logger.info(`Scoring interval ${current.start} - ${current.end}`);
     const scoredIntervals = await scoreInterval(instructions, goal, current, previous, next, allDayEventsToday);
-    intervalsWithExplanations.push(...scoredIntervals);
     for (const interval of scoredIntervals) {
       if (interval.interval.type === 'work') {
         scoredFreeWorkIntervals.push(interval);
@@ -332,17 +340,12 @@ Some example inputs:
 {
   allDayEvents: [],
   goal: {
-    id: "<goal-id>",
-    title: "Meditate more often",
-    description: "Meditation is a great way to clear your mind and focus on the present moment.",
-    remainingCommitment: 1.5,
-    priority: "High",
-    preferredTimes: [
-      { start: "5:00", end: "8:00" },
-      { start: "20:00", end: "23:00" },
-    ],
+    title: "Work on the project",
+    description: "Work on the project for my company",
     allowMultiplePerDay: false,
-    canDoDuringWork: false,
+    canDoDuringWork: true,
+    minimumTime: 90, // 90 minutes
+    maximumTime: 120, // 120 minutes
   },
   previous: {
     start: "2025-01-01 7:00",
@@ -369,14 +372,10 @@ Some example inputs:
     id: "<goal-id>",
     title: "Meditate more often",
     description: "Meditation is a great way to clear your mind and focus on the present moment.",
-    remainingCommitment: 1.5,
-    priority: "High",
-    preferredTimes: [
-      { start: "5:00", end: "8:00" },
-      { start: "20:00", end: "23:00" },
-    ],
     allowMultiplePerDay: false,
     canDoDuringWork: false,
+    minimumTime: 10, // 10 minutes
+    maximumTime: 20, // 20 minutes
   },
   previous: {
     goalId: "<goal-id>",
@@ -404,12 +403,11 @@ Here are some guidelines for scoring:
 - The intervals have a "type" field indicating whether they are free or work intervals, do not drop this information.
 - All intervals use the same YYYY-MM-DD HH:mm format for the "start" and "end" fields.
 - Given intervals all start with a score of 0.
-- If the current interval is during work hours and the goal cannot be done during work hours as shown by the "canDoDuringWork" field, it should get a score of -1.
-- If the current interval is outside of work hours and the goal can only be done during work hours as shown by the "canDoDuringWork" field, it should get a lower score, but not necessarily negative.
 - If the current interval is a good time to complete the goal, it should get a positive score.
 - If the current interval is a bad time to complete the goal, it should get a negative score.
 - If you don't have enough information to make a judgement, you should return a score of 0.
-- If the interval may have a portion that seems like a bad time, please split it into two intervals and score them separately.
+
+Here are some additional guidelines to consider:
 
 ${instructions}
 
@@ -420,10 +418,10 @@ Return the scored intervals in the "intervals" field using the answer tool.
 
 async function scoreInterval(
   instructions: string,
-  goal: ScheduleableGoal,
+  goal: MinimalScheduleableGoal,
   current: TypedIntervalWithScore<string>,
   previous: ScheduleEvent<string>,
-  next: ScheduleEvent<string>,
+  next: ScheduleEvent<string> | null,
   allDayEvents: ExternalEvent<string>[],
 ): Promise<Array<{ interval: TypedIntervalWithScore<string>; explanation: string }>> {
   const response = await generateText({
@@ -444,21 +442,6 @@ async function scoreInterval(
           })).describe('An explanation of the scoring for each interval'),
         }),
       }),
-      splitInterval: tool({
-        description: 'A tool for splitting an interval into two intervals',
-        parameters: z.object({
-          interval: TypedIntervalWithScoreSchema.describe('The interval to split'),
-          splitAt: z.string().describe('The time to split the interval at in YYYY-MM-DD HH:mm format'),
-        }),
-        execute: async ({ interval, splitAt }) => {
-          // console.log(`splitting interval ${interval.start} - ${interval.end} at ${splitAt}`);
-          const splitAtDayjs = dayjs(splitAt);
-          return [
-            { start: interval.start, end: splitAtDayjs.format(DATE_TIME_FORMAT) },
-            { start: splitAtDayjs.format(DATE_TIME_FORMAT), end: interval.end },
-          ];
-        },
-      }),
     },
   });
   const answerCall = response.toolCalls.find(call => call.toolName === 'answer');
@@ -478,22 +461,21 @@ These events should be used to infer the user's location / situation and whether
 The scheduling assistant should consider the following when scoring an interval:
 
 1. The goal's title and description to understand the nature of the activity.
-2. The previous and next events to determine if the user might be busy or in transit during the current interval.
-3. The duration of the previous and next events, as the user may need buffer time before or after those events.
-4. The location of the previous and next events, as the user may need travel time between locations.
-5. The type of the previous and next events (e.g., work, personal, exercise) to understand the user's potential state of mind or physical condition.
+2. Whether the goal allows multiple sessions in a day.
+3. The nature of the previous and next events to determine if the user might be busy or in transit or in an inappropriate setting during the current interval.
+4. The type of the previous and next events (e.g., work, personal, exercise) to understand the user's potential state of mind or physical condition.
+5. The location of the previous and next events, as the user may need travel time between locations.
 6. Any additional context provided in the title or description of the previous and next events.
 
-You should also consider telling the scheduling assistant how to spread out the goal activity sessions if it seems necessary for the user to have some rest or buffer time between sessions.
 You are given the calendar events and names of previously scheduled goal events to help you advice the scheduling assistant on what to look out for regarding scheduling the given goal in context of the other events.
-For example, if there are events like "Flight to New York" or "Exercise Regularly" in the schedule, you should inform the scheduling assistant to be aware of the user's travel time and the user's physical condition before scoring an interval.
+For example, if there are events like "Flight to New York" or "Exercise Regularly" in the schedule, you should inform the scheduling assistant to be aware of the user's situation during and between those events.
 
 You are speaking directly to the scheduling assistant, so use "you" instead of "the scheduling assistant".
 This is a one time immediate operation, so don't tell the scheduling assistant to look out for changes in the future.
 `
 
 export async function getGoalScoringInstructions(
-  goal: ScheduleableGoal,
+  goal: MinimalScheduleableGoal,
   previouslyScheduledGoalEvents: string[],
   calendarEvents: ExternalEvent<string>[],
 ): Promise<string> {
@@ -503,11 +485,7 @@ export async function getGoalScoringInstructions(
       currentGoal: {
         title: goal.title,
         description: goal.description,
-        preferredTimes: goal.preferredTimes,
         allowMultiplePerDay: goal.allowMultiplePerDay,
-        canDoDuringWork: goal.canDoDuringWork,
-        minimumTime: goal.minimumTime,
-        maximumTime: goal.maximumTime,
       },
       calendarEvents,
       previouslyScheduledGoalEvents,

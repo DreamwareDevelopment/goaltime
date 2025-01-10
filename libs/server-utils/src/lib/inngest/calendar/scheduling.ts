@@ -5,7 +5,7 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
 import { PreferredTimesEnumType } from "@/shared/zod";
-import { ExternalEvent, getGoalScoringInstructions, GoalEvent, IntervalWithScore, ScheduleableGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { ExternalEvent, getGoalScoringInstructions, GoalEvent, IntervalWithScore, MinimalScheduleableGoal, ScheduleableGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
 
 export interface Interval<T = Date> {
   start: T;
@@ -502,7 +502,15 @@ export const scheduleGoalEvents = inngest.createFunction(
     logger.info(`Scheduling ${data.goals.length} goals...`, data.goals.map(goal => goal.title));
     const goalsScheduledSoFar: string[] = [];
     for (const goal of data.goals) {
-      const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, goal, goalsScheduledSoFar, externalEvents);
+      const minimalGoal: MinimalScheduleableGoal = {
+        title: goal.title,
+        description: goal.description,
+        allowMultiplePerDay: goal.allowMultiplePerDay,
+        canDoDuringWork: goal.canDoDuringWork,
+        minimumTime: goal.minimumTime,
+        maximumTime: goal.maximumTime,
+      }
+      const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, minimalGoal, goalsScheduledSoFar, externalEvents);
       logger.info(`${instructions}`);
 
       const preferredTimes: Interval<dayjs.Dayjs>[] = goal.preferredTimes.map(time => ({
@@ -519,8 +527,9 @@ export const scheduleGoalEvents = inngest.createFunction(
       const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap(
         'score-intervals',
         scoreIntervals,
+        logger,
         instructions,
-        goal,
+        minimalGoal,
         preferredFreeIntervals,
         preferredFreeWorkIntervals,
         data.wakeUpOrSleepEvents,
@@ -734,9 +743,9 @@ function scheduleGoalBFS(
         queue.push({ intervals: intervals.slice(0, middle), remainingCommitment: updatedRemainingCommitment });
         queue.push({ intervals: intervals.slice(middle + 1), remainingCommitment: updatedRemainingCommitment });
       } else if (intervals.length === 2) {
-        queue.push({ intervals: [intervals[0]], remainingCommitment: updatedRemainingCommitment });
+        // We just scheduled the interval at 0, so we need to schedule the interval at 1
         queue.push({ intervals: [intervals[1]], remainingCommitment: updatedRemainingCommitment });
-      }
+      } // If there is only one interval, we don't need to schedule it again
     }
   }
 
