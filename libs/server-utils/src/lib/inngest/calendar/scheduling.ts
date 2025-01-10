@@ -743,8 +743,8 @@ function scheduleGoalBFS(
         queue.push({ intervals: intervals.slice(0, middle), remainingCommitment: updatedRemainingCommitment });
         queue.push({ intervals: intervals.slice(middle + 1), remainingCommitment: updatedRemainingCommitment });
       } else if (intervals.length === 2) {
-        // We just scheduled the interval at 0, so we need to schedule the interval at 1
-        queue.push({ intervals: [intervals[1]], remainingCommitment: updatedRemainingCommitment });
+        // We just scheduled the interval at 1, so we need to schedule the interval at 0
+        queue.push({ intervals: [intervals[0]], remainingCommitment: updatedRemainingCommitment });
       } // If there is only one interval, we don't need to schedule it again
     }
   }
