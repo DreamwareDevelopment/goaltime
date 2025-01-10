@@ -865,10 +865,9 @@ interface IntervalsState {
   score: number;
 }
 
-// TODO: Get the break duration from the goal
 const DEFAULT_BREAK_DURATION = 10;
 
-function splitInterval(logger: Logger, interval: IntervalWithScore<dayjs.Dayjs>, durations: number[]): IntervalWithScore<dayjs.Dayjs>[] {
+function splitInterval(logger: Logger, interval: IntervalWithScore<dayjs.Dayjs>, durations: number[], breakDuration: number): IntervalWithScore<dayjs.Dayjs>[] {
   const intervals: IntervalWithScore<dayjs.Dayjs>[] = [];
   let currentStart = interval.start;
 
@@ -885,7 +884,7 @@ function splitInterval(logger: Logger, interval: IntervalWithScore<dayjs.Dayjs>,
       continue;
     }
     intervals.push({ start: currentStart, end, score: i === 1 ? interval.score : -0.5 });
-    currentStart = end.add(DEFAULT_BREAK_DURATION, 'minutes');
+    currentStart = end.add(breakDuration, 'minutes');
   }
 
   return intervals;
@@ -896,24 +895,25 @@ function splitIntervals(
   goal: ScheduleableGoal,
   intervals: IntervalWithScore<dayjs.Dayjs>[]
 ): IntervalWithScore<dayjs.Dayjs>[] {
+  const breakDuration = goal.breakDuration ?? DEFAULT_BREAK_DURATION;
   const minDuration = Math.ceil(goal.minimumTime / 5) * 5;
   const maxDuration = Math.floor(goal.maximumTime / 5) * 5;
   const result: IntervalWithScore<dayjs.Dayjs>[] = [];
   for (const interval of intervals) {
     let intervalDuration = interval.end.diff(interval.start, 'minutes');
     logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is ${intervalDuration} minutes long`);
-    if (intervalDuration >= maxDuration + minDuration + DEFAULT_BREAK_DURATION) {
+    if (intervalDuration >= maxDuration + minDuration + breakDuration) {
       const splitDurations = [maxDuration]
       intervalDuration -= maxDuration;
-      while (intervalDuration >= maxDuration + DEFAULT_BREAK_DURATION ) {
+      while (intervalDuration >= maxDuration + breakDuration) {
         splitDurations.push(maxDuration);
-        intervalDuration -= (maxDuration + DEFAULT_BREAK_DURATION);
+        intervalDuration -= (maxDuration + breakDuration);
       }
-      if (intervalDuration >= minDuration + DEFAULT_BREAK_DURATION) {
-        splitDurations.push(intervalDuration - DEFAULT_BREAK_DURATION);
+      if (intervalDuration >= minDuration + breakDuration) {
+        splitDurations.push(intervalDuration - breakDuration);
       }
       
-      const splitIntervals = splitInterval(logger, interval, splitDurations);
+      const splitIntervals = splitInterval(logger, interval, splitDurations, breakDuration);
       logger.info(`Split intervals:\n${splitIntervals.map(interval => `\t${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} duration: ${interval.end.diff(interval.start, 'minutes')} minutes`).join('\n')}`);
       result.push(...splitIntervals);
     } else {

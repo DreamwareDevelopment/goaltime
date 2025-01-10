@@ -442,6 +442,7 @@ model Goal {
   deadline        DateTime?          @map("deadline")
   commitment      Float?
   estimate        Float?
+  breakDuration   Int?               @map("break_duration")
   minimumTime     Int                @map("minimum_time")
   maximumTime     Int                @map("maximum_time")
   completed       Float              @default(0.0)
@@ -560,4 +561,3 @@ model CalendarEvent {
   @@schema("public")
   @@map("calendar_events")
 }
-
