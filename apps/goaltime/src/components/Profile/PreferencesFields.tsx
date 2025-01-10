@@ -12,7 +12,7 @@ export function PreferencesFields({ form }: PreferencesFieldsProps) {
   const timezone = form.watch('timezone')
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-4 sm:gap-16">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap justify-around items-center gap-4">
         <FormField
           control={form.control}
           name="preferredWakeUpTime"

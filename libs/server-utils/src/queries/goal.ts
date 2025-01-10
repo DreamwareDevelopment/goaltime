@@ -32,8 +32,8 @@ export function sortGoals(a: Goal, b: Goal) {
       return canDoMultipleDiff;
     }
     // Sort by the most surgical goal
-    const minimumTimeDiff = a.minimumTime - b.minimumTime;
-    return minimumTimeDiff;
+    const minimumDurationDiff = a.minimumDuration - b.minimumDuration;
+    return minimumDurationDiff;
   }
   // Sort by priority
   if (a.priority === Priority.High) {

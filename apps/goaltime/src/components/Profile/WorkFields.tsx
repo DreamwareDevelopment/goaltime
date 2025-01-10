@@ -23,27 +23,9 @@ export function WorkFields({ form }: WorkFieldsProps) {
     <div className="flex flex-col gap-4">
       <FormField
         control={form.control}
-        name="occupation"
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <FloatingLabelInput
-                type="text"
-                autoComplete="occupation"
-                label="Occupation  (optional)"
-                value={field.value ?? ''}
-                onChange={field.onChange}
-              />
-            </FormControl>
-            <FormMessage className="pl-2" />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
         name="unemployed"
         render={({ field }) => (
-          <FormItem className="flex items-center">
+          <FormItem className="flex items-center space-y-0">
             <FormLabel className="pl-2">
               Unemployed
             </FormLabel>
@@ -60,6 +42,24 @@ export function WorkFields({ form }: WorkFieldsProps) {
       />
       {!form.watch('unemployed') && (
         <>
+          <FormField
+            control={form.control}
+            name="occupation"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <FloatingLabelInput
+                    type="text"
+                    autoComplete="occupation"
+                    label="Occupation  (optional)"
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage className="pl-2" />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="workDays"
@@ -79,7 +79,7 @@ export function WorkFields({ form }: WorkFieldsProps) {
               </FormItem>
             )}
           />
-          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-4 sm:gap-16">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-around items-center gap-4">
             <FormField
               control={form.control}
               name="startsWorkAt"

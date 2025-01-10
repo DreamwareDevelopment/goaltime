@@ -68,10 +68,10 @@ export const GoalSchema = z.object({
   preferredTimes: z.array(PreferredTimesEnum)
     .default([])
     .refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  minimumTime: z.number().int().min(10, "Minimum time must be at least 10 minutes").default(30),
-  maximumTime: z.number().int().min(10, "Maximum time must be at least 10 minutes").max(1000, "Maximum time must be less than 1000 minutes").default(120),
+  breakDuration: z.number().int().min(10, "Break duration must be at least 10 minutes").optional().nullable().default(null),
+  minimumDuration: z.number().int().min(10, "Minimum duration must be at least 10 minutes").default(30),
+  maximumDuration: z.number().int().min(10, "Maximum duration must be at least 10 minutes").max(1000, "Maximum duration must be less than 1000 minutes").default(120),
   allowMultiplePerDay: z.boolean().default(true),
-  breakReminders: z.boolean().default(true),
   canDoDuringWork: z.boolean().default(false),
   color: z.string().refine((color) => isValidHexColor(color), { message: "Invalid color" }),
   notifications: NotificationSettingsSchema,

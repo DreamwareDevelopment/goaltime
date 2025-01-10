@@ -54,10 +54,10 @@ function shouldScheduleGoals(original: Goal, updated: GoalInput): boolean {
   if (original.estimate !== updated.estimate) {
     return true
   }
-  if (original.minimumTime !== updated.minimumTime) {
+  if (original.minimumDuration !== updated.minimumDuration) {
     return true
   }
-  if (original.maximumTime !== updated.maximumTime) {
+  if (original.maximumDuration !== updated.maximumDuration) {
     return true
   }
   if (original.priority !== updated.priority) {

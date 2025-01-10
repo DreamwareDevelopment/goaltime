@@ -112,6 +112,11 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
         setCurrentStep(currentStep + 1)
       } else {
         setOTPError(result.message)
+        toast({
+          title: 'Error',
+          description: result.message,
+          variant: 'destructive',
+        })
       }
     })
   }
@@ -193,7 +198,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
   return (
     <>
       <CardHeader>
-        <CardTitle className="flex justify-center gap-2 w-full text-center">{steps[currentStep].title}</CardTitle>
+        <CardTitle className="flex justify-center gap-2 w-full text-center text-xl">{steps[currentStep].title}</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -213,7 +218,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                   <PersonalFields form={form} />
                 )}
                 {currentStepFields.includes('phone') && (
-                  <PhoneField form={form} className="pt-4" />
+                  <PhoneField form={form} />
                 )}
                 {currentStepFields.includes('otp') && (
                   <>
@@ -221,7 +226,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
                     <div className="pt-4 flex flex-col justify-center items-center">
                       <p className="text-sm text-muted-foreground">Didn&apos;t receive the code?</p>
                       <ShinyButton
-                        variant="linkHover2"
+                        variant="linkHover1"
                         type="button"
                         onClick={() => sendOTP('otp')}
                        >
@@ -239,7 +244,10 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
               </motion.div>
             </AnimatePresence>
           </CardContent>
-          <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap justify-between items-center gap-4">
+          <CardFooter className={
+            "flex flex-col-reverse sm:flex-row sm:flex-wrap items-center gap-4 " +
+            (currentStep === 0 ? "justify-end" : "justify-between")
+          }>
             {currentStep > 0 && (
               <ShinyButton
                 disabled={isSubmitting || isValidating || isSendingOTP}

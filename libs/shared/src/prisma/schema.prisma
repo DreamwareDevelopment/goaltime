@@ -443,15 +443,14 @@ model Goal {
   commitment      Float?
   estimate        Float?
   breakDuration   Int?               @map("break_duration")
-  minimumTime     Int                @map("minimum_time")
-  maximumTime     Int                @map("maximum_time")
+  minimumDuration Int                @map("minimum_time")
+  maximumDuration Int                @map("maximum_time")
   completed       Float              @default(0.0)
   priority        Priority           @default(Medium)
   preferredTimes  Json
   color           String
   milestones      Milestone[]
   notifications   NotificationSettings?
-  breakReminders  Boolean           @map("break_reminders")
   canDoDuringWork Boolean           @map("can_do_during_work")
   allowMultiplePerDay Boolean       @map("allow_multiple_per_day")
   createdAt       DateTime          @default(now()) @map("created_at")

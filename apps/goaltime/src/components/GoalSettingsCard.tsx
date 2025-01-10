@@ -11,7 +11,7 @@ import { NotificationSettings } from './Settings/Notifications'
 import { MaximumTimeInput, MinimumTimeInput, PreferredTimes } from './Settings/TimeInputs.tsx'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
-import { AllowMultiplePerDayCheckbox, BreakRemindersCheckbox, CanDoDuringWorkCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
+import { AllowMultiplePerDayCheckbox, CanDoDuringWorkCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
@@ -93,10 +93,28 @@ export function GoalSettingsCard({
           message: 'Estimate requires a deadline',
         }
       }
-      if (data.minimumTime > data.maximumTime) {
-        errors.minimumTime = {
+      if (data.minimumDuration > data.maximumDuration) {
+        errors.minimumDuration = {
           type: 'validate',
-          message: 'Minimum time cannot be greater than maximum time',
+          message: 'Minimum duration cannot be greater than maximum duration',
+        }
+      }
+      if (data.allowMultiplePerDay) {
+        if (!data.breakDuration) {
+          errors.breakDuration = {
+            type: 'validate',
+            message: 'Break duration is required when allowing multiple per day',
+          }
+        } else if (data.breakDuration < 10) {
+          errors.breakDuration = {
+            type: 'validate',
+            message: 'Break duration must be at least 10 minutes',
+          }
+        } else if (data.breakDuration > 60 * 12) {
+          errors.breakDuration = {
+            type: 'validate',
+            message: 'Break duration must be less than 12 hours',
+          }
         }
       }
       return errors
@@ -206,17 +224,18 @@ export function GoalSettingsCard({
                     <PreferredTimes form={form} />
                     <PrioritySelector form={form} />
                     <div className="flex flex-wrap gap-4">
-                      <AllowMultiplePerDayCheckbox form={form} />
                       <CanDoDuringWorkCheckbox form={form} />
+                      <AllowMultiplePerDayCheckbox form={form} />
                     </div>
-                    <MinimumTimeInput form={form} />
-                    <MaximumTimeInput form={form} />
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-start gap-4">
+                      <MinimumTimeInput form={form} />
+                      <MaximumTimeInput form={form} />
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="notifications">
                   <AccordionTrigger className="text-lg font-bold">Notification Settings</AccordionTrigger>
                   <AccordionContent className="space-y-4">
-                    <BreakRemindersCheckbox form={form} />
                     <NotificationSettings form={form} />
                   </AccordionContent>
                 </AccordionItem>

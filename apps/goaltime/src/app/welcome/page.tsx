@@ -12,8 +12,7 @@ export default async function WelcomeFlowServer() {
   if (profile) {
     const error = 'Profile already exists during welcome flow'
     console.error(error)
-    const next = encodeURIComponent('/dashboard')
-    redirect(`/error?error=${error}&next=${next}&solution=Please go to the dashboard.`)
+    redirect(`/dashboard`)
   }
   return (
     <div className="h-screen flex items-center justify-center">

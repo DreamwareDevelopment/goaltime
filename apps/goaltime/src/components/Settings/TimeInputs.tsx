@@ -1,3 +1,5 @@
+import { HelpCircleIcon } from "lucide-react";
+
 import { PreferredTimesEnumType } from "@/shared/zod";
 import { Button } from "@/ui-components/button";
 import { DatetimePicker } from "@/ui-components/datetime-picker"
@@ -37,19 +39,31 @@ export const DeadlineInput: React.FC<FormInputProps> = ({ form }) => {
 }
 
 export const MinimumTimeInput: React.FC<FormInputProps> = ({ form }) => {
-  const value = form.watch("minimumTime")
+  const value = form.watch("minimumDuration")
   const date = new Date()
   date.setHours(0, value, 0, 0)
   return (
     <FormField
       control={form.control}
-      name="minimumTime"
+      name="minimumDuration"
       render={({ field }) => (
-        <FormItem>
-          <Label className="pl-2">Minimum Time</Label>
-          <FormDescription className="pl-2">
-            The minimum amount of time you need to have a productive session.
-          </FormDescription>
+        <FormItem className="flex flex-col gap-1 items-center justify-center">
+          <div className="flex items-center gap-2">
+            <Label className="pl-2">Minimum Duration</Label>
+            <FormDescription className="sr-only">
+              The minimum amount of time you need to have a productive session.
+            </FormDescription>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircleIcon className="w-[20px] h-[20px] text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  The minimum amount of time you need to have a productive session.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <FormControl>
             <DatetimePicker
               {...field}
@@ -76,19 +90,31 @@ export const MinimumTimeInput: React.FC<FormInputProps> = ({ form }) => {
 }
 
 export const MaximumTimeInput: React.FC<FormInputProps> = ({ form }) => {
-  const value = form.watch("maximumTime")
+  const value = form.watch("maximumDuration")
   const date = new Date()
   date.setHours(0, value, 0, 0)
   return (
     <FormField
       control={form.control}
-      name="maximumTime"
+      name="maximumDuration"
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="flex flex-col gap-1 items-center justify-center">
+          <div className="flex items-center gap-2">
           <Label className="pl-2">Maximum Time</Label>
-          <FormDescription className="pl-2">
-            The maximum amount of time you&apos;d like to spend in a single session.
-          </FormDescription>
+            <FormDescription className="sr-only">
+              The maximum amount of time you&apos;d like to spend in a single session.
+            </FormDescription>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircleIcon className="w-[20px] h-[20px] text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  The maximum amount of time you&apos;d like to spend in a single session.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <FormControl>
             <DatetimePicker
               {...field}

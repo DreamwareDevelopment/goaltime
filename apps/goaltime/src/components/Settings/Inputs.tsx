@@ -1,11 +1,14 @@
+import { HelpCircleIcon } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
-import { AutosizeTextarea } from "@/ui-components/text-area";
-import { FloatingLabelInput } from "@/ui-components/floating-input";
-import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 import { GoalInput } from "@/shared/zod";
 import { Checkbox } from "@/ui-components/checkbox";
+import { Input } from "@/ui-components/input";
+import { FloatingLabelInput } from "@/ui-components/floating-input";
+import { FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 import { Label } from "@/ui-components/label";
+import { AutosizeTextarea } from "@/ui-components/text-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/ui-components/tooltip";
 
 export interface FormInputProps {
   form: UseFormReturn<GoalInput>;
@@ -57,28 +60,6 @@ export const DescriptionInput: React.FC<FormInputProps> = ({ form }) => {
   )
 }
 
-export const BreakRemindersCheckbox: React.FC<FormInputProps> = ({ form }) => {
-  return (
-    <FormField
-      control={form.control}
-      name="breakReminders"
-      render={({ field }) => (
-        <FormItem className="flex gap-4 h-6 pl-2 items-center">
-          <Label>Break Reminders</Label>
-          <FormControl>
-            <Checkbox
-              id="breakReminders"
-              style={{ marginTop: '2px' }}
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-          </FormControl>
-        </FormItem>
-      )}
-    />
-  )
-}
-
 export const CanDoDuringWorkCheckbox: React.FC<FormInputProps> = ({ form }) => {
   return (
     <FormField
@@ -88,12 +69,21 @@ export const CanDoDuringWorkCheckbox: React.FC<FormInputProps> = ({ form }) => {
         <FormItem className="flex gap-4 h-6 pl-2 items-center">
           <Label>Can Do During Work</Label>
           <FormControl>
-            <Checkbox
-              id="canDoDuringWork"
-              style={{ marginTop: '2px' }}
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                <Checkbox
+                    id="canDoDuringWork"
+                    style={{ marginTop: '2px' }}
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Whether or not this goal can be done during work hours</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </FormControl>
         </FormItem>
       )}
@@ -103,22 +93,69 @@ export const CanDoDuringWorkCheckbox: React.FC<FormInputProps> = ({ form }) => {
 
 export const AllowMultiplePerDayCheckbox: React.FC<FormInputProps> = ({ form }) => {
   return (
-    <FormField
-      control={form.control}
-      name="allowMultiplePerDay"
-      render={({ field }) => (
-        <FormItem className="flex gap-4 h-6 pl-2 items-center">
-          <Label>Allow Multiple Per Day</Label>
-          <FormControl>
-            <Checkbox
-              id="allowMultiplePerDay"
-              style={{ marginTop: '2px' }}
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-          </FormControl>
-        </FormItem>
+    <div className="flex flex-wrap items-center gap-4">
+      <FormField
+        control={form.control}
+        name="allowMultiplePerDay"
+        render={({ field }) => (
+          <FormItem className="flex gap-4 h-6 pl-2 items-center">
+            <Label>Allow Multiple Per Day</Label>
+            <FormControl>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                  <Checkbox
+                      id="allowMultiplePerDay"
+                      style={{ marginTop: '2px' }}
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Whether or not this goal can be done multiple times per day</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </FormControl>
+          </FormItem>
+        )}
+      />
+      { form.watch('allowMultiplePerDay') && (
+        <FormField
+          control={form.control}
+          name="breakDuration"
+          render={({ field }) => (
+            <div>
+              <FormItem className="flex gap-2 space-y-0 items-center">
+                <Label>Breaks</Label>
+                <FormControl>
+                  <>
+                    <Input
+                      {...field}
+                      value={field.value ?? undefined}
+                      min={10}
+                      max={60 * 12}
+                      type="number"
+                    />
+                    <FormMessage className="ml-2" />
+                  </>
+                </FormControl>
+                <span className="text-sm text-muted-foreground">minutes</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircleIcon className="w-10 h-10 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>The minimum duration between consecutive sessions</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </FormItem>
+            </div>
+          )}
+        />
       )}
-    />
+    </div>
   )
 }

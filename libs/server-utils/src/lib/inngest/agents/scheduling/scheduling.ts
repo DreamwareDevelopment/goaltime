@@ -28,8 +28,8 @@ export const MinimalScheduleableGoalSchema = z.object({
   description: z.string().describe('The description of the goal'),
   allowMultiplePerDay: z.boolean().describe('If the goal allows multiple sessions in a day'),
   canDoDuringWork: z.boolean().describe('If the goal can also be done during work hours'),
-  minimumTime: z.number().describe('The minimum time in minutes that the goal can be scheduled for'),
-  maximumTime: z.number().describe('The maximum time in minutes that the goal can be scheduled for'),
+  minimumDuration: z.number().describe('The minimum duration in minutes that the goal can be scheduled for'),
+  maximumDuration: z.number().describe('The maximum duration in minutes that the goal can be scheduled for'),
 });
 
 export type MinimalScheduleableGoal = z.infer<typeof MinimalScheduleableGoalSchema>;
@@ -37,6 +37,7 @@ export type MinimalScheduleableGoal = z.infer<typeof MinimalScheduleableGoalSche
 export const ScheduleableGoalSchema = MinimalScheduleableGoalSchema.extend({
   id: z.string().describe('The unique identifier for the goal'),
   remainingCommitment: z.number().describe('The remaining time commitment in hours to be scheduled over the period of the free intervals'),
+  breakDuration: z.number().optional().nullable().default(null).describe('The duration of the break in minutes'),
   priority: z.enum(['High', 'Medium', 'Low']).describe('The priority of the goal'),
   preferredTimes: z.array(z.object({
     start: z.string().describe('The start time of the preferred time interval in HH:mm format'),
@@ -75,10 +76,10 @@ export function validateSchedule(goal: ScheduleableGoal, schedule: Interval<stri
     dayLookup.get(day)!.push(interval);
     const end = dayjs(interval.end);
     const duration = end.diff(start, 'minute');
-    if (duration < goal.minimumTime) {
-      errors.push(`Interval ${interval.start} - ${interval.end} is less than the minimum time ${goal.minimumTime} minutes`);
-    } else if (duration > goal.maximumTime) {
-      errors.push(`Interval ${interval.start} - ${interval.end} is greater than the maximum time ${goal.maximumTime} minutes`);
+    if (duration < goal.minimumDuration) {
+      errors.push(`Interval ${interval.start} - ${interval.end} is less than the minimum duration ${goal.minimumDuration} minutes`);
+    } else if (duration > goal.maximumDuration) {
+      errors.push(`Interval ${interval.start} - ${interval.end} is greater than the maximum duration ${goal.maximumDuration} minutes`);
     }
     totalTime += duration;
     let partialOverlap = freeIntervals.find(freeInterval => {
@@ -344,8 +345,8 @@ Some example inputs:
     description: "Work on the project for my company",
     allowMultiplePerDay: false,
     canDoDuringWork: true,
-    minimumTime: 90, // 90 minutes
-    maximumTime: 120, // 120 minutes
+    minimumDuration: 90, // 90 minutes
+    maximumDuration: 120, // 120 minutes
   },
   previous: {
     start: "2025-01-01 7:00",
@@ -374,8 +375,8 @@ Some example inputs:
     description: "Meditation is a great way to clear your mind and focus on the present moment.",
     allowMultiplePerDay: false,
     canDoDuringWork: false,
-    minimumTime: 10, // 10 minutes
-    maximumTime: 20, // 20 minutes
+    minimumDuration: 10, // 10 minutes
+    maximumDuration: 20, // 20 minutes
   },
   previous: {
     goalId: "<goal-id>",

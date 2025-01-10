@@ -13,7 +13,7 @@ export function WelcomeCard({ className }: React.HTMLAttributes<HTMLDivElement> 
     <Card className={className}>
       <CardHeader>
         <CardTitle className="text-3xl text-center">Welcome to GoalTime</CardTitle>
-        <CardDescription className="text-center text-lg">
+        <CardDescription className="text-center text-lg font-semibold">
           Start tracking your goals and make every minute count
         </CardDescription>
       </CardHeader>

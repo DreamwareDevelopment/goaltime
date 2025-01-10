@@ -23,7 +23,7 @@
     "wipe": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker volume rm supabase_config_goaltime && docker volume rm supabase_db_goaltime && docker volume rm supabase_edge_runtime_goaltime && docker volume rm supabase_inbucket_goaltime && docker volume rm supabase_storage_goaltime"
+        "command": "docker volume rm supabase_config_goaltime && docker volume rm supabase_db_goaltime && docker volume rm supabase_inbucket_goaltime && docker volume rm supabase_storage_goaltime"
       }
     },
     "functions": {

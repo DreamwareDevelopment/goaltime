@@ -229,7 +229,7 @@ export function PhoneInput({
 				name="phone"
 				id={id}
 				placeholder="Phone"
-				className="w-36"
+				className="w-[230px]"
 				defaultValue={initializeDefaultValue()}
 				onInput={handleOnInput}
 				onPaste={handleOnPaste}
