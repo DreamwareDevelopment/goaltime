@@ -551,23 +551,26 @@ export const scheduleGoalEvents = inngest.createFunction(
         end: dayjs(interval.interval.end),
       }))
       .filter(interval => interval.score >= 0 && interval.end.diff(interval.start, 'minutes') >= goal.minimumTime)
-      .sort(sortIntervals);
+      const splitFreeIntervals = splitIntervals(logger, goal, filteredFreeIntervals);
+      const sortedFreeIntervals = splitFreeIntervals.sort(sortIntervals);
+
       const filteredFreeWorkIntervals = scoredFreeWorkIntervals.map(interval => ({
         ...interval.interval,
         start: dayjs(interval.interval.start),
         end: dayjs(interval.interval.end),
       }))
       .filter(interval => interval.score >= 0 && interval.end.diff(interval.start, 'minutes') >= goal.minimumTime)
-      .sort(sortIntervals);
+      const splitFreeWorkIntervals = splitIntervals(logger, goal, filteredFreeWorkIntervals);
+      const sortedFreeWorkIntervals = splitFreeWorkIntervals.sort(sortIntervals);
 
-      logger.info(`${filteredFreeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of filtered free intervals:\n${filteredFreeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
-      logger.info(`${filteredFreeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of filtered free work intervals:\n${filteredFreeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      logger.info(`${sortedFreeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of filtered free intervals:\n${sortedFreeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      logger.info(`${sortedFreeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of filtered free work intervals:\n${sortedFreeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
 
       const intervals = scheduleGoal(
         logger,
         goal,
-        filteredFreeIntervals,
-        filteredFreeWorkIntervals,
+        sortedFreeIntervals,
+        sortedFreeWorkIntervals,
       );
       ({ freeIntervals, freeWorkIntervals } = updateIntervals({ freeIntervals, freeWorkIntervals }, intervals));
 
@@ -761,21 +764,23 @@ interface IntervalsState {
 // TODO: Get the break duration from the goal
 const DEFAULT_BREAK_DURATION = 10;
 
-function splitInterval(logger: Logger, interval: Interval<dayjs.Dayjs>, durations: number[]): Interval<dayjs.Dayjs>[] {
-  const intervals: Interval<dayjs.Dayjs>[] = [];
+function splitInterval(logger: Logger, interval: IntervalWithScore<dayjs.Dayjs>, durations: number[]): IntervalWithScore<dayjs.Dayjs>[] {
+  const intervals: IntervalWithScore<dayjs.Dayjs>[] = [];
   let currentStart = interval.start;
 
+  let i = 0;
   for (const duration of durations) {
+    i++;
     if (duration === 0) {
       continue;
     }
     const end = currentStart.add(duration, 'minutes');
     if (end.isAfter(interval.end.add(1, 'minute'))) {
       logger.error(`Split interval ${currentStart.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)} at ${duration} minutes is after the end of the interval`);
-      intervals.push({ start: currentStart, end: interval.end });
+      intervals.push({ start: currentStart, end: interval.end, score: i === 1 ? interval.score : -0.5 });
       continue;
     }
-    intervals.push({ start: currentStart, end });
+    intervals.push({ start: currentStart, end, score: i === 1 ? interval.score : -0.5 });
     currentStart = end.add(DEFAULT_BREAK_DURATION, 'minutes');
   }
 
@@ -785,14 +790,11 @@ function splitInterval(logger: Logger, interval: Interval<dayjs.Dayjs>, duration
 function splitIntervals(
   logger: Logger,
   goal: ScheduleableGoal,
-  intervals: Interval<dayjs.Dayjs>[]
-): {
-  intervals: Interval<dayjs.Dayjs>[],
-  splitIntervals: Interval<dayjs.Dayjs>[],
-} {
+  intervals: IntervalWithScore<dayjs.Dayjs>[]
+): IntervalWithScore<dayjs.Dayjs>[] {
   const minDuration = Math.ceil(goal.minimumTime / 5) * 5;
   const maxDuration = Math.floor(goal.maximumTime / 5) * 5;
-  const result: { intervals: Interval<dayjs.Dayjs>[], splitIntervals: Interval<dayjs.Dayjs>[] } = { intervals: [], splitIntervals: [] };
+  const result: IntervalWithScore<dayjs.Dayjs>[] = [];
   for (const interval of intervals) {
     let intervalDuration = interval.end.diff(interval.start, 'minutes');
     logger.info(`Interval ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} is ${intervalDuration} minutes long`);
@@ -807,13 +809,11 @@ function splitIntervals(
         splitDurations.push(intervalDuration - DEFAULT_BREAK_DURATION);
       }
       
-      const [first, ...rest] = splitInterval(logger, interval, splitDurations);
-      logger.info(`Split interval: ${first.start.format(DATE_TIME_FORMAT)} - ${first.end.format(DATE_TIME_FORMAT)} duration: ${first.end.diff(first.start, 'minutes')} minutes`);
-      result.intervals.push(first);
-      result.splitIntervals.push(...rest);
-      logger.info(`${rest.map(interval => `Split interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} duration: ${interval.end.diff(interval.start, 'minutes')} minutes`).join('\n')}`);
+      const splitIntervals = splitInterval(logger, interval, splitDurations);
+      logger.info(`Split intervals:\n${splitIntervals.map(interval => `\t${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)} duration: ${interval.end.diff(interval.start, 'minutes')} minutes`).join('\n')}`);
+      result.push(...splitIntervals);
     } else {
-      result.intervals.push(interval);
+      result.push(interval);
     }
   }
   return result;
@@ -826,15 +826,13 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
   let currentWorkIndex = 0;
   let nextFreeIndex = -1;
   let nextWorkIndex = -1;
-  const splitFreeIntervals: Interval<dayjs.Dayjs>[] = [];
-  const splitWorkIntervals: Interval<dayjs.Dayjs>[] = [];
   do {
-    const currentFree = currentFreeIndex < freeIntervals.length ? freeIntervals[currentFreeIndex] : undefined; // TODO: Check if undefined
-    const currentWork = currentWorkIndex < freeWorkIntervals.length ? freeWorkIntervals[currentWorkIndex] : undefined; // TODO: Check if undefined
+    const currentFree = currentFreeIndex < freeIntervals.length ? freeIntervals[currentFreeIndex] : undefined;
+    const currentWork = currentWorkIndex < freeWorkIntervals.length ? freeWorkIntervals[currentWorkIndex] : undefined;
     if (!currentFree && !currentWork) {
       break;
     }
-    const currentHighScore = Math.max(currentFree?.score ?? 0, currentWork?.score ?? 0);
+    const currentHighScore = Math.max(currentFree?.score ?? -0.5, currentWork?.score ?? -0.5); // -0.5 is the default score for an interval that was split
     nextFreeIndex = freeIntervals.findIndex(interval => interval.score < currentHighScore);
     nextWorkIndex = freeWorkIntervals.findIndex(interval => interval.score < currentHighScore);
     const sameScoreFreeIntervals = currentFree ? freeIntervals.slice(currentFreeIndex, nextFreeIndex === -1 ? freeIntervals.length : nextFreeIndex) : [];
@@ -842,18 +840,11 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
     if (sameScoreFreeIntervals.length <= 0 && sameScoreWorkIntervals.length <= 0) {
       continue;
     }
-    if (goal.allowMultiplePerDay) {
-      logger.info(`Splitting intervals with score ${currentHighScore}`);
-    }
-    const freeSplitResult = goal.allowMultiplePerDay ? splitIntervals(logger, goal, sameScoreFreeIntervals) : { intervals: sameScoreFreeIntervals, splitIntervals: [] };
-    const workSplitResult = goal.canDoDuringWork ? splitIntervals(logger, goal, sameScoreWorkIntervals) : { intervals: sameScoreWorkIntervals, splitIntervals: [] };
     preferredIntervals.push({
-      freeIntervals: freeSplitResult.intervals,
-      freeWorkIntervals: workSplitResult.intervals,
+      freeIntervals: sameScoreFreeIntervals,
+      freeWorkIntervals: sameScoreWorkIntervals,
       score: currentHighScore,
     });
-    splitFreeIntervals.push(...freeSplitResult.splitIntervals);
-    splitWorkIntervals.push(...workSplitResult.splitIntervals);
     currentFreeIndex = nextFreeIndex;
     currentWorkIndex = nextWorkIndex;
   } while (nextFreeIndex !== -1 || nextWorkIndex !== -1);
@@ -863,11 +854,6 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
   let totalTimeAvailable = 0;
   for (let i = 0; i < preferredIntervals.length; i++) {
     const { freeIntervals, freeWorkIntervals, score } = preferredIntervals[i];
-    if (i === preferredIntervals.length - 1) {
-      // Add the split intervals to the lowest score set of intervals
-      freeIntervals.push(...splitFreeIntervals);
-      freeWorkIntervals.push(...splitWorkIntervals);
-    }
     logger.info(`Scheduling "${goal.title}" in preferred intervals with score ${score} and remaining commitment ${remainingCommitment}`);
     totalTimeAvailable += freeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0);
     if (goal.canDoDuringWork) {
