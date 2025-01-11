@@ -611,7 +611,7 @@ export const scheduleGoalEvents = inngest.createFunction(
         minimumDuration: goal.minimumDuration,
         maximumDuration: goal.maximumDuration,
       }
-      const instructions = await step.ai.wrap('get-goal-scoring-instructions', getGoalScoringInstructions, minimalGoal, goalsScheduledSoFar, externalEvents);
+      const instructions = await step.ai.wrap(`get-${goal.id}-scoring-instructions`, getGoalScoringInstructions, minimalGoal, goalsScheduledSoFar, externalEvents);
       logger.info(`${instructions}`);
 
       const preferredTimes: Interval<dayjs.Dayjs>[] = goal.preferredTimes.map(time => ({
@@ -626,7 +626,7 @@ export const scheduleGoalEvents = inngest.createFunction(
 
       logger.info(`Scoring intervals for "${goal.title}"...`);
       const { scoredFreeWorkIntervals, scoredFreeIntervals } = await step.ai.wrap(
-        'score-intervals',
+        `score-${goal.id}-intervals`,
         scoreIntervals,
         logger,
         instructions,
