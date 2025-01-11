@@ -1,16 +1,13 @@
-import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
-import { inngest, InngestEvent } from "../client";
-import { Goal, UserProfile } from "@prisma/client";
-import { Logger } from "inngest/middleware/logger";
-import { dayjs } from "@/shared/utils";
 import { JsonValue } from "inngest/helpers/jsonify";
-import { PreferredTimesEnumType } from "@/shared/zod";
-import { ExternalEvent, getGoalScoringInstructions, GoalEvent, IntervalWithScore, MinimalScheduleableGoal, ScheduleableGoal, ScheduleInputData, scoreIntervals, TypedIntervalWithScore, WakeUpOrSleepEvent } from "../agents/scheduling/scheduling";
+import { Logger } from "inngest/middleware/logger";
 
-export interface Interval<T = Date> {
-  start: T;
-  end: T;
-}
+import { Goal, UserProfile } from "@prisma/client";
+import { dayjs, ExternalEvent, GoalEvent, Interval, IntervalWithScore, TypedIntervalWithScore, WakeUpOrSleepEvent } from "@/shared/utils";
+import { MinimalScheduleableGoal, PreferredTimesEnumType, ScheduleableGoal, ScheduleInputData } from "@/shared/zod";
+
+import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
+import { getGoalScoringInstructions, scoreIntervals } from "../../ai/scheduling";
+import { inngest, InngestEvent } from "../client";
 
 interface PreparedSchedulingData {
   interval: Interval<string>;

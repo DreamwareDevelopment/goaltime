@@ -1,5 +1,3 @@
-import { createTool } from '@inngest/agent-kit';
-import { z } from 'zod';
 import twilio from 'twilio';
 
 export function getTwilioMessageService() {
@@ -24,18 +22,3 @@ export async function sendSMS(phone: string, message: string) {
     messagingServiceSid: serviceSid,
   });
 }
-
-export const sendSMSTool = createTool({
-  name: 'send_sms',
-  description:
-    "Sends an SMS message to a user. Use this when you need to send a text message to a user.",
-  parameters: z.object({
-    phone: z.string(),
-    message: z.string(),
-  }),
-  handler: async ({ phone, message }, { network, agent, step }) => {
-    step.run(`send-message`, async () => {
-      await sendSMS(phone, message);
-    })
-  },
-});

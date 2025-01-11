@@ -1,7 +1,7 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
 import { GoogleAuth, UserProfile } from "@prisma/client";
 
-import type { AccountabilityEvent } from "./agents";
+import type { AccountabilityEvent } from "../ai";
 import type { SyncEvent } from "@/shared/zod";
 
 export enum InngestEvent {

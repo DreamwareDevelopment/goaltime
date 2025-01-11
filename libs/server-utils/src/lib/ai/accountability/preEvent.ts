@@ -1,6 +1,7 @@
-import { getPrismaClient } from "../../../prisma/client";
-import { inngest, InngestEvent } from "../../client";
 // import { Logger } from "inngest/middleware/logger";
+
+import { getPrismaClient } from "../../prisma/client";
+import { inngest, InngestEvent } from "../../inngest";
 
 export const preEvent = inngest.createFunction(
   {

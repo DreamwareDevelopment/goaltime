@@ -4,9 +4,8 @@ import { dayjs } from "@/shared/utils";
 
 import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
-import { Interval } from "../lib/inngest/calendar/scheduling";
-import { ExternalEvent, GoalEvent } from "../lib/inngest/agents/scheduling/scheduling";
 import { getNextFullSync } from "../lib/inngest";
+import { ExternalEvent, GoalEvent, Interval } from "@/shared/utils";
 
 export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const startOfDay = date.startOf('day').toDate()
