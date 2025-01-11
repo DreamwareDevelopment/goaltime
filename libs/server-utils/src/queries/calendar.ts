@@ -41,16 +41,6 @@ export async function getSchedule(userId: User['id'], date: dayjs.Dayjs): Promis
   return schedule;
 }
 
-function getNextQuarterHour(date: dayjs.Dayjs): dayjs.Dayjs {
-  const now = dayjs(date);
-  const minutes = now.minute();
-  const roundedMinutes = Math.ceil(minutes / 15) * 15;
-  if (roundedMinutes === 60) {
-    return now.hour(now.hour() + 1).minute(0).second(0);
-  }
-  return now.minute(roundedMinutes).second(0);
-}
-
 export async function getSchedulingData(userId: User['id']): Promise<{
   schedule: ExternalEvent<dayjs.Dayjs>[];
   profile: UserProfile;
@@ -78,7 +68,7 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   }
   const lastFullSync = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
   const now = dayjs.tz(new Date(), profile.timezone);
-  const start = getNextQuarterHour(now).toDate();
+  const start = now.hour(now.hour() + 1).second(0).toDate(); // Give an hour buffer before the next possible scheduling event
   const nextFullSync = getNextFullSync(lastFullSync, profile.timezone);
   const fullSyncTimeframe = {
     start: lastFullSync,
