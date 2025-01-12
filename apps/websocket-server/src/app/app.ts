@@ -3,9 +3,11 @@ import { FastifyInstance } from 'fastify';
 import inngestFastify from 'inngest/fastify';
 import * as path from 'path';
 
-import { inngest } from '@/server-utils/inngest';
+import { inngest, InngestEvent } from '@/server-utils/inngest';
+import { checkIn } from '@/server-utils/ai';
 
 import { syncToClient } from './lib/sync';
+import { startAccountabilityLoop } from './accountability/loop';
 
 /* eslint-disable-next-line */
 export interface AppOptions {}
@@ -21,7 +23,7 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
 
   fastify.register(inngestFastify, {
     client: inngest,
-    functions: [syncToClient],
+    functions: [startAccountabilityLoop, syncToClient, checkIn],
     options: {}
   });
 
@@ -36,5 +38,20 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
   fastify.register(AutoLoad, {
     dir: path.join(__dirname, 'routes'),
     options: { ...opts },
+  });
+
+  fastify.addHook('onReady', async () => {
+    console.log('Sending start accountability loop event');
+    await inngest.send({
+      name: InngestEvent.StartAccountabilityLoop,
+      data: {} as never,
+    });
+  });
+  fastify.addHook('onClose', async () => {
+    console.log('Sending stop accountability loop event');
+    await inngest.send({
+      name: InngestEvent.StopAccountabilityLoop,
+      data: {} as never,
+    });
   });
 }

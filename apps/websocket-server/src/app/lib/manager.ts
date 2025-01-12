@@ -3,7 +3,7 @@ import { WebSocket } from 'ws';
 // TODO: This should be backed by redis when we scale out
 // Also, with redis, we would be able to detect if the user is online
 // before sending them a sync event that we pay for even if they are offline
-// Last point about scaling, we should keep this service simple so we can migrate to Go
+// Last point about scaling, we should keep this websocket logic simple so we can migrate it to its own service in Go
 export class ConnectionManager {
   private static instance: ConnectionManager;
   private connections: Map<string, WebSocket> = new Map();
