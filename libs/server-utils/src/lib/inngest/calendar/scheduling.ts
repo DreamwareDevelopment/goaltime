@@ -164,7 +164,7 @@ function getFreeIntervals(
   // TODO: Take holidays into account
   const workdays = Array.isArray(profile.workDays) ? profile.workDays : [];
 
-  for (let i = 0; i <= daysBetween; i++) {
+  for (let i = 0; i <= daysBetween + 1; i++) {
     let currentTime = start.add(i, 'days')
     if (i > 0) {
       // Adjust the current time to the start of the day, otherwise it will be the start of the timeframe for each day
@@ -175,7 +175,8 @@ function getFreeIntervals(
       // Adjust the next day to the start of the day, otherwise it will be the start of the timeframe for the second day
       nextDay = nextDay.subtract(start.hour(), 'hours').subtract(start.minute(), 'minutes');
     }
-    const isLastDay = i === daysBetween;
+
+    const isLastDay = daysBetween + 1 === i;
     const upcomingEvents = events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay));
     const preferredWakeUpTime = dayjs(profile.preferredWakeUpTime);
     const wakeUpTime = currentTime
@@ -373,11 +374,6 @@ function getRemainingCommitmentForPeriod(
   timeframe: Interval<dayjs.Dayjs>,
   fullSyncTimeframe: Interval<dayjs.Dayjs>,
 ): number {
-  if (!goal.allowMultiplePerDay) {
-    const daysBetween = timeframe.end.diff(timeframe.start, 'days');
-    const maxDuration = daysBetween * goal.maximumDuration;
-    return Math.floor(maxDuration / 5) * 5 / 60;
-  }
   const priorityRestFactor = goal.priority === 'High' ? 1 : goal.priority === 'Medium' ? 0.985 : 0.95;
   let remainingMinutesThisPeriod = 0;
   iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, timeframe, (intersection, duringWork) => {
@@ -394,6 +390,13 @@ function getRemainingCommitmentForPeriod(
     return scalingFactor;
   }
   if (goal.commitment) {
+    const amountToComplete = (goal.commitment - goal.completed) * 60;
+    logger.info(`Amount to complete: ${amountToComplete}`);
+    if (!goal.allowMultiplePerDay) {
+      const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
+      const maxDuration = daysBetween * goal.maximumDuration;
+      return Math.min(Math.floor(maxDuration / 5) * 5, amountToComplete) / 60;
+    }
     const periodScalingFactor = getScalingFactor(fullSyncTimeframe);
     let totalMinutesThisPeriod = 0;
     iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, null, null, fullSyncTimeframe, (intersection, duringWork) => {
@@ -407,11 +410,16 @@ function getRemainingCommitmentForPeriod(
     logger.info(`Total minutes this period: ${totalMinutesThisPeriod * periodScalingFactor}`);
     const adjustmentFactor = Math.min(1, remainingMinutesThisPeriod / totalMinutesThisPeriod * periodScalingFactor);
     logger.info(`Adjustment factor: ${adjustmentFactor}`);
-    const amountToComplete = (goal.commitment - goal.completed) * 60;
-    logger.info(`Amount to complete: ${amountToComplete}`);
     const minutesToComplete = Math.ceil(adjustmentFactor * priorityRestFactor * amountToComplete / 5) * 5;
     logger.info(`Minutes to complete: ${minutesToComplete}`);
     return Math.max(goal.minimumDuration, minutesToComplete) / 60;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const amountToComplete = (goal.estimate! - goal.completed) * 60;
+  if (!goal.allowMultiplePerDay) {
+    const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
+    const maxDuration = daysBetween * goal.maximumDuration;
+    return Math.min(Math.floor(maxDuration / 5) * 5, amountToComplete) / 60;
   }
   const start = dayjs(goal.createdAt);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -436,8 +444,6 @@ function getRemainingCommitmentForPeriod(
   const totalScalingFactor = getScalingFactor({ start, end });
   const remainingMinutes = totalMinutes * totalScalingFactor - minutesSoFar * previousPeriodScalingFactor;
   const adjustmentFactor = Math.min(1, remainingMinutesThisPeriod / remainingMinutes);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const amountToComplete = (goal.estimate! - goal.completed) * 60;
   const minutesToComplete = Math.floor(adjustmentFactor * priorityRestFactor * amountToComplete / 5) * 5;
   return Math.max(goal.minimumDuration, Math.min(minutesToComplete, remainingMinutes)) / 60;
 }
@@ -700,6 +706,13 @@ export const scheduleGoalEvents = inngest.createFunction(
         userId,
         calendarEvents: newEvents,
         calendarEventsToDelete: deletedEvents,
+      },
+    });
+    await step.sendEvent('schedule-updated', {
+      name: InngestEvent.ScheduleUpdated,
+      data: {
+        userId,
+        schedule: newEvents,
       },
     });
   }

@@ -68,7 +68,8 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   }
   const lastFullSync = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
   const now = dayjs.tz(new Date(), profile.timezone);
-  const start = now.hour(now.hour() + 1).second(0).toDate(); // Give an hour buffer before the next possible scheduling event
+  const sensibleMinutes = Math.floor(now.minute() / 5) * 5;
+  const start = now.hour(now.hour() + 1).minute(sensibleMinutes).second(0).toDate(); // Give an hour buffer before the next possible scheduling event
   const nextFullSync = getNextFullSync(lastFullSync, profile.timezone);
   const fullSyncTimeframe = {
     start: lastFullSync,
