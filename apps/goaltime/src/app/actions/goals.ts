@@ -2,16 +2,10 @@
 
 import { GoalInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
-import { Goal, Prisma } from '@prisma/client'
-import { inngest, InngestEvent } from '@/libs/server-utils/src/lib/inngest'
+import { Goal } from '@prisma/client'
 import { isDeepStrictEqual } from 'util'
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const goalWithNotifications = Prisma.validator<Prisma.GoalArgs>()({
-  include: { notifications: true },
-})
-
-export type GoalWithNotifications = Prisma.GoalGetPayload<typeof goalWithNotifications>
+import { inngest, InngestEvent } from '@/server-utils/inngest'
+import { GoalWithNotifications } from '@/shared/utils'
 
 export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotifications> {
   const prisma = await getPrismaClient(goal.userId)

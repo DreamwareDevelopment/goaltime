@@ -28,7 +28,11 @@ export const DeadlineInput: React.FC<FormInputProps> = ({ form }) => {
                 []
               ]}
               value={field.value}
-              onChange={field.onChange}
+              onChange={(e) => {
+                if (e) {
+                  field.onChange(e.getHours() * 60 + e.getMinutes());
+                }
+              }}
             />
           </FormControl>
           <FormMessage className="sm:pl-2 text-center sm:text-left" />

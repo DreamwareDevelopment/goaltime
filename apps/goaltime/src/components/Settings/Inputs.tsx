@@ -133,6 +133,7 @@ export const AllowMultiplePerDayCheckbox: React.FC<FormInputProps> = ({ form }) 
                     <Input
                       {...field}
                       value={field.value ?? undefined}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
                       min={10}
                       max={60 * 12}
                       type="number"

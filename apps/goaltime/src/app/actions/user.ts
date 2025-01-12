@@ -4,6 +4,8 @@ import { UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
+import { inngest, InngestEvent } from '@/server-utils/inngest'
+
 import { fullSyncCalendarAction, syncCalendarAction } from './calendar'
 
 export async function createUserProfileAction(profile: UserProfileInput) {
@@ -19,6 +21,12 @@ export async function createUserProfileAction(profile: UserProfileInput) {
     },
   })
   await syncCalendarAction(userProfile.userId)
+  await inngest.send({
+    name: InngestEvent.NewUser,
+    data: {
+      id: userProfile.userId,
+    },
+  });
   return userProfile
 }
 

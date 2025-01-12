@@ -6,7 +6,7 @@ import { Input } from '@/ui-components/input';
 import { Label } from '@/ui-components/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui-components/tabs';
 import { FormControl, FormField, FormItem } from "@/ui-components/form";
-import { GoalInput, NotificationSettingsInput } from "@/shared/zod";
+import { GoalInput, MAX_NOTIFICATION_EVENT_OFFSET, NotificationSettingsInput } from "@/shared/zod";
 
 interface NotificationSettingsProps {
   form: UseFormReturn<GoalInput>;
@@ -51,7 +51,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ form
                               id={`${type}-before-input`}
                               type="number"
                               className="w-14"
-                              value={(field.value[`${type}Before` as keyof NotificationSettingsInput] ?? 0) as number}
+                              min={0}
+                              max={MAX_NOTIFICATION_EVENT_OFFSET}
+                              value={(field.value[`${type}Before` as keyof NotificationSettingsInput] ?? undefined) as number}
                               onChange={(e) => {
                                 const updatedNotifications = {
                                   ...field.value,
@@ -59,7 +61,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ form
                                 };
                                 field.onChange(updatedNotifications);
                               }}
-                              min={0}
                             />
                             <span className="text-sm text-muted-foreground pl-2">minutes</span>
                           </>
@@ -85,7 +86,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ form
                               id={`${type}-after-input`}
                               type="number"
                               className="w-14"
-                              value={(field.value[`${type}After` as keyof NotificationSettingsInput] ?? 0) as number}
+                              min={0}
+                              max={MAX_NOTIFICATION_EVENT_OFFSET}
+                              value={(field.value[`${type}After` as keyof NotificationSettingsInput] ?? undefined) as number}
                               onChange={(e) => {
                                 const updatedNotifications = {
                                   ...field.value,
@@ -93,7 +96,6 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ form
                                 };
                                 field.onChange(updatedNotifications);
                               }}
-                              min={0}
                             />
                             <span className="text-sm text-muted-foreground pl-2">minutes</span>
                           </>
