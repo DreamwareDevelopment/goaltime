@@ -40,14 +40,17 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
     options: { ...opts },
   });
 
-  fastify.addHook('onReady', async () => {
+  fastify.addHook('onReady', async function () {
     console.log('Sending start accountability loop event');
-    await inngest.send({
-      name: InngestEvent.StartAccountabilityLoop,
-      data: {} as never,
-    });
+    setTimeout(async () => {
+      await inngest.send({
+        name: InngestEvent.StartAccountabilityLoop,
+        data: {} as never,
+      });
+      console.log('Sent start accountability loop event.');
+    }, 1000);
   });
-  fastify.addHook('onClose', async () => {
+  fastify.addHook('preClose', async function () {
     console.log('Sending stop accountability loop event');
     await inngest.send({
       name: InngestEvent.StopAccountabilityLoop,

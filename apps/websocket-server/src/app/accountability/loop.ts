@@ -215,6 +215,11 @@ export const startAccountabilityLoop = inngest.createFunction({
     limit: 1,
   }],
   retries: 1,
+  cancelOn: [
+    {
+      event: InngestEvent.StopAccountabilityLoop,
+    },
+  ],
 }, {
   event: InngestEvent.StartAccountabilityLoop,
 }, async ({ logger, step }) => {
