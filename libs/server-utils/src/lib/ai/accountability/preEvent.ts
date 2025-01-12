@@ -25,7 +25,5 @@ export const preEvent = inngest.createFunction(
     event: InngestEvent.PreEvent,
   }],
   async ({ step, event, logger }) => {
-    const { userId } = event.data;
-    const prisma = await getPrismaClient(userId);
   },
 );

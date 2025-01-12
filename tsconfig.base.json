@@ -18,6 +18,7 @@
     "paths": {
       "@/*": ["./*"],
       "@/server-utils/inngest": ["libs/server-utils/src/lib/inngest/index.ts"],
+      "@/server-utils/ai": ["libs/server-utils/src/lib/ai/index.ts"],
       "@/server-utils/prisma": ["libs/server-utils/src/lib/prisma/client.ts"],
       "@/server-utils/queries/*": ["libs/server-utils/src/queries/*"],
       "@/server-utils/supabase": [

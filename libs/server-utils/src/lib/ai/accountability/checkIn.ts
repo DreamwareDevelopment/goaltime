@@ -2,6 +2,7 @@
 
 import { getPrismaClient } from "../../prisma/client";
 import { inngest, InngestEvent } from "../../inngest";
+import { sendSMS } from "../tools/sendMessage";
 
 export const checkIn = inngest.createFunction(
   {
@@ -10,14 +11,8 @@ export const checkIn = inngest.createFunction(
       // global concurrency queue for this function,
       // limit to 5 concurrent syncs as per the free tier quota
       scope: "fn",
-      key: `"check-in"`,
+      key: "checkIn",
       limit: 5,
-    }, {
-      // virtual concurrency queue for this function,
-      // only one sync per user at a time
-      scope: "fn",
-      key: "event.data.userId",
-      limit: 1,
     }],
     retries: 1,
   },
@@ -25,7 +20,27 @@ export const checkIn = inngest.createFunction(
     event: InngestEvent.CheckIn,
   }],
   async ({ step, event, logger }) => {
-    const { userId } = event.data;
-    const prisma = await getPrismaClient(userId);
+    logger.info(`Checking in`);
+    const events = event.data.data;
+    if (!events.length) {
+      logger.info(`No events found, skipping`);
+      return;
+    }
+    const userIds = events.map((event) => event.settings.userId);
+    const prisma = await getPrismaClient();
+    const users = await prisma.userProfile.findMany({
+      where: {
+        userId: {
+          in: userIds,
+        },
+      },
+    });
+    if (!users || !users.length) {
+      throw new Error(`Users not found`);
+    }
+    await step.run('check-in', async () => {
+      logger.info(`Sending SMS to ${users.map((user) => user.name).join(', ')}`);
+      await sendSMS(`+17379772512`, `Check in for ${users.map((user) => user.name).join(', ')}`);
+    });
   },
 );

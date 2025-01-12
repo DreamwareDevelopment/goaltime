@@ -18,6 +18,8 @@ export const MilestoneSchema = z.object({
 });
 export type MilestoneInput = z.infer<typeof MilestoneSchema>
 
+export const MAX_NOTIFICATION_EVENT_OFFSET = 60;
+
 // NotificationSettings Schema
 export const NotificationSettingsSchema = z.object({
   id: z.string().uuid().optional(),
@@ -25,13 +27,13 @@ export const NotificationSettingsSchema = z.object({
   phone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/, {
     message: 'Please provide a valid phone number',
   }),
-  pushBefore: z.number().int().min(0).optional().nullable().default(0),
-  pushAfter: z.number().int().min(0).optional().nullable().default(2),
-  textBefore: z.number().int().min(0).optional().nullable().default(null),
-  textAfter: z.number().int().min(0).optional().nullable().default(null),
-  textCheckIn: z.boolean().default(true),
-  phoneBefore: z.number().int().min(0).optional().nullable().default(20),
-  phoneAfter: z.number().int().min(0).optional().nullable().default(null),
+  pushBefore: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(null),
+  pushAfter: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(null),
+  textBefore: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(10),
+  textAfter: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(2),
+  textCheckIn: z.boolean().default(false),
+  phoneBefore: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(null),
+  phoneAfter: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(null),
 });
 export type NotificationSettingsInput = z.infer<typeof NotificationSettingsSchema>
 

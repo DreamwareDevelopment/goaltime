@@ -1,10 +1,14 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
-import { GoogleAuth, UserProfile } from "@prisma/client";
+import { CalendarEvent, GoogleAuth, UserProfile } from "@prisma/client";
 
-import type { AccountabilityEvent } from "../ai";
+import type { NotificationData } from "@/shared/utils";
 import type { SyncEvent } from "@/shared/zod";
+import { Jsonify } from "inngest/helpers/jsonify";
 
 export enum InngestEvent {
+  StartAccountabilityLoop = "accountability/loop/start",
+  StopAccountabilityLoop = "accountability/loop/stop",
+  ScheduleUpdated = "accountability/schedule-updated",
   SyncToClient = "streaming/sync",
   GoogleCalendarSync = "calendar/google/sync",
   GoogleCalendarCronSync = "calendar/google/sync/cron",
@@ -12,6 +16,7 @@ export enum InngestEvent {
   CheckIn = "agents/accountability/check-in",
   PreEvent = "agents/accountability/pre-event",
   PostEvent = "agents/accountability/post-event",
+  NewUser = "marketing/new-user",
 }
 
 // Create a client to send and receive events
@@ -33,13 +38,25 @@ export const inngest = new Inngest({
       }
     };
     [InngestEvent.CheckIn]: {
-      data: AccountabilityEvent;
+      data: NotificationData<string>;
     };
     [InngestEvent.PreEvent]: {
-      data: AccountabilityEvent;
+      data: NotificationData<string>;
     };
     [InngestEvent.PostEvent]: {
-      data: AccountabilityEvent;
+      data: NotificationData<string>;
+    };
+    [InngestEvent.StartAccountabilityLoop]: {
+      data: never;
+    };
+    [InngestEvent.StopAccountabilityLoop]: {
+      data: never;
+    };
+    [InngestEvent.ScheduleUpdated]: {
+      data: {
+        userId: string;
+        schedule: Jsonify<CalendarEvent[]>;
+      };
     };
     [InngestEvent.ScheduleGoalEvents]: {
       data: {
@@ -48,6 +65,9 @@ export const inngest = new Inngest({
     };
     [InngestEvent.SyncToClient]: {
       data: SyncEvent;
+    };
+    [InngestEvent.NewUser]: {
+      data: never;
     };
   }>()
 });
