@@ -1,15 +1,31 @@
-import { CalendarEvent, NotificationSettings } from "@prisma/client";
+import { CalendarEvent, Goal, NotificationSettings } from "@prisma/client";
 import { Jsonify } from "inngest/helpers/jsonify";
 
-export interface NotificationPayload {
-  goalId: string;
+export enum NotificationDestination {
+  Push = 'push',
+  SMS = 'sms',
+  Phone = 'phone',
+  Email = 'email',
+}
+
+export enum NotificationType {
+  Before = 'before',
+  After = 'after',
+}
+
+export interface NotificationTimes<T> {
+  fireAt: T;
+  destination: NotificationDestination;
+  type: NotificationType;
+}
+
+export interface NotificationPayload<T> extends NotificationTimes<T> {
+  goal: Jsonify<Goal>;
   event: Jsonify<CalendarEvent>;
   settings: Jsonify<NotificationSettings>;
-  fireAt: string;
-  type: 'before' | 'after';
 }
 
 export interface NotificationData<T> {
   nextEventTime: T | null;
-  data: NotificationPayload[];
+  data: NotificationPayload<T>[];
 }

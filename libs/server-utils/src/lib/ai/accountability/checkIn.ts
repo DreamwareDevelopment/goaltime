@@ -3,6 +3,7 @@
 import { getPrismaClient } from "../../prisma/client";
 import { inngest, InngestEvent } from "../../inngest";
 import { sendSMS } from "../tools/sendMessage";
+import { NotificationDestination, NotificationPayload } from "@/shared/utils";
 
 export const checkIn = inngest.createFunction(
   {
@@ -28,6 +29,7 @@ export const checkIn = inngest.createFunction(
     }
     const userIds = events.map((event) => event.settings.userId);
     const prisma = await getPrismaClient();
+    // TODO: Might not have to get profiles here if Zep can resolve the user from the events
     const users = await prisma.userProfile.findMany({
       where: {
         userId: {
@@ -38,9 +40,24 @@ export const checkIn = inngest.createFunction(
     if (!users || !users.length) {
       throw new Error(`Users not found`);
     }
-    await step.run('check-in', async () => {
-      logger.info(`Sending SMS to ${users.map((user) => user.name).join(', ')}`);
-      await sendSMS(`+17379772512`, `Check in for ${users.map((user) => user.name).join(', ')}`);
-    });
+    const notificationLookup = events.reduce((acc, event) => {
+      acc[event.settings.userId] = event;
+      return acc;
+    }, {} as Record<string, NotificationPayload<string>>);
+    for (const user of users) {
+      const notification = notificationLookup[user.userId];
+      const settings = notification.settings;
+      const event = notification.event;
+      await step.run(`check-in-${user.userId}`, async () => {
+        switch (notification.destination) {
+          case NotificationDestination.SMS:
+            await sendSMS(settings.phone, `It's ${settings.textBefore} minutes until ${event.title}, are you ready?`);
+            break;
+          default:
+            logger.error(`Unsupported notification destination: ${notification.destination}`);
+            break; // Don't throw and stop notifications for other users
+        }
+      });
+    }
   },
 );

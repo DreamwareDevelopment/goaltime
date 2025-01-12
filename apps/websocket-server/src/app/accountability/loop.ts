@@ -1,7 +1,8 @@
 import { DATE_TIME_FORMAT, inngest, InngestEvent, InngestEventData } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { getUserIds } from "@/server-utils/queries/user";
-import { dayjs, GoalWithNotifications, NotificationData } from "@/shared/utils";
+import { MAX_NOTIFICATION_EVENT_OFFSET } from "@/shared/zod";
+import { dayjs, GoalWithNotifications, NotificationData, NotificationDestination, NotificationType, NotificationTimes } from "@/shared/utils";
 import { CalendarEvent, Goal, NotificationSettings } from "@prisma/client";
 import { Jsonify } from "inngest/helpers/jsonify";
 import { Logger } from "inngest/middleware/logger";
@@ -71,36 +72,138 @@ function getNextEvents(logger: Logger, state: Jsonify<AccountabilityLoopState>):
     if (!goal) {
       throw new Error('Invariant: Goal not found in state');
     }
-    const maxNotificationBefore = Math.max(settings.pushBefore ?? 0, settings.textBefore ?? 0, settings.phoneBefore ?? 0);
-    const minNotificationAfter = Math.min(settings.pushAfter ?? Number.MAX_SAFE_INTEGER, settings.textAfter ?? Number.MAX_SAFE_INTEGER, settings.phoneAfter ?? Number.MAX_SAFE_INTEGER);
-    const nextEventStart = dayjs(event.startTime).second(0).subtract(maxNotificationBefore, 'minutes');
-    const nextEventEnd = dayjs(event.endTime).second(0).add(minNotificationAfter, 'minutes');
-    const isAfterEvent = nextEventStart.isBefore(now);
-    const nextEventTime = isAfterEvent ? nextEventEnd : nextEventStart;
-    logger.info(`Next: ${nextEventTime.format(DATE_TIME_FORMAT)}`);
-    if (!nextEventTime.isAfter(state.lastEventTime)) {
-      continue;
+    const { notifications, minimumTime } = getNextEventTimes(logger, now, settings, event);
+    if (result.nextEventTime !== null && minimumTime !== null) {
+      if (minimumTime.isAfter(result.nextEventTime)) {
+        logger.info(`Minimum time is after the next event time, so we're done`);
+        break;
+      } else if (minimumTime.isBefore(result.nextEventTime)) {
+        logger.error(`Minimum time is before the next event time, this should never happen due to sorting`);
+      } else {
+        logger.info(`Adding a new event to the batch`);
+      }
     }
-    if (result.nextEventTime === null) {
-      result.nextEventTime = nextEventTime;
+    if (notifications.length > 0) {
+      logger.info(`Notifications:\n${notifications.map(n => `${n.fireAt.format(DATE_TIME_FORMAT)} ${n.destination} ${n.type}`).join('\n')}`);
     }
-    if (nextEventTime.isBefore(result.nextEventTime)) {
-      // We've found a new event that's closer than the current one
-      result.nextEventTime = nextEventTime;
-      result.data = [];
-    } else if (nextEventTime.isAfter(result.nextEventTime)) {
-      // We've found an event that's after the current set, so we should exit and wait for the next event
-      break;
+    for (const notification of notifications) {
+      if (notification.fireAt.isBefore(now)) {
+        // This event has already fired, so we can skip it
+        logger.info(`Skipping event already fired "${event.title}" for user ${event.userId} - ${dayjs(event.startTime).format(DATE_TIME_FORMAT)}: ${dayjs(event.endTime).format(DATE_TIME_FORMAT)}`);
+        continue;
+      }
+      if (!notification.fireAt.isAfter(state.lastEventTime)) {
+        // This event is before the last event time, so we can skip it
+        continue;
+      }
+      if (result.nextEventTime === null) {
+        // This is the first event we've found, so we set it as the next event time
+        result.nextEventTime = notification.fireAt;
+      }
+      if (notification.fireAt.isBefore(result.nextEventTime)) {
+        // We've found a new event that's closer than the current one
+        result.nextEventTime = notification.fireAt;
+        result.data = [];
+        logger.error(`Found a new event that's closer than the current one, resetting the results`);
+      } else if (notification.fireAt.isAfter(result.nextEventTime)) {
+        // We've found an event that's after the current set. Since the notifications are sorted we should exit the inner loop
+        break;
+      }
+      result.data.push({
+        goal,
+        event,
+        settings,
+        ...notification,
+      });
     }
-    result.data.push({
-      goalId: event.goalId,
-      event,
-      settings,
-      type: isAfterEvent ? 'after' : 'before',
-      fireAt: nextEventTime.format(DATE_TIME_FORMAT),
-    });
   }
   return result;
+}
+
+function getNextEventTimes(
+  logger: Logger,
+  now: dayjs.Dayjs,
+  settings: NotificationSettings,
+  event: Jsonify<CalendarEvent>,
+): {
+  minimumTime: dayjs.Dayjs | null,
+  notifications: NotificationTimes<dayjs.Dayjs>[]
+} {
+  const eventStart = dayjs(event.startTime);
+  const eventEnd = dayjs(event.endTime);
+  const result: NotificationTimes<dayjs.Dayjs>[] = [];
+  let minimumTime: dayjs.Dayjs | null = null;
+  let fireAt = settings.pushBefore ? eventStart.subtract(settings.pushBefore, 'minutes') : null;
+  if (settings.pushBefore && fireAt !== null && now.isBefore(fireAt)) {
+    result.push({
+      fireAt,
+      destination: NotificationDestination.Push,
+      type: NotificationType.Before,
+    });
+    minimumTime = fireAt;
+  }
+  fireAt = settings.pushAfter ? eventEnd.add(settings.pushAfter, 'minutes') : null;
+  if (settings.pushAfter && fireAt !== null && now.isBefore(fireAt)) {
+    result.push({
+      fireAt,
+      destination: NotificationDestination.Push,
+      type: NotificationType.After,
+    });
+    if (minimumTime === null || fireAt.isBefore(minimumTime)) {
+      minimumTime = fireAt;
+    }
+  }
+  fireAt = settings.textBefore ? eventStart.subtract(settings.textBefore, 'minutes') : null;
+  if (settings.textBefore && fireAt !== null && now.isBefore(fireAt)) {
+    result.push({
+      fireAt,
+      destination: NotificationDestination.SMS,
+      type: NotificationType.Before,
+    });
+    if (minimumTime === null || fireAt.isBefore(minimumTime)) {
+      minimumTime = fireAt;
+    }
+  }
+  fireAt = settings.textAfter ? eventEnd.add(settings.textAfter, 'minutes') : null;
+  if (settings.textAfter && fireAt !== null && now.isBefore(fireAt)) {
+    result.push({
+      fireAt,
+      destination: NotificationDestination.SMS,
+      type: NotificationType.After,
+    });
+    if (minimumTime === null || fireAt.isBefore(minimumTime)) {
+      minimumTime = fireAt;
+    }
+  }
+  fireAt = settings.phoneBefore ? eventStart.subtract(settings.phoneBefore, 'minutes') : null;
+  if (settings.phoneBefore && fireAt !== null && now.isBefore(fireAt)) {
+    result.push({
+      fireAt,
+      destination: NotificationDestination.Phone,
+      type: NotificationType.Before,
+    });
+    if (minimumTime === null || fireAt.isBefore(minimumTime)) {
+      minimumTime = fireAt;
+    }
+  }
+  fireAt = settings.phoneAfter ? eventEnd.add(settings.phoneAfter, 'minutes') : null;
+  if (settings.phoneAfter && fireAt !== null && now.isBefore(fireAt)) {
+    result.push({
+      fireAt,
+      destination: NotificationDestination.Phone,
+      type: NotificationType.After,
+    });
+    if (minimumTime === null || fireAt.isBefore(minimumTime)) {
+      minimumTime = fireAt;
+    }
+  }
+  if (minimumTime === null) {
+    logger.info('Notification times are empty, likely because the event is too far in the past');
+  }
+  return {
+    minimumTime: minimumTime?.second(0) ?? null,
+    notifications: result.sort((a, b) => a.fireAt.diff(b.fireAt)),
+  };
 }
 
 export const startAccountabilityLoop = inngest.createFunction({
@@ -138,7 +241,7 @@ export const startAccountabilityLoop = inngest.createFunction({
             in: userIds,
           },
           endTime: {
-            gte: now.toDate(),
+            gte: now.subtract(MAX_NOTIFICATION_EVENT_OFFSET, 'minutes').toDate(), // The max notification offset is 1 hour
           },
         },
         take: userIds.length * 2, // Two events per user in case of overlap
@@ -160,7 +263,7 @@ export const startAccountabilityLoop = inngest.createFunction({
         logger.info(`No upcoming events remaining after ${j} events, so we're re-fetching state`);
         break;
       }
-      logger.info(`Waiting for events:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\n${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      logger.info(`Waiting to send notifications:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
       let nextEventTime = nextEvents.nextEventTime;
       if (!nextEventTime) {
         nextEventTime = dayjs().add(1, 'day').second(0);
@@ -188,11 +291,14 @@ export const startAccountabilityLoop = inngest.createFunction({
           logger.info(`Accountability loop ${i}-${j} time is different, so we're not notifying`);
           continue;
         }
-        logger.info(`Accountability loop ${i}-${j} time is the same, so we're notifying`);
 
+        logger.info(`Sending notifications:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\n${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
         const sleepPromise = step.sleep(`one-minute-sleep-${i}-${j}`, 1);
         const payload: NotificationData<string> = {
-          ...nextEvents,
+          data: nextEvents.data.map(e => ({
+            ...e,
+            fireAt: e.fireAt.format(DATE_TIME_FORMAT),
+          })),
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           nextEventTime: nextEvents.nextEventTime!.format(DATE_TIME_FORMAT),
         }
