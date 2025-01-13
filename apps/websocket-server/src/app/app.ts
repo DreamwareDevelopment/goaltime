@@ -1,4 +1,6 @@
 import AutoLoad from '@fastify/autoload';
+import formBody from '@fastify/formbody';
+import qs from 'qs';
 import { FastifyInstance } from 'fastify';
 import inngestFastify from 'inngest/fastify';
 import * as path from 'path';
@@ -13,6 +15,10 @@ import { startAccountabilityLoop } from './accountability/loop';
 export interface AppOptions {}
 
 export async function app(fastify: FastifyInstance, opts: AppOptions) {
+  fastify.register(formBody, {
+    parser: (body) => qs.parse(body),
+  });
+
   // This loads all plugins defined in plugins
   // those should be support plugins that are reused
   // through your application
