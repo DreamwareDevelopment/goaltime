@@ -1,9 +1,10 @@
+/* eslint-disable no-case-declarations */
 // import { Logger } from "inngest/middleware/logger";
 
 import { getPrismaClient } from "../../prisma/client";
 import { inngest, InngestEvent } from "../../inngest";
 import { sendSMS } from "../tools/sendMessage";
-import { NotificationDestination, NotificationPayload } from "@/shared/utils";
+import { NotificationDestination, NotificationPayload, NotificationType } from "@/shared/utils";
 
 export const checkIn = inngest.createFunction(
   {
@@ -51,7 +52,8 @@ export const checkIn = inngest.createFunction(
       await step.run(`check-in-${user.userId}`, async () => {
         switch (notification.destination) {
           case NotificationDestination.SMS:
-            await sendSMS(settings.phone, `It's ${settings.textBefore} minutes until ${event.title}, are you ready?`);
+            const minutes = notification.type === NotificationType.Before ? settings.textBefore : settings.textAfter;
+            await sendSMS(settings.phone, `It's ${minutes} minutes ${notification.type} ${event.title}, are you ready?`);
             break;
           default:
             logger.error(`Unsupported notification destination: ${notification.destination}`);

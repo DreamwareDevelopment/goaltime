@@ -78,7 +78,7 @@ function getNextEvents(logger: Logger, state: Jsonify<AccountabilityLoopState>):
         logger.info(`Minimum time is after the next event time, so we're done`);
         break;
       } else if (minimumTime.isBefore(result.nextEventTime)) {
-        logger.error(`Minimum time is before the next event time, this should never happen due to sorting`);
+        logger.info(`Minimum time is before the next event time, do nothing`);
       } else {
         logger.info(`Adding a new event to the batch`);
       }
@@ -103,8 +103,8 @@ function getNextEvents(logger: Logger, state: Jsonify<AccountabilityLoopState>):
       if (notification.fireAt.isBefore(result.nextEventTime)) {
         // We've found a new event that's closer than the current one
         result.nextEventTime = notification.fireAt;
+        logger.warn(`Found a new event that's closer than the current one, resetting the results:\n${result.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}\nTo ${notification.type} "${goal.title}"\nfireAt: ${notification.fireAt}\nEvent time: ${dayjs(event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(event.endTime).format(DATE_TIME_FORMAT)}`);
         result.data = [];
-        logger.error(`Found a new event that's closer than the current one, resetting the results`);
       } else if (notification.fireAt.isAfter(result.nextEventTime)) {
         // We've found an event that's after the current set. Since the notifications are sorted we should exit the inner loop
         break;
@@ -227,7 +227,8 @@ export const startAccountabilityLoop = inngest.createFunction({
   let i = 0;
   do {
     const state = await step.run(`get-accountability-state-${i}`, async () => {
-      const now = dayjs();
+      logger.info(`Getting accountability state ${i}`);
+      const now = dayjs().second(0);
       const prisma = await getPrismaClient();
       const userIds = await getUserIds(prisma);
       const goalsAndNotifications = await prisma.goal.findMany({
@@ -247,13 +248,14 @@ export const startAccountabilityLoop = inngest.createFunction({
           },
           endTime: {
             gte: now.subtract(MAX_NOTIFICATION_EVENT_OFFSET, 'minutes').toDate(), // The max notification offset is 1 hour
+            lte: now.add(1, 'day').toDate(),
           },
         },
-        take: userIds.length * 2, // Two events per user in case of overlap
         orderBy: {
           startTime: 'asc',
         },
       });
+      logger.info(`Got ${calendarEvents.length} calendar events`);
       return getAccountabilityState(now, goalsAndNotifications, calendarEvents);
     });
 
@@ -261,7 +263,14 @@ export const startAccountabilityLoop = inngest.createFunction({
     do {
       const nextEvents = getNextEvents(logger, state);
       if (nextEvents.data.length === 0) {
-        logger.info(`No events found, so we're re-fetching state`);
+        // This can cause a tight loop if there are no new events from the db in the next iteration, be rare in production
+        // as long as we have customers with events in the db.
+        // So sleep until the schedule is updated or a day passes
+        logger.info(`No events found, so we wait for the schedule to be updated or a day to pass`);
+        await step.waitForEvent(`no-events-wait-for-update-${i}-${j}`, {
+          event: InngestEvent.ScheduleUpdated,
+          timeout: '1d',
+        });
         break;
       }
       if (nextEvents.data.length < j) {
@@ -273,6 +282,7 @@ export const startAccountabilityLoop = inngest.createFunction({
       if (!nextEventTime) {
         nextEventTime = dayjs().add(1, 'day').second(0);
       }
+      logger.info(`Next event time: ${nextEventTime.format(DATE_TIME_FORMAT)}`);
       state.lastEventTime = nextEventTime.format(DATE_TIME_FORMAT);
       const sleepPromise = step.sleepUntil(`sleep-until-${i}-${j}`, nextEventTime.toDate());
       const updatePromise = step.waitForEvent(`wait-for-update-${i}-${j}`, {
@@ -288,12 +298,12 @@ export const startAccountabilityLoop = inngest.createFunction({
       j++;
       if (!command) {
         logger.info(`Accountability loop ${i}-${j} sleep finished`, nextEvents.data);
-        const now = dayjs().second(0);
-        state.now = now.format(DATE_TIME_FORMAT); // Reset now since we've slept
-        logger.info(`Current time: ${state.now}`);
+        let now = dayjs().second(0);
+        logger.info(`Current time: ${now}`);
         logger.info(`Accountability next event time: ${nextEventTime.format(DATE_TIME_FORMAT)}`);
         if (now.diff(nextEventTime, 'minute') !== 0) {
           logger.info(`Accountability loop ${i}-${j} time is different, so we're not notifying`);
+          state.now = now.format(DATE_TIME_FORMAT); // Reset now since we've slept
           continue;
         }
 
@@ -313,6 +323,8 @@ export const startAccountabilityLoop = inngest.createFunction({
         };
         const sendNotificationsPromise = step.sendEvent(`send-notifications-${i}-${j}`, data);
         await Promise.all([sendNotificationsPromise, sleepPromise]);
+        now = dayjs().second(0);
+        state.now = now.format(DATE_TIME_FORMAT); // Reset now since we've slept
         continue;
       }
       if (command.name === InngestEvent.StopAccountabilityLoop) {
@@ -323,9 +335,9 @@ export const startAccountabilityLoop = inngest.createFunction({
         logger.info(`Accountability loop ${i}-${j} schedule updated`);
         break;
       }
-      i++;
-    // eslint-disable-next-line no-constant-condition
+      // eslint-disable-next-line no-constant-condition
     } while (true);
+    i++;
   // eslint-disable-next-line no-constant-condition
   } while (true);
 });
