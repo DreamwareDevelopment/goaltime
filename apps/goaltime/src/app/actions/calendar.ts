@@ -31,6 +31,7 @@ export async function syncCalendarAction(userId: string): Promise<void> {
   if (!googleAuth || !profile) {
     throw new Error('Google auth or profile not found')
   }
+  console.log('Sending sync event');
   await inngest.send({
     name: InngestEvent.GoogleCalendarSync,
     data: {
@@ -43,6 +44,7 @@ export async function syncCalendarAction(userId: string): Promise<void> {
 export async function fullSyncCalendarAction(profile: UserProfile, googleAuth: GoogleAuth) {
   googleAuth.lastFullSyncAt = null;
   googleAuth.calendarSyncToken = null;
+  console.log('Sending full sync event');
   await inngest.send({
     name: InngestEvent.GoogleCalendarSync,
     data: {

@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_break_duration",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_has_synced_before",
         "cwd": "libs/shared"
       }
     },

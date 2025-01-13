@@ -385,6 +385,7 @@ model GoogleAuth {
   refreshToken      String      @db.VarChar(512) @map("refresh_token")
   calendarSyncToken String?     @db.VarChar(255) @map("calendar_sync_token")
   lastFullSyncAt    DateTime?   @map("last_full_sync_at")
+  hasSyncedBefore   Boolean     @default(false) @map("has_synced_before")
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")

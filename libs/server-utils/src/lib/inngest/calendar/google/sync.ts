@@ -9,6 +9,7 @@ import { SerializableCalendarEvent } from "@/shared/zod";
 import { getPrismaClient } from "../../../prisma/client";
 import { inngest, InngestEvent, InngestEventData } from "../../client";
 import { DATE_TIME_FORMAT } from "../scheduling";
+import { Jsonify } from "inngest/helpers/jsonify";
 
 // Relevant docs:
 // https://developers.google.com/calendar/api/guides/sync
@@ -25,6 +26,8 @@ interface CalendarEventsIterationResult {
   nextSyncToken?: string | null | undefined;
   calendarEvents?: SerializableCalendarEvent[];
   calendarEventsToDelete?: string[];
+  freshGoogleAuth: Jsonify<GoogleAuth>;
+  isFullSync: boolean;
 }
 
 type CalendarSyncAction = "refresh" | "full-sync";
@@ -35,14 +38,14 @@ export function getNextFullSync(lastFullSync: dayjs.Dayjs, timezone: string): da
 
 async function incrementalSyncCalendarEvents(
   logger: Logger,
-  googleAuth: GoogleAuth,
+  googleAuth: Jsonify<GoogleAuth>,
   calendar: calendar_v3.Calendar,
   pageToken: string | null | undefined,
   syncToken: string | null | undefined,
   profile: UserProfile,
 ): Promise<CalendarEventResult | CalendarSyncAction> {
   if (!googleAuth.lastFullSyncAt) {
-    throw new Error(`Invariant error: Google auth ${googleAuth.userId} has no last full sync date during incremental sync`);
+    return "full-sync";
   }
   const lastFullSyncAt = dayjs.tz(googleAuth.lastFullSyncAt, profile.timezone);
   const nextSundayNight = getNextFullSync(lastFullSyncAt, profile.timezone);
@@ -111,7 +114,19 @@ async function fullSyncCalendarEvents(
   }
 }
 
-async function saveFullSync(logger: Logger, prisma: PrismaClient, googleAuth: GoogleAuth, nextSyncToken: string | null | undefined, eventsToSave: CalendarEvent[]) {
+async function saveFullSync(
+  logger: Logger,
+  prisma: PrismaClient,
+  googleAuth: Jsonify<GoogleAuth>,
+  nextSyncToken: string | null | undefined,
+  eventsToSave: CalendarEvent[],
+): Promise<Jsonify<GoogleAuth>> {
+  const freshGoogleAuth = {
+    ...googleAuth,
+    calendarSyncToken: nextSyncToken ?? null,
+    lastFullSyncAt: new Date(),
+    hasSyncedBefore: true,
+  }
   await prisma.$transaction(async (tx) => {
     logger.info(`Updating google auth ${googleAuth.userId} for full sync`);
     try {
@@ -119,10 +134,7 @@ async function saveFullSync(logger: Logger, prisma: PrismaClient, googleAuth: Go
         where: {
           id: googleAuth.id,
         },
-        data: {
-          calendarSyncToken: nextSyncToken ?? null,
-          lastFullSyncAt: new Date(),
-        },
+        data: freshGoogleAuth,
       });
     } catch (error) {
       logError(logger, `Failed to update google auth ${googleAuth.userId} for full sync`, error);
@@ -138,9 +150,25 @@ async function saveFullSync(logger: Logger, prisma: PrismaClient, googleAuth: Go
       throw error;
     }
   });
+  return {
+    ...freshGoogleAuth,
+    lastFullSyncAt: dayjs(freshGoogleAuth.lastFullSyncAt).format(DATE_TIME_FORMAT),
+  };
 }
 
-async function saveIncrementalSync(logger: Logger, prisma: PrismaClient, googleAuth: GoogleAuth, nextSyncToken: string | null | undefined, eventsToDelete: string[], eventsToSave: CalendarEvent[]) {
+async function saveIncrementalSync(
+  logger: Logger,
+  prisma: PrismaClient,
+  googleAuth: Jsonify<GoogleAuth>,
+  nextSyncToken: string | null | undefined,
+  eventsToDelete: string[],
+  eventsToSave: CalendarEvent[],
+): Promise<Jsonify<GoogleAuth>> {
+  const freshGoogleAuth = {
+    ...googleAuth,
+    lastFullSyncAt: googleAuth.lastFullSyncAt ? dayjs(googleAuth.lastFullSyncAt).toDate() : null,
+    calendarSyncToken: nextSyncToken ?? null,
+  }
   await prisma.$transaction(async (tx) => {
     logger.info(`Updating google auth ${googleAuth.userId} for incremental sync`);
     try {
@@ -148,9 +176,7 @@ async function saveIncrementalSync(logger: Logger, prisma: PrismaClient, googleA
         where: {
           id: googleAuth.id,
         },
-        data: {
-          calendarSyncToken: nextSyncToken ?? null,
-        },
+        data: freshGoogleAuth,
       });
     } catch (error) {
       logError(logger, `Failed to update google auth ${googleAuth.userId} during incremental sync`, error);
@@ -177,9 +203,13 @@ async function saveIncrementalSync(logger: Logger, prisma: PrismaClient, googleA
       throw error;
     }
   });
+  return {
+    ...freshGoogleAuth,
+    lastFullSyncAt: dayjs(freshGoogleAuth.lastFullSyncAt).format(DATE_TIME_FORMAT),
+  };
 }
 
-export async function refreshGoogleAccessToken(logger: Logger, prisma: PrismaClient, googleAuth: GoogleAuth, oauth2Client: OAuth2Client) {
+export async function refreshGoogleAccessToken(logger: Logger, prisma: PrismaClient, googleAuth: Jsonify<GoogleAuth>, oauth2Client: OAuth2Client) {
   try {
     const newTokens = await oauth2Client.refreshAccessToken();
     oauth2Client.setCredentials(newTokens.credentials);
@@ -229,7 +259,7 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
   }
 }
 
-export const getGoogleOAuth2Client = (googleAuth: GoogleAuth) => {
+export const getGoogleOAuth2Client = (googleAuth: Jsonify<GoogleAuth>) => {
   const apiKey = process.env.GOOGLE_CALENDAR_API_KEY;
   if (!apiKey) {
     throw new Error('GOOGLE_CALENDAR_API_KEY is not set');
@@ -255,36 +285,45 @@ export const getGoogleOAuth2Client = (googleAuth: GoogleAuth) => {
   return oauth2Client;
 }
 
-async function deleteForFullSync(logger: Logger, prisma: PrismaClient, googleAuth: GoogleAuth) {
+async function deleteForFullSync(logger: Logger, prisma: PrismaClient, googleAuth: Jsonify<GoogleAuth>) {
+  const freshGoogleAuth = {
+    ...googleAuth,
+    calendarSyncToken: null,
+    lastFullSyncAt: null,
+  }
   await prisma.$transaction(async (tx) => {
     try {
       await tx.googleAuth.update({
         where: {
           id: googleAuth.id,
         },
-        data: {
-          calendarSyncToken: null,
-        },
+        data: freshGoogleAuth,
       });
     } catch (error) {
       logError(logger, `Failed to update google auth ${googleAuth.userId} for full sync during delete`, error);
       throw error;
     }
-    try {
-      await tx.calendarEvent.deleteMany({
-        where: {
-          userId: googleAuth.userId,
-          OR: [
-            { startTime: { gt: new Date() } },
-            { allDay: { gt: new Date() } },
-          ],
-        },
-      });
-    } catch (error) {
-      logError(logger, `Failed to delete calendar events for user ${googleAuth.userId} during full sync`, error);
-      throw error;
-    }
+    await deleteCalendarEvents(logger, tx as PrismaClient, googleAuth);
   });
+  return freshGoogleAuth;
+}
+
+async function deleteCalendarEvents(logger: Logger, tx: PrismaClient, googleAuth: Jsonify<GoogleAuth>) {
+  const now = new Date();
+  try {
+    await tx.calendarEvent.deleteMany({
+      where: {
+        userId: googleAuth.userId,
+        OR: [
+          { startTime: { gt: now } },
+          { allDay: { gt: now } },
+        ],
+      },
+    });
+  } catch (error) {
+    logError(logger, `Failed to delete calendar events for user ${googleAuth.userId} during full sync`, error);
+    throw error;
+  }
 }
 
 export const syncGoogleCalendar = inngest.createFunction(
@@ -313,28 +352,32 @@ export const syncGoogleCalendar = inngest.createFunction(
   async ({ step, event, logger }) => {
     const { profile, googleAuth, forceFullSync } = event.data;
     const prisma = await getPrismaClient(googleAuth.userId);
-    const oauth2Client = getGoogleOAuth2Client(googleAuth);
+    let freshGoogleAuth = await step.run(`get-google-auth`, async () => {
+      return await prisma.googleAuth.findUniqueOrThrow({
+        where: {
+          id: googleAuth.id,
+          userId: googleAuth.userId,
+        },
+      });
+    });
+    const oauth2Client = getGoogleOAuth2Client(freshGoogleAuth);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
     let cursor: string | null | undefined = undefined;
-    let nextSyncToken: string | null | undefined = googleAuth.calendarSyncToken;
+    let nextSyncToken: string | null | undefined = freshGoogleAuth.calendarSyncToken;
     const calendarEvents: SerializableCalendarEvent[] = [];
     const calendarEventsToDelete: string[] = [];
-    const initialSync = !googleAuth.calendarSyncToken && !forceFullSync;
-    let isFullSync = initialSync || forceFullSync;
+    const initialSync = !freshGoogleAuth.hasSyncedBefore;
+    let isFullSync = Boolean(initialSync || forceFullSync);
     let index = 0;
     do {
+      logger.info(`Google auth calendar sync token: ${freshGoogleAuth.calendarSyncToken}, last full sync at: ${freshGoogleAuth.lastFullSyncAt}`);
+      logger.info(`Syncing calendar events...\n- full sync: ${isFullSync}\n- initial sync: ${initialSync}`);
       // eslint-disable-next-line no-loop-func
       const stepResult: CalendarEventsIterationResult = await step.run(`download-calendar-list-${index++}`, async () => {
-        const freshGoogleAuth = await prisma.googleAuth.findUniqueOrThrow({
-          where: {
-            id: googleAuth.id,
-            userId: googleAuth.userId,
-          },
-        });
         if (forceFullSync && index === 1) {
           logger.info(`Force full sync for user ${freshGoogleAuth.userId}, deleting all events...`);
-          await deleteForFullSync(logger, prisma, freshGoogleAuth);
+          await deleteCalendarEvents(logger, prisma, freshGoogleAuth);
         }
         if (isFullSync) {
           if (index === 1) {
@@ -350,12 +393,14 @@ export const syncGoogleCalendar = inngest.createFunction(
           }
           const events = res.list.map(event => transformCalendarEvent(event, freshGoogleAuth.userId));
           logger.info(`Saving ${events.length} events for full sync`);
-          await saveFullSync(logger, prisma, freshGoogleAuth, res.nextSyncToken, events);
+          const gAuth = await saveFullSync(logger, prisma, freshGoogleAuth, res.nextSyncToken, events);
           return {
             nextPageToken: res.nextPageToken,
             nextSyncToken: res.nextSyncToken,
             calendarEvents: events,
             calendarEventsToDelete: [],
+            freshGoogleAuth: gAuth,
+            isFullSync: true,
           };
         } else {
           if (index === 1) {
@@ -371,11 +416,12 @@ export const syncGoogleCalendar = inngest.createFunction(
           }
           if (res === "full-sync") {
             logger.info(`Full sync required, deleting all events...`);
-            await deleteForFullSync(logger, prisma, freshGoogleAuth);
-            isFullSync = true;
+            const gAuth = await deleteForFullSync(logger, prisma, freshGoogleAuth);
             return {
               nextPageToken: undefined,
               nextSyncToken: undefined,
+              freshGoogleAuth: gAuth,
+              isFullSync: true,
             };
           }
           const events: CalendarEvent[] = [];
@@ -390,15 +436,19 @@ export const syncGoogleCalendar = inngest.createFunction(
           }
           logger.info(`Saving ${events.length} events for incremental sync`);
           logger.info(`Deleting ${deletedEvents.length} events for incremental sync`);
-          await saveIncrementalSync(logger, prisma, freshGoogleAuth, res.nextSyncToken, deletedEvents, events);
+          const gAuth = await saveIncrementalSync(logger, prisma, freshGoogleAuth, res.nextSyncToken, deletedEvents, events);
           return {
             nextPageToken: res.nextPageToken,
             nextSyncToken: res.nextSyncToken,
             calendarEvents: events,
             calendarEventsToDelete: deletedEvents,
+            freshGoogleAuth: gAuth,
+            isFullSync: false,
           };
         }
       });
+      isFullSync = stepResult.isFullSync;
+      freshGoogleAuth = stepResult.freshGoogleAuth;
       cursor = stepResult.nextPageToken;
       nextSyncToken = stepResult.nextSyncToken;
       if (stepResult.calendarEvents) {
