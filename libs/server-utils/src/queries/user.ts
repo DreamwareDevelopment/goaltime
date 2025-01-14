@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 
 import { GoogleAuth, PrismaClient, UserProfile } from '@prisma/client'
+import { SanitizedUser } from '@/shared/utils'
 
 import { createClient } from '../lib/supabase'
 import { getPrismaClient } from '../lib/prisma/client'
@@ -18,8 +19,6 @@ async function getUser(): Promise<User> {
 
   return data.user
 }
-
-export type SanitizedUser = Pick<User, 'id' | 'email'>
 
 export async function getSanitizedUser(): Promise<SanitizedUser> {
   const user = await getUser()

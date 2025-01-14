@@ -18,7 +18,7 @@ export default async function WelcomeFlowServer() {
     <div className="h-screen flex items-center justify-center">
       <ScrollArea className="h-full w-full">
         <Card className="w-full py-4 max-w-lg mx-auto">
-          <WelcomeFlowClient userId={user.id} />
+          <WelcomeFlowClient user={user} />
         </Card>
       </ScrollArea>
     </div>

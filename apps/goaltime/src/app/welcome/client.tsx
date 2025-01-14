@@ -18,9 +18,10 @@ import { OTPField, PhoneField } from '../../components/Profile/PhoneFields'
 import { PreferencesFields } from '../../components/Profile/PreferencesFields'
 import { WorkFields } from '../../components/Profile/WorkFields'
 import { useValtio } from '../../components/data/valtio'
-import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
+import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { sendOTPAction, verifyPhoneNumberAction } from '../actions/user'
-import { useToast } from '@/libs/ui-components/src/hooks/use-toast'
+import { useToast } from '@/ui-components/hooks/use-toast'
+import { SanitizedUser } from '@/shared/utils'
 
 const steps = [
   { title: "Profile Setup", fields: ['name', 'avatarUrl', 'birthday', 'timezone', 'phone'] },
@@ -30,10 +31,10 @@ const steps = [
 ]
 
 export interface WelcomeFlowClientProps {
-  userId: string
+  user: SanitizedUser
 }
 
-export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
+export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
   const router = useRouter()
   const { toast } = useToast()
   const { userStore } = useValtio()
@@ -53,7 +54,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
     resolver: getZodResolver(UserProfileSchema, refineUserProfileSchema),
     defaultValues: {
       ...getDefaults(UserProfileSchema),
-      userId,
+      userId: user.id,
     }
   })
   const { handleSubmit, formState, clearErrors, setError, setValue } = form
@@ -90,7 +91,7 @@ export default function WelcomeFlowClient({ userId }: WelcomeFlowClientProps) {
       }
     }
     try {
-      await userStore.createUserProfile(profile)
+      await userStore.createUserProfile(user, profile)
       console.log('Finished creating user profile')
       router.push('/dashboard')
     } catch (error) {

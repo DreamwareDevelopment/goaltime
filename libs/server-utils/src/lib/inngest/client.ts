@@ -1,7 +1,7 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
 import { CalendarEvent, GoogleAuth, UserProfile } from "@prisma/client";
 
-import type { NotificationData } from "@/shared/utils";
+import type { NotificationData, SanitizedUser } from "@/shared/utils";
 import type { SyncEvent } from "@/shared/zod";
 import { Jsonify } from "inngest/helpers/jsonify";
 
@@ -67,7 +67,10 @@ export const inngest = new Inngest({
       data: SyncEvent;
     };
     [InngestEvent.NewUser]: {
-      data: never;
+      data: {
+        user: SanitizedUser;
+        profile: UserProfile;
+      };
     };
   }>()
 });

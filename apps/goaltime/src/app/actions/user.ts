@@ -5,10 +5,12 @@ import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
 import { inngest, InngestEvent } from '@/server-utils/inngest'
+import { zep } from '@/server-utils/ai'
 
 import { fullSyncCalendarAction, syncCalendarAction } from './calendar'
+import { SanitizedUser } from '@/shared/utils'
 
-export async function createUserProfileAction(profile: UserProfileInput) {
+export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
   delete profile.otp
   const prisma = await getPrismaClient(profile.userId)
   const userProfile = await prisma.userProfile.create({
@@ -20,11 +22,19 @@ export async function createUserProfileAction(profile: UserProfileInput) {
       preferredSleepTime: profile.preferredSleepTime!,
     },
   })
+  const [firstName, ...lastName] = profile.name.split(' ')
+  await zep.user.add({
+    userId: userProfile.userId,
+    firstName,
+    lastName: lastName.join(' '),
+    email: user.email,
+  })
   await syncCalendarAction(userProfile.userId)
   await inngest.send({
     name: InngestEvent.NewUser,
     data: {
-      id: userProfile.userId,
+      user: user,
+      profile: userProfile,
     },
   });
   return userProfile

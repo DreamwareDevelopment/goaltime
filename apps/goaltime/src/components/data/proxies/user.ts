@@ -4,12 +4,12 @@ import { UserProfile } from "@prisma/client"
 import { UserProfileInput } from "@/shared/zod"
 import { createUserProfileAction, updateUserProfileAction } from '../../../app/actions/user'
 import { createClient } from '@/ui-components/hooks/supabase'
-import { SanitizedUser } from '@/server-utils/queries/user'
+import { SanitizedUser } from '@/shared/utils'
 
 export const userStore = proxy<{
   user: SanitizedUser | null,
   profile: UserProfile | null,
-  createUserProfile(profile: UserProfileInput): Promise<void>,
+  createUserProfile(user: SanitizedUser, profile: UserProfileInput): Promise<void>,
   updateUserProfile(original: UserProfile, profile: Partial<UserProfileInput>): Promise<void>,
   uploadProfileImage(userId: string, image: File): Promise<string>,
   init(user: SanitizedUser, profile: UserProfile): void,
@@ -20,8 +20,8 @@ export const userStore = proxy<{
     this.user = user
     this.profile = profile
   },
-  async createUserProfile(profile) {
-    const userProfile = await createUserProfileAction(profile)
+  async createUserProfile(user, profile) {
+    const userProfile = await createUserProfileAction(user, profile)
     this.profile = userProfile
   },
   async updateUserProfile(original, profile) {
