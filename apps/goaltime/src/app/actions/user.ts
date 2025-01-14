@@ -10,6 +10,19 @@ import { zep } from '@/server-utils/ai'
 import { fullSyncCalendarAction, syncCalendarAction } from './calendar'
 import { SanitizedUser } from '@/shared/utils'
 
+const zepIgnoredUserFields = [
+  'userId',
+  'name',
+  'otp',
+  'avatarUrl',
+  'phone',
+  'hasOnboarded',
+]
+
+function getZepUserMetadata(userProfile: UserProfile) {
+  return Object.fromEntries(Object.entries(userProfile).filter(([key]) => !zepIgnoredUserFields.includes(key)))
+}
+
 export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
   delete profile.otp
   const prisma = await getPrismaClient(profile.userId)
@@ -28,6 +41,7 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
     firstName,
     lastName: lastName.join(' '),
     email: user.email,
+    metadata: getZepUserMetadata(userProfile),
   })
   await syncCalendarAction(userProfile.userId)
   await inngest.send({
@@ -59,6 +73,11 @@ export async function updateUserProfileAction(original: UserProfile, profile: Pa
       await fullSyncCalendarAction(updated, googleAuth)
     }
   }
+  // TODO: Improve by using a diff of the original and updated profile to check if the metadata has changed,
+  // Should imply changes to the rest of this function.
+  await zep.user.update(updated.userId, {
+    metadata: getZepUserMetadata(updated),
+  })
   return updated
 }
 
