@@ -5,16 +5,16 @@ import { getPrismaClient } from "@/server-utils/prisma";
 import { randomUUID } from "crypto";
 import { Session } from "@getzep/zep-cloud/api";
 import { NotificationPayload, NotificationType } from "@/shared/utils";
-import { generateText } from "ai";
+import { CoreMessage, generateText } from "ai";
 
 enum Intent {
-  RescheduleUpcomingEvent = "reschedule an upcoming event",
-  InquireAboutEvents = "inquiry about one or more events, either upcoming or past",
-  GiveAccountabilityUpdateOnLastEvent = "give accountability update on last event",
-  ChangeSchedulingPreferencesForAGoal = "change scheduling preferences for a goal",
-  AskForAdviceRegardingAGoal = "ask for advice regarding a goal",
-  EndConversation = "end conversation",
-  Other = "other",
+  AccountabilityUpdate = "Give accountability update on an event.",
+  AlterGoal = "Change scheduling preferences for a goal.",
+  EndConversation = "End conversation.",
+  InquireAboutGoals = "Answer questions about one or more goals.",
+  InquireAboutEvents = "Answer questions about one or more events, either upcoming or past.",
+  NeedsHelp = "Give help on how to use this agent.",
+  RescheduleEvent = "Reschedule an upcoming event.",
 }
 
 export const WELCOME_MESSAGE = `Looks like you're new here. I'm GoalTime AI, your personal accountability assistant to keep you on track to hit all your goals. Please create an account at https://goaltime.ai`;
@@ -37,6 +37,46 @@ async function generateMessage(notification: NotificationPayload<string>) {
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     prompt,
+  })
+  return response.text;
+}
+
+async function getHelpMessage(session: Session) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const memory = await zep.memory.get(session.sessionId!);
+  const messages = memory.messages;
+  const systemPrompt = `{
+    role: "You are to help the user understand how to use this agent. 
+    Tell them the relevant capabilities of this agent or just the one relevant to them.
+    You are to respond to the user in a friendly and helpful manner with concise answers befitting an sms conversation.",
+    capabilities: [
+      "give accountability update on an event",
+      "change scheduling preferences for a goal",
+      "end conversation",
+      "inquiry about one or more goals",
+      "inquiry about one or more events, either upcoming or past",
+      "reschedule an upcoming event",
+    ],
+    context: "${JSON.stringify(memory.context, null, 2)}"
+  }`;
+  const messagesToSend: CoreMessage[] = []
+  messagesToSend.push({
+    role: "system",
+    content: systemPrompt,
+  })
+  if (messages) {
+    for (const message of messages) {
+      if (message.role === "user" || message.role === "assistant") {
+        messagesToSend.push({
+          role: message.role,
+          content: message.content,
+        })
+      }
+    }
+  }
+  const response = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages: messagesToSend,
   })
   return response.text;
 }
@@ -195,13 +235,13 @@ export const chat = inngest.createFunction({
     const classification = await zep.memory.classifySession(session.sessionId!, {
       name: "intent",
       classes: [
-        Intent.RescheduleUpcomingEvent,
-        Intent.InquireAboutEvents,
-        Intent.GiveAccountabilityUpdateOnLastEvent,
-        Intent.ChangeSchedulingPreferencesForAGoal,
-        Intent.AskForAdviceRegardingAGoal,
+        Intent.AccountabilityUpdate,
+        Intent.AlterGoal,
         Intent.EndConversation,
-        Intent.Other,
+        Intent.InquireAboutEvents,
+        Intent.InquireAboutGoals,
+        Intent.NeedsHelp,
+        Intent.RescheduleEvent,
       ],
       persist: false,
       instruction,
@@ -210,32 +250,50 @@ export const chat = inngest.createFunction({
   })
 
   logger.info(`Session metadata:\n${JSON.stringify(session.metadata, null, 2)}`);
+  let response: string;
   switch (agentSelection) {
-    case Intent.RescheduleUpcomingEvent:
-      logger.info(`Rescheduling upcoming event for user ${userId}`);
-      return `Rescheduling upcoming event`;
+    case Intent.AccountabilityUpdate:
+      logger.info(`Giving accountability update for user ${userId}`);
+      response = `Giving accountability update`;
+      break;
+    case Intent.AlterGoal:
+      logger.info(`Changing a goal for user ${userId}`);
+      response = `Changing a goal`;
+      break;
     case Intent.InquireAboutEvents:
       logger.info(`Inquiring about events for user ${userId}`);
-      return `Inquiring about events`;
-    case Intent.GiveAccountabilityUpdateOnLastEvent:
-      logger.info(`Giving accountability update on last event for user ${userId}`);
-      return `Giving accountability update on last event`;
-    case Intent.ChangeSchedulingPreferencesForAGoal:
-      logger.info(`Changing scheduling preferences for a goal for user ${userId}`);
-      return `Changing scheduling preferences for a goal`;
-    case Intent.AskForAdviceRegardingAGoal:
+      response = `Inquiring about events`;
+      break;
+    case Intent.InquireAboutGoals:
       logger.info(`Asking for advice regarding a goal for user ${userId}`);
-      return `Asking for advice regarding a goal`;
+      response = `Asking for advice regarding a goal`;
+      break;
     case Intent.EndConversation:
       logger.info(`Ending conversation for user ${userId}`);
-      return `Ending conversation`;
-    case Intent.Other:
-      logger.info(`Other intent for user ${userId}`);
-      return `Other intent`;
+      response = `Ending conversation`;
+      break;
+    case Intent.NeedsHelp:
+      logger.info(`User ${userId} needs help using this agent`);
+      response = await getHelpMessage(session);
+      break;
+    case Intent.RescheduleEvent:
+      logger.info(`Rescheduling upcoming event for user ${userId}`);
+      response = `Rescheduling upcoming event`;
+      break;
     default:
       logger.info(`Unknown intent for user ${userId}`);
-      return `Not implemented`;
+      response = `Not implemented`;
+      break;
   }
-
-  return `Reached the end of the chat function`;
+  await step.run("store-response", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await zep.memory.add(session.sessionId!, {
+      messages: [{
+        role: "assistant",
+        content: response,
+        roleType: "assistant",
+      }],
+    })
+  })
+  return response;
 });
