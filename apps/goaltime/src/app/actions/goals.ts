@@ -1,11 +1,23 @@
 'use server'
 
-import { GoalInput } from '@/shared/zod'
+import { GoalInput, ScheduleableGoalSchema } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import { Goal } from '@prisma/client'
 import { isDeepStrictEqual } from 'util'
 import { inngest, InngestEvent } from '@/server-utils/inngest'
 import { GoalWithNotifications } from '@/shared/utils'
+import { zep } from '@/server-utils/ai'
+
+async function upsertGoalToGraph(goal: Goal): Promise<void> {
+  const minimalGoal = ScheduleableGoalSchema.parse(goal)
+  await zep.graph.add({
+    type: "json",
+    userId: goal.userId,
+    data: JSON.stringify({
+      goal: minimalGoal,
+    }),
+  })
+}
 
 export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotifications> {
   const prisma = await getPrismaClient(goal.userId)
@@ -22,6 +34,7 @@ export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotific
       notifications: true,
     },
   })
+  await upsertGoalToGraph(newGoal)
   await inngest.send({
     id: `schedule-new-goal-events-${newGoal.id}`,
     name: InngestEvent.ScheduleGoalEvents,
@@ -99,6 +112,7 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
       },
     })
   }
+  await upsertGoalToGraph(updatedGoal)
   return updatedGoal
 }
 
