@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { Session } from "@getzep/zep-cloud/api";
 import { NotificationPayload, NotificationType } from "@/shared/utils";
 import { CoreMessage, generateText } from "ai";
+import { Logger } from "inngest/middleware/logger";
 
 enum Intent {
   AccountabilityUpdate = "Give accountability update on an event.",
@@ -93,22 +94,29 @@ async function updateUserProfile(userId: string, sessionId: string) {
   })
 }
 
-async function shouldStartNewSession(sessionId: string, message: string) {
-  // TODO: Just use AI SDK to classify this along with the history
-  const classification = await zep.memory.classifySession(sessionId, {
-    name: "chat-session-classification",
-    classes: ["relevant", "new"],
-    persist: true,
-    instruction: `
-    {
-      role: "You are to determine if the following message is relevant to the existing conversation or should be the start of a new conversation.",
-      message: {
-        content: ${message},
-        role: "user",
-      }
-    }`,
+async function shouldStartNewSession(logger: Logger, sessionId: string, message: string) {
+  const memory = await zep.memory.get(sessionId);
+  const history: CoreMessage[] = memory.messages?.filter(message => message.role === "user" || message.role === "assistant").map(message => ({
+    role: message.role as "user" | "assistant",
+    content: message.content,
+  })) ?? [];
+  const systemPrompt = `{
+    "role": "You are to determine if a given message is a relevant continuation of the following conversation",
+    "conversation": ${JSON.stringify(history, null, 2)},
+    "return": "new" | "relevant"
+  }`;
+  const response = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages: [{
+      role: "system",
+      content: systemPrompt,
+    }, ...history, {
+      role: "user",
+      content: message,
+    }],
   })
-  return classification.class === "new";
+  logger.info(`Response: ${response.text}`);
+  return response.text === "new";
 }
 
 export const chat = inngest.createFunction({
@@ -181,7 +189,7 @@ export const chat = inngest.createFunction({
         userId,
       })
     } else {
-      const startNewSession = await shouldStartNewSession(userProfile.lastChatSessionId, message);
+      const startNewSession = await shouldStartNewSession(logger, userProfile.lastChatSessionId, message);
       if (startNewSession) {
         logger.info(`Starting new chat session for user ${userId} for message ${message}`);
         session = await zep.memory.addSession({
