@@ -186,7 +186,7 @@ function getFreeIntervals(
     const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(profile.preferredSleepTime);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
-      .hour(sleepHour === 0 ? 24 : sleepHour)
+      .hour(sleepHour < wakeUpTime.hour() ? sleepHour + 24 : sleepHour)
       .minute(preferredSleepTime.minute())
     wakeUpOrSleepEvents.push({
       type: 'wakeUp',
@@ -843,6 +843,7 @@ function scheduleGoalBFS(
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { intervals, remainingCommitment: currentRemainingCommitment } = queue.shift()!;
 
+    logger.info(`Scheduling goal ${goal.title} with ${currentRemainingCommitment} minutes of remaining commitment`);
     if (intervals.length === 0 || currentRemainingCommitment < goal.minimumDuration) {
       continue;
     }

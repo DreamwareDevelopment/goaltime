@@ -1,6 +1,6 @@
 'use server'
 
-import { GoalInput, ScheduleableGoalSchema } from '@/shared/zod'
+import { GoalInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import { Goal } from '@prisma/client'
 import { isDeepStrictEqual } from 'util'
@@ -8,13 +8,13 @@ import { inngest, InngestEvent } from '@/server-utils/inngest'
 import { GoalWithNotifications } from '@/shared/utils'
 import { zep } from '@/server-utils/ai'
 
+// TODO: Use a more minimal goal schema
 async function upsertGoalToGraph(goal: Goal): Promise<void> {
-  const minimalGoal = ScheduleableGoalSchema.parse(goal)
   await zep.graph.add({
     type: "json",
     userId: goal.userId,
     data: JSON.stringify({
-      goal: minimalGoal,
+      goal,
     }),
   })
 }

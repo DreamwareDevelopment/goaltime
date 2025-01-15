@@ -3,7 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { Logger } from "inngest/middleware/logger";
 
 import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient, UserProfile } from "@prisma/client";
-import { dayjs } from "@/shared/utils";
+import { dayjs, truncateText } from "@/shared/utils";
 import { SerializableCalendarEvent } from "@/shared/zod";
 
 import { getPrismaClient } from "../../../prisma/client";
@@ -371,7 +371,7 @@ export const syncGoogleCalendar = inngest.createFunction(
     let isFullSync = Boolean(initialSync || forceFullSync);
     let index = 0;
     do {
-      logger.info(`Google auth calendar sync token: ${freshGoogleAuth.calendarSyncToken}, last full sync at: ${freshGoogleAuth.lastFullSyncAt}`);
+      logger.info(`Google auth calendar sync token: ${truncateText(freshGoogleAuth.calendarSyncToken ?? 'null', 5)}, last full sync at: ${freshGoogleAuth.lastFullSyncAt}`);
       logger.info(`Syncing calendar events...\n- full sync: ${isFullSync}\n- initial sync: ${initialSync}`);
       // eslint-disable-next-line no-loop-func
       const stepResult: CalendarEventsIterationResult = await step.run(`download-calendar-list-${index++}`, async () => {

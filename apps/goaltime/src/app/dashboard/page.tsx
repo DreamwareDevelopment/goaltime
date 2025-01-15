@@ -25,7 +25,7 @@ export default async function Dashboard() {
   const profilePromise = getProfile(user.id)
   const googleAuthPromise = getGoogleAuth(user.id)
   const [profile, googleAuth] = await Promise.all([profilePromise, googleAuthPromise])
-  if (!profile || !googleAuth || !googleAuth.lastFullSyncAt) {
+  if (!profile) {
     redirect('/welcome')
   }
 
