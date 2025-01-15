@@ -93,20 +93,19 @@ async function updateUserProfile(userId: string, sessionId: string) {
   })
 }
 
-async function shouldStartNewSession(sessionId: string, message: string, notification?: NotificationPayload<string>) {
+async function shouldStartNewSession(sessionId: string, message: string) {
+  // TODO: Just use AI SDK to classify this along with the history
   const classification = await zep.memory.classifySession(sessionId, {
     name: "chat-session-classification",
-    classes: ["continue", "new"],
-    persist: false,
-    instruction: `Determine if the following message is a continuation of the last conversation or should be the start of a new conversation: {
+    classes: ["relevant", "new"],
+    persist: true,
+    instruction: `
+    {
+      role: "You are to determine if the following message is relevant to the existing conversation or should be the start of a new conversation.",
       message: {
         content: ${message},
-        role: ${notification ? "assistant" : "user"},
-      }${notification ? `,
-      metadata: {
-        goal: ${notification.goal},
-        event: ${notification.event},
-      }` : ""}
+        role: "user",
+      }
     }`,
   })
   return classification.class === "new";
@@ -153,18 +152,8 @@ export const chat = inngest.createFunction({
           },
         })
       } else {
-        // If this notification is after the event, we need to get the last chat session
-        const startNewSession = await shouldStartNewSession(userProfile.lastChatSessionId, message, notification);
-        if (startNewSession) {
-          logger.info(`Starting new chat session for user ${userId} for event ${notification.event}`);
-          session = await zep.memory.addSession({
-            sessionId: randomUUID(),
-            userId,
-          })
-        } else {
-          logger.info(`Continuing chat session for user ${userId} for event ${notification.event}`);
-          session = await zep.memory.getSession(userProfile.lastChatSessionId);
-        }
+        logger.info(`Continuing chat session for user ${userId} for event ${notification.event}`);
+        session = await zep.memory.getSession(userProfile.lastChatSessionId);
       }
       if (!session || !session.sessionId) {
         logger.error(`Failed to retrieve chat session for user ${userId}`);
