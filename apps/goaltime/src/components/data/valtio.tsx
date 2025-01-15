@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useRef } from 'react'
 
 import { Goal, NotificationSettings, UserProfile } from '@prisma/client'
 import { SyncEvent } from '@/shared/zod'
-import { SanitizedUser } from '@/server-utils/queries/user'
+import { SanitizedUser } from '@/shared/utils'
 import { useToast } from '@/ui-components/hooks/use-toast'
 
 import { calendarStore, goalStore, milestoneDynamicStore, userStore } from './proxies'

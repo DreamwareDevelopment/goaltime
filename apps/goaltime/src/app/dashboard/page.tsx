@@ -29,17 +29,22 @@ export default async function Dashboard() {
     redirect('/welcome')
   }
 
-  // TODO: Consider using now() instead of lastFullSyncAt
-  const lastFullSync = dayjs(googleAuth.lastFullSyncAt)
-  const nextFullSync = getNextFullSync(lastFullSync, profile.timezone)
+  const getAggregates = async () => {
+    if (!googleAuth?.lastFullSyncAt) {
+      return {} as Record<string, number>
+    }
+    const lastFullSync = dayjs(googleAuth.lastFullSyncAt)
+    const nextFullSync = getNextFullSync(lastFullSync, profile.timezone)
+    return await getAggregateTimeByGoal(user.id, lastFullSync, nextFullSync.endOf('day'))
+  }
   const [goals, goalAggregates, notifications] = await Promise.all([
     getGoals(profile),
-    getAggregateTimeByGoal(user.id, lastFullSync, nextFullSync.endOf('day')),
+    getAggregates(),
     getNotifications(profile),
   ])
   const hasGoals = goals.length > 0;
   return (
-    <ValtioProvider 
+    <ValtioProvider
       dashboardData={{ goals, profile, user, notifications, goalAggregates }}
     >
       <div className="w-full 2xl:w-[67%] mx-auto p-1 pt-4 sm:p-4">
