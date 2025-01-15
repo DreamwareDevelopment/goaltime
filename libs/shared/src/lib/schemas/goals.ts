@@ -80,3 +80,15 @@ export const GoalSchema = z.object({
   updatedAt: z.date().default(new Date()),
 });
 export type GoalInput = z.infer<typeof GoalSchema>
+
+export const LLMGoalSchema = z.object({
+  title: z.string().describe("The title of the goal."),
+  description: z.string().describe("A description of the goal."),
+  deadline: z.string().describe("The deadline of the goal.").nullable(),
+  commitment: z.number().describe("The hours per week committed to the goal.").nullable(),
+  preferredTimes: z.array(z.string()).describe("The preferred times of the goal.").nullable(),
+  minimumDuration: z.number().describe("The minimum duration in minutes that the user should spend on the goal.").nullable(),
+  maximumDuration: z.number().describe("The maximum duration in minutes that the user should spend on the goal.").nullable(),
+});
+
+export type LLMGoal = z.infer<typeof LLMGoalSchema>;

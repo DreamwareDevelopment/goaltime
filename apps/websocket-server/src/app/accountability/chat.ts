@@ -1,14 +1,16 @@
-import { inngest, InngestEvent } from "@/server-utils/inngest";
-import { buildMessages, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { openai } from "@ai-sdk/openai";
-import { getPrismaClient } from "@/server-utils/prisma";
-import { randomUUID } from "crypto";
 import { Session } from "@getzep/zep-cloud/api";
-import { NotificationPayload, NotificationType } from "@/shared/utils";
 import { generateText } from "ai";
+import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
 import z from "zod";
-import { ScheduleableGoal, ScheduleableGoalSchema } from "@/shared/zod";
+
+import { Goal } from "@prisma/client";
+import { buildMessages, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
+import { inngest, InngestEvent } from "@/server-utils/inngest";
+import { getPrismaClient } from "@/server-utils/prisma";
+import { NotificationPayload, NotificationType } from "@/shared/utils";
+import { LLMGoal, LLMGoalSchema } from "@/shared/zod";
 
 enum Intent {
   AccountabilityUpdate = "Give accountability update on an event.",
@@ -102,15 +104,35 @@ async function shouldStartNewSession(logger: Logger, sessionId: string, message:
   return response.text === "new";
 }
 
-async function getGoal(logger: Logger, sessionId: string): Promise<ScheduleableGoal | null> {
+function formatGoal(goal: Goal): string {
+  return JSON.stringify({
+    title: goal.title,
+    description: goal.description,
+    deadline: goal.deadline,
+    commitment: goal.commitment ? `${goal.commitment} hrs/wk` : null,
+    preferredTimes: goal.preferredTimes,
+    minimumDuration: `${goal.minimumDuration} mins`,
+    maximumDuration: `${goal.maximumDuration} mins`,
+  }, null, 2)
+}
+
+function formatGoals(goals: Goal[]): string {
+  return JSON.stringify(goals.map(formatGoal), null, 2)
+}
+
+async function getGoals(logger: Logger, userId: string, sessionId: string): Promise<LLMGoal[]> {
+  const prisma = await getPrismaClient(userId);
+  const goals = await prisma.goal.findMany({
+    where: {
+      userId,
+    },
+  });
+  const relevantGoals: LLMGoal[] = [];
   const memory = await zep.memory.get(sessionId);
-  const goal = memory.metadata?.goal as ScheduleableGoal | undefined;
-  if (goal) {
-    return goal;
-  }
   const systemPrompt = `{
     "role": "You are to determine if the user is asking for advice about a goal that they already have.",
     "context": ${JSON.stringify(memory.context, null, 2)},
+    "goals": ${formatGoals(goals)},
   }`;
   const messagesToSend = buildMessages(systemPrompt, memory.messages);
   const response = await generateText({
@@ -119,23 +141,29 @@ async function getGoal(logger: Logger, sessionId: string): Promise<ScheduleableG
     toolChoice: "required",
     tools: {
       answer: {
-        description: "Give the goal that the user is asking for advice about or null if there is no existing goal.",
+        description: "Give the goal(s) that the user is referencing.",
         parameters: z.object({
-          answer: ScheduleableGoalSchema.nullable().optional(),
+          answer: z.array(LLMGoalSchema).nullable().optional(),
         }),
       },
     },
   })
-  return response.toolCalls[0].args.answer ?? null;
+  for (const g of response.toolCalls[0].args.answer ?? []) {
+    logger.info(`Relevant goal: ${JSON.stringify(g, null, 2)}`);
+    relevantGoals.push(g);
+  }
+  return relevantGoals;
 }
 
-async function goalAdvice(logger: Logger, sessionId: string) {
-  const goal = await getGoal(logger, sessionId);
-  if (!goal) {
-    return "I couldn't find a relevant goal for you. Please create a goal first.";
+async function goalAdvice(logger: Logger, userId: string, sessionId: string) {
+  const goals = await getGoals(logger, userId, sessionId);
+  if (goals.length === 0) {
+    return "I couldn't find any relevant goals for you. Please create a goal first.";
   }
   const systemPrompt = `{
-    "role": "You are to give concise advice to the user about a goal they have.",
+    "role": "You are to assist the user with their goal(s).
+    You should respond to each goal individually as colloquially as possible.
+    Only give the user what they asked for. Do not over-explain or advise them on any thing other than what they asked for.",
     "capabilities": [
       "Help the user understand what their goal means for their life.",
       "Suggest realistic ways to achieve their goal steadily over time.",
@@ -149,8 +177,9 @@ async function goalAdvice(logger: Logger, sessionId: string) {
     ],
     "constraints": [
       "Respond in 1600 characters or less.",
+      "Answers should be appropriate for sms conversations.",
     ],
-    "goal": ${JSON.stringify(goal, null, 2)},
+    "goals": ${JSON.stringify(goals, null, 2)},
   }`;
   const memory = await zep.memory.get(sessionId);
   const messagesToSend = buildMessages(systemPrompt, memory.messages);
@@ -306,7 +335,7 @@ export const chat = inngest.createFunction({
     case Intent.InquireAboutGoals:
       logger.info(`Asking for advice regarding a goal for user ${userId}`);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      response = await goalAdvice(logger, session.sessionId!);
+      response = await goalAdvice(logger, userId, session.sessionId!);
       break;
     case Intent.EndConversation:
       logger.info(`Ending conversation for user ${userId}`);
