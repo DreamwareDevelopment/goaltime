@@ -1,6 +1,10 @@
+import { inngest, InngestEvent } from '@/server-utils/inngest';
+import { getPrismaClient } from '@/server-utils/prisma';
 import { FastifyInstance } from 'fastify';
 import { twiml } from 'twilio';
 import { z } from 'zod';
+import { chat, WELCOME_MESSAGE } from '../../accountability/chat';
+import { sendSMS } from '@/server-utils/ai';
 
 // Define the schema for the request body
 const twilioRequestBodySchema = z.object({
@@ -25,13 +29,66 @@ export default async function (fastify: FastifyInstance) {
     if (requestBody.data.SmsMessageSid) {
       // Process the incoming message
       console.log(`Received message from ${From}: ${Body}`);
-      const response = new twiml.MessagingResponse();
-      response.message(`You said: ${Body}`);
-      reply.type('text/xml').send(response.toString());
-    } else {
-      // Handle other types of requests if needed
-      reply.status(200).send({ status: 'ok' });
+      const userId = await getUserIdByPhoneNumber(From);
+      if (!userId) {
+        const response = new twiml.MessagingResponse();
+        response.message(`User not found, sign up at https://goaltime.ai/login?type=signup`);
+        return reply.type('text/xml').send(response.toString());
+      } else {
+        await inngest.send({
+          name: InngestEvent.IncomingSMS,
+          data: {
+            from: From,
+            message: Body,
+            userId,
+          },
+        });
+      }
     }
+    reply.status(200).send({ status: 'ok' });
   });
 }
 
+async function getUserIdByPhoneNumber(phoneNumber: string) {
+  const prisma = await getPrismaClient();
+  const profile = await prisma.userProfile.findFirst({
+    where: {
+      phone: phoneNumber,
+    },
+  });
+  return profile?.userId ?? null;
+}
+
+export const incomingSMS = inngest.createFunction(
+  {
+    id: 'incoming-sms',
+    concurrency: {
+      limit: 1,
+      scope: "env",
+      key: "event.data.from"
+    }
+  },
+  {
+    event: InngestEvent.IncomingSMS,
+  },
+  async ({ event, logger, step }) => {
+    const { from, message, userId } = event.data;
+    let responseText = '';
+    if (!userId) {
+      logger.info(`User with phone number ${from} not found, sending signup link`);
+      responseText = WELCOME_MESSAGE;
+    } else {
+      logger.info(`User with phone number ${from} found, executing chat`);
+      responseText = await step.invoke(`chat-for-user-${userId}`, {
+        function: chat,
+        data: {
+          userId,
+          message,
+        },
+      });
+    }
+    logger.info(`Sending response to ${from}:\n"${responseText}"`);
+    await step.run('send-response', async () => {
+      await sendSMS(from, responseText);
+    });
+  });

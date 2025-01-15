@@ -1,7 +1,7 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
 import { CalendarEvent, GoogleAuth, UserProfile } from "@prisma/client";
 
-import type { NotificationData, SanitizedUser } from "@/shared/utils";
+import type { NotificationData, NotificationPayload, SanitizedUser } from "@/shared/utils";
 import type { SyncEvent } from "@/shared/zod";
 import { Jsonify } from "inngest/helpers/jsonify";
 
@@ -13,6 +13,8 @@ export enum InngestEvent {
   GoogleCalendarSync = "calendar/google/sync",
   GoogleCalendarCronSync = "calendar/google/sync/cron",
   ScheduleGoalEvents = "calendar/scheduling",
+  IncomingSMS = "incoming/sms",
+  Chat = "agents/accountability/chat",
   CheckIn = "agents/accountability/check-in",
   PreEvent = "agents/accountability/pre-event",
   PostEvent = "agents/accountability/post-event",
@@ -36,6 +38,20 @@ export const inngest = new Inngest({
         googleAuth: GoogleAuth;
         forceFullSync?: undefined;
       }
+    };
+    [InngestEvent.Chat]: {
+      data: {
+        userId: string;
+        message?: string;
+        notification?: NotificationPayload<string>;
+      };
+    };
+    [InngestEvent.IncomingSMS]: {
+      data: {
+        from: string;
+        message: string;
+        userId: string;
+      };
     };
     [InngestEvent.CheckIn]: {
       data: NotificationData<string>;

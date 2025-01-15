@@ -29,6 +29,7 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
   const userProfile = await prisma.userProfile.create({
     data: {
       ...profile,
+      phone: profile.phone.replace(/[^+\d]/g, ''),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       preferredWakeUpTime: profile.preferredWakeUpTime!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

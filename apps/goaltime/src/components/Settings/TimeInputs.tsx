@@ -216,11 +216,12 @@ export const CommitmentInput: React.FC<FormInputProps> = ({ form }) => {
                 placeholder="Enter..."
                 className="pr-10 w-[200px]"
                 type="number"
-                min={1}
+                min={1.0}
+                step={0.5}
                 {...field}
                 value={field.value ?? undefined}
                 onChange={(e) => {
-                  const inputValue = e.target.value;
+                  const inputValue = parseFloat(e.target.value.trim()).toFixed(2);
                   field.onChange(inputValue === "" ? null : Number(inputValue));
                 }}
               />
@@ -250,11 +251,12 @@ export const EstimateInput: React.FC<FormInputProps> = ({ form }) => {
                 placeholder="Enter..."
                 className="pr-10 w-[200px]"
                 type="number"
-                min={1}
+                min={1.0}
+                step={0.5}
                 {...field}
                 value={field.value ?? undefined}
                 onChange={(e) => {
-                  const inputValue = e.target.value;
+                  const inputValue = parseFloat(e.target.value.trim()).toFixed(2);
                   field.onChange(inputValue === "" ? null : Number(inputValue));
                 }}
               />

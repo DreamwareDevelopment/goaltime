@@ -9,7 +9,9 @@ import { inngest, InngestEvent } from '@/server-utils/inngest';
 import { checkIn } from '@/server-utils/ai';
 
 import { syncToClient } from './lib/sync';
+import { chat } from './accountability/chat';
 import { startAccountabilityLoop } from './accountability/loop';
+import { incomingSMS } from './routes/webhooks/messaging';
 
 /* eslint-disable-next-line */
 export interface AppOptions {}
@@ -29,7 +31,7 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
 
   fastify.register(inngestFastify, {
     client: inngest,
-    functions: [startAccountabilityLoop, syncToClient, checkIn],
+    functions: [startAccountabilityLoop, syncToClient, checkIn, chat, incomingSMS],
     options: {}
   });
 
@@ -51,11 +53,18 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
     console.log('Sending start accountability loop event');
     setTimeout(async () => {
       await inngest.send({
-        name: InngestEvent.StartAccountabilityLoop,
+        name: InngestEvent.StopAccountabilityLoop,
         data: {} as never,
       });
-      console.log('Sent start accountability loop event.');
-    }, 1000);
+      console.log('Sent stop accountability loop event.');
+      setTimeout(async () => {
+        await inngest.send({
+          name: InngestEvent.StartAccountabilityLoop,
+          data: {} as never,
+        });
+        console.log('Sent start accountability loop event.');
+      }, 10000);
+    }, 10000);
   });
   fastify.addHook('preClose', async function () {
     console.log('Sending stop accountability loop event');
