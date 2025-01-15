@@ -1,12 +1,14 @@
 import { inngest, InngestEvent } from "@/server-utils/inngest";
-import { zep } from "@/server-utils/ai";
+import { buildMessages, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { openai } from "@ai-sdk/openai";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { randomUUID } from "crypto";
 import { Session } from "@getzep/zep-cloud/api";
 import { NotificationPayload, NotificationType } from "@/shared/utils";
-import { CoreMessage, generateText } from "ai";
+import { generateText } from "ai";
 import { Logger } from "inngest/middleware/logger";
+import z from "zod";
+import { ScheduleableGoal, ScheduleableGoalSchema } from "@/shared/zod";
 
 enum Intent {
   AccountabilityUpdate = "Give accountability update on an event.",
@@ -60,21 +62,7 @@ async function getHelpMessage(session: Session) {
     ],
     context: "${JSON.stringify(memory.context, null, 2)}"
   }`;
-  const messagesToSend: CoreMessage[] = []
-  messagesToSend.push({
-    role: "system",
-    content: systemPrompt,
-  })
-  if (messages) {
-    for (const message of messages) {
-      if (message.role === "user" || message.role === "assistant") {
-        messagesToSend.push({
-          role: message.role,
-          content: message.content,
-        })
-      }
-    }
-  }
+  const messagesToSend = buildMessages(systemPrompt, messages);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     messages: messagesToSend,
@@ -96,27 +84,81 @@ async function updateUserProfile(userId: string, sessionId: string) {
 
 async function shouldStartNewSession(logger: Logger, sessionId: string, message: string) {
   const memory = await zep.memory.get(sessionId);
-  const history: CoreMessage[] = memory.messages?.filter(message => message.role === "user" || message.role === "assistant").map(message => ({
-    role: message.role as "user" | "assistant",
-    content: message.content,
-  })) ?? [];
   const systemPrompt = `{
     "role": "You are to determine if a given message is a relevant continuation of the following conversation",
-    "conversation": ${JSON.stringify(history, null, 2)},
+    "conversation": ${JSON.stringify(zepMessagesToCoreMessages(memory.messages), null, 2)},
     "return": "new" | "relevant"
   }`;
+  const messagesToSend = buildMessages(systemPrompt, [{
+    role: "user",
+    content: message,
+    roleType: "user",
+  }]);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
-    messages: [{
-      role: "system",
-      content: systemPrompt,
-    }, ...history, {
-      role: "user",
-      content: message,
-    }],
+    messages: messagesToSend,
   })
   logger.info(`Response: ${response.text}`);
   return response.text === "new";
+}
+
+async function getGoal(logger: Logger, sessionId: string): Promise<ScheduleableGoal | null> {
+  const memory = await zep.memory.get(sessionId);
+  const goal = memory.metadata?.goal as ScheduleableGoal | undefined;
+  if (goal) {
+    return goal;
+  }
+  const systemPrompt = `{
+    "role": "You are to determine if the user is asking for advice about a goal that they already have.",
+    "context": ${JSON.stringify(memory.context, null, 2)},
+  }`;
+  const messagesToSend = buildMessages(systemPrompt, memory.messages);
+  const response = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages: messagesToSend,
+    toolChoice: "required",
+    tools: {
+      answer: {
+        description: "Give the goal that the user is asking for advice about or null if there is no existing goal.",
+        parameters: z.object({
+          answer: ScheduleableGoalSchema.nullable().optional(),
+        }),
+      },
+    },
+  })
+  return response.toolCalls[0].args.answer ?? null;
+}
+
+async function goalAdvice(logger: Logger, sessionId: string) {
+  const goal = await getGoal(logger, sessionId);
+  if (!goal) {
+    return "I couldn't find a relevant goal for you. Please create a goal first.";
+  }
+  const systemPrompt = `{
+    "role": "You are to give concise advice to the user about a goal they have.",
+    "capabilities": [
+      "Help the user understand what their goal means for their life.",
+      "Suggest realistic ways to achieve their goal steadily over time.",
+      "Suggest best practices related to their goal.",
+      "Give relevant examples of how others have achieved similar goals.",
+      "Recommend tools or resources that can help them achieve their goal.",
+      "Provide motivational quotes or stories to inspire them.",
+      "Offer tips on how to stay consistent and motivated.",
+      "Encourage self-reflection and goal-setting.",
+      "Provide emotional support and encouragement.",
+    ],
+    "constraints": [
+      "Respond in 1600 characters or less.",
+    ],
+    "goal": ${JSON.stringify(goal, null, 2)},
+  }`;
+  const memory = await zep.memory.get(sessionId);
+  const messagesToSend = buildMessages(systemPrompt, memory.messages);
+  const response = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages: messagesToSend,
+  })
+  return response.text;
 }
 
 export const chat = inngest.createFunction({
@@ -263,7 +305,8 @@ export const chat = inngest.createFunction({
       break;
     case Intent.InquireAboutGoals:
       logger.info(`Asking for advice regarding a goal for user ${userId}`);
-      response = `Asking for advice regarding a goal`;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      response = await goalAdvice(logger, session.sessionId!);
       break;
     case Intent.EndConversation:
       logger.info(`Ending conversation for user ${userId}`);
