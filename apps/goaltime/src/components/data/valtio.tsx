@@ -88,8 +88,7 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
     })
 
     return cleanupWebSocket
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [toast])
 
   return (
     <ValtioContext.Provider value={{ ...stores, dashboardData }}>

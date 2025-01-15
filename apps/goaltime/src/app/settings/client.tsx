@@ -76,7 +76,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
       })
       router.push('/dashboard')
     } catch (error) {
-      console.error('error creating user profile', error)
+      console.error('error updating user profile', error)
       // TODO: Get better type checking on these error page params
       router.push(`/error?error=${error}&next=${encodeURIComponent('/login')}&solution=Please try again.`)
     }

@@ -25,7 +25,7 @@ function getZepUserMetadata(userProfile: UserProfile) {
 
 export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
   delete profile.otp
-  const prisma = await getPrismaClient(profile.userId)
+  const prisma = await getPrismaClient()
   const userProfile = await prisma.userProfile.create({
     data: {
       ...profile,
