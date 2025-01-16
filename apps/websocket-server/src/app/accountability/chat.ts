@@ -5,11 +5,11 @@ import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
 import z from "zod";
 
-import { Goal } from "@prisma/client";
+import { Goal, UserProfile } from "@prisma/client";
 import { buildMessages, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngest, InngestEvent } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
-import { NotificationPayload, NotificationType } from "@/shared/utils";
+import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
 import { LLMGoal, LLMGoalSchema } from "@/shared/zod";
 
 enum Intent {
@@ -24,20 +24,29 @@ enum Intent {
 
 export const WELCOME_MESSAGE = `Looks like you're new here. I'm GoalTime AI, your personal accountability assistant to keep you on track to hit all your goals. Please create an account at https://goaltime.ai`;
 
-async function generateMessage(notification: NotificationPayload<string>) {
+async function generateNotificationMessage(notification: NotificationPayload<string>) {
   const { goal, event } = notification;
   let prompt: string;
   if (notification.type === NotificationType.Before) {
-    prompt = `You are a helpful scheduling assistant. There is an event coming up.
-    Event: ${event}
-    Minutes before event: ${goal}
-    Return a message informing them how long they have until the event.
-    `;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const minutesUntilEvent = dayjs(event.startTime!).diff(dayjs(), "minutes");
+    prompt = `{
+      "role": "You are a scheduling assistant. There is an event coming up.",
+      "relatedGoal": ${JSON.stringify(goal, null, 2)},
+      "event": ${JSON.stringify(event, null, 2)},
+      "minutesUntilEvent": ${minutesUntilEvent},
+      "tone": "colloquial, concise, encouraging",
+      "format": "sms",
+      "return": "A message informing them how long they have until the event.",
+    }`;
   } else {
-    prompt = `You are a helpful scheduling assistant. The user has just finished an event.
-    Event: ${event.title}
-    Return a message asking them how it went and if they spent the entire time on the event.
-    `;
+    prompt = `{
+      "role": "You are a scheduling assistant. The user has just finished an event.",
+      "event": ${JSON.stringify(event, null, 2)},
+      "tone": "colloquial, concise, accountable",
+      "format": "sms",
+      "return": "A message asking them how it went and if they spent the entire time on the event.",
+    }`;
   }
   const response = await generateText({
     model: openai("gpt-4o-mini"),
@@ -190,6 +199,76 @@ async function goalAdvice(logger: Logger, userId: string, sessionId: string) {
   return response.text;
 }
 
+async function handleNotification(logger: Logger, profile: UserProfile, notification: NotificationPayload<string>) {
+  let session: Session;
+  logger.info(`Generating notification message for user ${profile.userId} with notification:\n${JSON.stringify(notification, null, 2)}`);
+  const message = await generateNotificationMessage(notification);
+  logger.info(`Generated notification message for user ${profile.userId}: ${message}`);
+  if (notification.type === NotificationType.Before || !profile.lastChatSessionId) {
+    // If this notification is before the event or there is no last chat session, we need to create a new one
+    session = await zep.memory.addSession({
+      sessionId: randomUUID(),
+      userId: profile.userId,
+      metadata: {
+        goal: notification.goal,
+        event: notification.event,
+      },
+    })
+  } else {
+    logger.info(`Continuing chat session for user ${profile.userId} for event ${notification.event}`);
+    session = await zep.memory.getSession(profile.lastChatSessionId);
+  }
+  if (!session || !session.sessionId) {
+    logger.error(`Failed to retrieve chat session for user ${profile.userId}`);
+    throw new Error(`We couldn't find your chat session. Please try again later.`);
+  }
+  await zep.memory.add(session.sessionId, {
+    messages: [{
+      role: "assistant",
+      content: message,
+      roleType: "assistant",
+    }],
+  })
+  await updateUserProfile(profile.userId, session.sessionId);
+  return message;
+}
+
+async function getUpdatedSession(logger: Logger, profile: UserProfile, message: string): Promise<{ session: Session }> {
+  let session: Session;
+  if (!profile.lastChatSessionId) {
+    // Create a new session
+    const sessionId = randomUUID();
+    session = await zep.memory.addSession({
+      sessionId,
+      userId: profile.userId,
+    })
+  } else {
+    const startNewSession = await shouldStartNewSession(logger, profile.lastChatSessionId, message);
+    if (startNewSession) {
+      logger.info(`Starting new chat session for user ${profile.userId} for message ${message}`);
+      session = await zep.memory.addSession({
+        sessionId: randomUUID(),
+        userId: profile.userId,
+      })
+    } else {
+      logger.info(`Continuing chat session for user ${profile.userId} for message ${message}`);
+      session = await zep.memory.getSession(profile.lastChatSessionId);
+    }
+  }
+  if (!session.sessionId) {
+    throw new Error(`Failed to retrieve or create chat session: ${message}`);
+  }
+  await zep.memory.add(session.sessionId, {
+    messages: [{
+      role: "user",
+      content: message,
+      roleType: "user",
+    }],
+  })
+  await updateUserProfile(profile.userId, session.sessionId);
+  return { session };
+}
+
 export const chat = inngest.createFunction({
   id: 'chat',
   concurrency: [{
@@ -202,9 +281,7 @@ export const chat = inngest.createFunction({
 }, {
   event: InngestEvent.Chat,
 }, async ({ event, logger, step }) => {
-  let message = event.data.message;
   const { userId, notification } = event.data;
-  logger.info(`Processing chat for user ${userId} with message "${message}" and notification:\n${JSON.stringify(notification, null, 2)}`);
   const prisma = await getPrismaClient(userId);
   const sessionResponse = await step.run("get-chat-session", async () => {
     const userProfile = await prisma.userProfile.findUnique({
@@ -215,102 +292,46 @@ export const chat = inngest.createFunction({
     if (!userProfile) {
       return WELCOME_MESSAGE;
     }
-  
-    let session: Session;
     if (notification) {
       // If there is a notification, we need to generate a message to send to the user
-      message = await generateMessage(notification);
-      if (notification.type === NotificationType.Before || !userProfile.lastChatSessionId) {
-        // If this notification is before the event or there is no last chat session, we need to create a new one
-        session = await zep.memory.addSession({
-          sessionId: randomUUID(),
-          userId,
-          metadata: {
-            goal: notification.goal,
-            event: notification.event,
-          },
-        })
-      } else {
-        logger.info(`Continuing chat session for user ${userId} for event ${notification.event}`);
-        session = await zep.memory.getSession(userProfile.lastChatSessionId);
-      }
-      if (!session || !session.sessionId) {
-        logger.error(`Failed to retrieve chat session for user ${userId}`);
-        return `We couldn't find your chat session. Please try again later.`;
-      }
-      await zep.memory.add(session.sessionId, {
-        messages: [{
-          role: "assistant",
-          content: message,
-          roleType: "assistant",
-        }],
-      })
-      await updateUserProfile(userId, session.sessionId);
-      return message;
+      return await handleNotification(logger, userProfile, notification);
     }
+
+    const message = event.data.message;
+    logger.info(`Processing chat for user ${userId} with message "${message}"`);
     if (!message) {
       throw new Error("Message is required when there is no notification");
     }
+
     // This is a chat message from the user, not a notification
-    if (!userProfile.lastChatSessionId) {
-      // Create a new session
-      const sessionId = randomUUID();
-      session = await zep.memory.addSession({
-        sessionId,
-        userId,
-      })
-    } else {
-      const startNewSession = await shouldStartNewSession(logger, userProfile.lastChatSessionId, message);
-      if (startNewSession) {
-        logger.info(`Starting new chat session for user ${userId} for message ${message}`);
-        session = await zep.memory.addSession({
-          sessionId: randomUUID(),
-          userId,
-        })
-      } else {
-        logger.info(`Continuing chat session for user ${userId} for message ${message}`);
-        session = await zep.memory.getSession(userProfile.lastChatSessionId);
-      }
-    }
-    if (!session.sessionId) {
-      throw new Error(`Failed to retrieve or create chat session: ${message}`);
-    }
-    await zep.memory.add(session.sessionId, {
-      messages: [{
-        role: "user",
-        content: message,
-        roleType: "user",
-      }],
-    })
-    await updateUserProfile(userId, session.sessionId);
-    return { session };
+    return await getUpdatedSession(logger, userProfile, message);
   });
+
   if (typeof sessionResponse === "string") {
     return sessionResponse;
   }
   const { session } = sessionResponse;
-  if (!session.sessionId) {
+  if (!session?.sessionId) {
     throw new Error("Failed to retrieve or create chat session");
   }
 
   const agentSelection = await step.run("select-agent", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const memory = await zep.memory.get(session.sessionId!)
-    logger.info(`Context:\n${JSON.stringify(memory.context, null, 2)}`);
     const instruction = `Select the agent that should respond given the context`;
     logger.info(`Selecting agent for user ${userId} with instruction:\n${instruction}`);
+    const classes = [
+      Intent.AccountabilityUpdate,
+      Intent.AlterGoal,
+      Intent.EndConversation,
+      Intent.InquireAboutEvents,
+      Intent.InquireAboutGoals,
+      Intent.NeedsHelp,
+      Intent.RescheduleEvent,
+    ];
+    // TODO: Should first classify the session on whether the user is asking for help, action, or something else that can be responded to directly.
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const classification = await zep.memory.classifySession(session.sessionId!, {
       name: "intent",
-      classes: [
-        Intent.AccountabilityUpdate,
-        Intent.AlterGoal,
-        Intent.EndConversation,
-        Intent.InquireAboutEvents,
-        Intent.InquireAboutGoals,
-        Intent.NeedsHelp,
-        Intent.RescheduleEvent,
-      ],
+      classes,
       persist: false,
       instruction,
     })
