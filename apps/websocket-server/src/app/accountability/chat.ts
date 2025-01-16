@@ -5,12 +5,13 @@ import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
 import z from "zod";
 
-import { Goal, UserProfile } from "@prisma/client";
+import { CalendarEvent, Goal, UserProfile } from "@prisma/client";
 import { buildMessages, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngest, InngestEvent } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
-import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
+import { dayjs, Interval, NotificationPayload, NotificationType } from "@/shared/utils";
 import { LLMGoal, LLMGoalSchema } from "@/shared/zod";
+import { DATE_TIME_FORMAT } from "@/server-utils/inngest";
 
 enum ConversationCategory {
   Information = "Asking for help or information",
@@ -137,16 +138,31 @@ async function shouldStartNewSession(logger: Logger, sessionId: string, message:
   return response.text === "new";
 }
 
+function formatEvent(event: CalendarEvent): string {
+  return `{
+    "title": "${event.title}",
+    "description": "${event.description}",
+    "startTime": "${dayjs(event.startTime).format(DATE_TIME_FORMAT)}",
+    "endTime": "${event.endTime ? dayjs(event.endTime).format(DATE_TIME_FORMAT) : null}",
+    "duration": "${event.endTime ? `${dayjs(event.endTime).diff(dayjs(event.startTime), "minutes")} mins` : null}",
+  }`
+}
+
+function formatEvents(events: CalendarEvent[]): string {
+  return JSON.stringify(events.map(formatEvent), null, 2)
+}
+
 function formatGoal(goal: Goal): string {
-  return JSON.stringify({
-    title: goal.title,
-    description: goal.description,
-    deadline: goal.deadline,
-    commitment: goal.commitment ? `${goal.commitment} hrs/wk` : null,
-    preferredTimes: goal.preferredTimes,
-    minimumDuration: `${goal.minimumDuration} mins`,
-    maximumDuration: `${goal.maximumDuration} mins`,
-  }, null, 2)
+  return `{
+    "id": "${goal.id}",
+    "title": "${goal.title}",
+    "description": "${goal.description}",
+    "deadline": "${goal.deadline}",
+    "commitment": "${goal.commitment ? `${goal.commitment} hrs/wk` : null}",
+    "preferredTimes": "${goal.preferredTimes}",
+    "minimumDuration": "${goal.minimumDuration} mins",
+    "maximumDuration": "${goal.maximumDuration} mins",
+  }`
 }
 
 function formatGoals(goals: Goal[]): string {
@@ -186,6 +202,113 @@ async function getGoals(logger: Logger, userId: string, sessionId: string): Prom
     relevantGoals.push(g);
   }
   return relevantGoals;
+}
+
+async function getEventsTimeframe(sessionId: string): Promise<Interval> {
+  const instruction = `You are to determine if the user is asking for information about event(s) in the past or future.`;
+  const classes = [
+    "Past event(s)",
+    "Future event(s)",
+  ];
+  const classification = await zep.memory.classifySession(sessionId, {
+    name: "event-information",
+    classes,
+    instruction,
+  })
+  const now = dayjs();
+  if (classification.class === "Past event(s)") {
+    return {
+      start: now.subtract(7, "days").toDate(),
+      end: now.toDate(),
+    };
+  }
+  return {
+    start: now.toDate(),
+    end: now.add(7, "days").toDate(),
+  };
+}
+
+async function getEvents(userId: string, timeframe: Interval): Promise<CalendarEvent[]> {
+  const prisma = await getPrismaClient(userId);
+  const events = await prisma.calendarEvent.findMany({
+    where: {
+      userId,
+      goalId: {
+        not: null,
+      },
+      OR: [
+        {
+          startTime: {
+            gte: timeframe.start,
+            lte: timeframe.end,
+          },
+        },
+        {
+          endTime: {
+            gte: timeframe.start,
+            lte: timeframe.end,
+          },
+        },
+      ],
+    },
+  });
+  return events;
+}
+
+async function eventInformation(logger: Logger, profile: UserProfile, sessionId: string): Promise<string> {
+  const now = dayjs.tz(new Date(), profile.timezone);
+  const eventTimeframe = await getEventsTimeframe(sessionId);
+  const events = await getEvents(profile.userId, eventTimeframe);
+  logger.info(`Timeframe:\n\tStart: ${eventTimeframe.start}\n\tEnd: ${eventTimeframe.end}`);
+  logger.info(`Events: ${formatEvents(events)}`);
+  // TODO: Figure out if they are asking for future or past events
+  const systemPrompt = `{
+    "role": "You are to answer questions about the user's events.",
+    "now": "${now.format(DATE_TIME_FORMAT)}",
+    "events": ${formatEvents(events)},
+    "timezone": "${profile.timezone}",
+    "instructions": "You are given a list of events sorted by start time within the time frame the user is asking about. All events are in the same timezone as the user.
+    Answer the user's question about the event(s) they are referencing. You may use only one tool call to get the information you need and one to answer the user's question.",
+    "constraints": [
+      "You are to respond in 1600 characters or less.",
+      "You are to respond in a colloquial and concise manner befitting an sms conversation.",
+      "Don't mention the time frame or the current time in your response.",
+    ]
+  }`;
+  logger.info(`System prompt: ${systemPrompt}`);
+  const memory = await zep.memory.get(sessionId);
+  const messagesToSend = buildMessages(systemPrompt, memory.messages);
+  const response = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages: messagesToSend,
+    toolChoice: "required",
+    maxSteps: 2,
+    tools: {
+      answer: {
+        description: "Answer the user's question about the event(s) they are referencing.",
+        parameters: z.object({
+          answer: z.string().describe("The answer to the user's question."),
+        }),
+      },
+      getTimeBetweenEvents: {
+        description: "Get the time between two events.",
+        parameters: z.object({
+          timeA: z.string().describe("Time A."),
+          timeB: z.string().describe("Time B."),
+        }),
+        execute: async (args) => {
+          const timeA = dayjs(args.timeA);
+          const timeB = dayjs(args.timeB);
+          return `${Math.abs(timeA.diff(timeB, "minutes"))} mins`;
+        },
+      },
+    },
+  })
+  const answer = response.toolCalls.find((call) => call.toolName === "answer")?.args.answer;
+  if (!answer) {
+    throw new Error("No answer provided");
+  }
+  return answer;
 }
 
 async function goalAdvice(logger: Logger, userId: string, sessionId: string): Promise<string> {
@@ -321,15 +444,16 @@ export const chat = inngest.createFunction({
 }, async ({ event, logger, step }) => {
   const { userId, notification } = event.data;
   const prisma = await getPrismaClient(userId);
+  const userProfile = await prisma.userProfile.findUnique({
+    where: {
+      userId,
+    },
+  });
+  if (!userProfile) {
+    return WELCOME_MESSAGE;
+  }
+
   const sessionResponse = await step.run("get-chat-session", async () => {
-    const userProfile = await prisma.userProfile.findUnique({
-      where: {
-        userId,
-      },
-    });
-    if (!userProfile) {
-      return WELCOME_MESSAGE;
-    }
     if (notification) {
       // If there is a notification, we need to generate a message to send to the user
       return await handleNotification(logger, userProfile, notification);
@@ -396,12 +520,16 @@ export const chat = inngest.createFunction({
       persist: false,
       instruction,
     })
+    logger.info(`Intent classification: "${intentClassification.class}"`);
+    if (!intentClassification.class) {
+      return { type: ConversationCategory.Other, intent: "" };
+    }
     return { type: conversationClassification.class, intent: intentClassification.class };
-  })
+  }) as ConversationIntent;
 
 
   const { type, intent } = agentSelection;
-  let response: string;
+  let response = `Sorry, I don't know how to respond to that.`;
   if (type === ConversationCategory.Information) {
     switch (intent) {
       case InformationIntent.NeedsHelp:
@@ -414,7 +542,7 @@ export const chat = inngest.createFunction({
         break;
       case InformationIntent.InquireAboutEvents:
         logger.info(`Asking for advice regarding an event for user ${userId}`);
-        response = `Asking for advice regarding an event`;
+        response = await step.ai.wrap("get-event-advice", eventInformation, logger, userProfile, sessionId);
         break;
     }
   } else if (type === ConversationCategory.Action) {
@@ -450,5 +578,6 @@ export const chat = inngest.createFunction({
       }],
     })
   })
+  logger.info(`Response: ${response}`);
   return response;
 });

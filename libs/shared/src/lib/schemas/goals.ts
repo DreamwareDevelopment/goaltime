@@ -82,6 +82,7 @@ export const GoalSchema = z.object({
 export type GoalInput = z.infer<typeof GoalSchema>
 
 export const LLMGoalSchema = z.object({
+  id: z.string().describe("The id of the goal."),
   title: z.string().describe("The title of the goal."),
   description: z.string().describe("A description of the goal."),
   deadline: z.string().describe("The deadline of the goal.").nullable(),
