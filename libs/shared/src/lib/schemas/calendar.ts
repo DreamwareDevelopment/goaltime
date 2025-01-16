@@ -13,3 +13,13 @@ export const CalendarEventSchema = z.object({
 });
 
 export type CalendarEventInput = z.infer<typeof CalendarEventSchema>;
+
+export const LLMEventSchema = z.object({
+  title: z.string().describe("The title of the event"),
+  description: z.string().nullable().describe("The description of the event"),
+  duration: z.number().describe("The duration of the event in minutes"),
+  startTime: z.string().describe("The start time of the event"),
+  endTime: z.string().describe("The end time of the event"),
+});
+
+export type LLMEvent = z.infer<typeof LLMEventSchema>;

@@ -16,8 +16,6 @@ export enum InngestEvent {
   IncomingSMS = "incoming/sms",
   Chat = "agents/accountability/chat",
   CheckIn = "agents/accountability/check-in",
-  PreEvent = "agents/accountability/pre-event",
-  PostEvent = "agents/accountability/post-event",
   NewUser = "marketing/new-user",
 }
 
@@ -54,12 +52,6 @@ export const inngest = new Inngest({
       };
     };
     [InngestEvent.CheckIn]: {
-      data: NotificationData<string>;
-    };
-    [InngestEvent.PreEvent]: {
-      data: NotificationData<string>;
-    };
-    [InngestEvent.PostEvent]: {
       data: NotificationData<string>;
     };
     [InngestEvent.StartAccountabilityLoop]: {

@@ -3,15 +3,12 @@ import { Session } from "@getzep/zep-cloud/api";
 import { generateText } from "ai";
 import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
-import z from "zod";
 
-import { CalendarEvent, Goal, UserProfile } from "@prisma/client";
-import { buildMessages, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
+import { UserProfile } from "@prisma/client";
+import { buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngest, InngestEvent } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
-import { dayjs, Interval, NotificationPayload, NotificationType } from "@/shared/utils";
-import { LLMGoal, LLMGoalSchema } from "@/shared/zod";
-import { DATE_TIME_FORMAT } from "@/server-utils/inngest";
+import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
 
 enum ConversationCategory {
   Information = "Asking for help or information",
@@ -81,31 +78,6 @@ async function generateNotificationMessage(notification: NotificationPayload<str
   return response.text;
 }
 
-async function getHelpMessage(sessionId: string) {
-  const memory = await zep.memory.get(sessionId);
-  const messages = memory.messages;
-  const systemPrompt = `{
-    role: "You are to help the user understand how to use this agent. 
-    Tell them the relevant capabilities of this agent or just the one relevant to them.
-    You are to respond to the user in a friendly and helpful manner with concise answers befitting an sms conversation.",
-    capabilities: [
-      "give accountability update on an event",
-      "change scheduling preferences for a goal",
-      "end conversation",
-      "inquiry about one or more goals",
-      "inquiry about one or more events, either upcoming or past",
-      "reschedule an upcoming event",
-    ],
-    context: "${JSON.stringify(memory.context, null, 2)}"
-  }`;
-  const messagesToSend = buildMessages(systemPrompt, messages);
-  const response = await generateText({
-    model: openai("gpt-4o-mini"),
-    messages: messagesToSend,
-  })
-  return response.text;
-}
-
 async function updateUserProfile(userId: string, sessionId: string) {
   const prisma = await getPrismaClient(userId);
   await prisma.userProfile.update({
@@ -136,214 +108,6 @@ async function shouldStartNewSession(logger: Logger, sessionId: string, message:
   })
   logger.info(`Response: ${response.text}`);
   return response.text === "new";
-}
-
-function formatEvent(event: CalendarEvent): string {
-  return `{
-    "title": "${event.title}",
-    "description": "${event.description}",
-    "startTime": "${dayjs(event.startTime).format(DATE_TIME_FORMAT)}",
-    "endTime": "${event.endTime ? dayjs(event.endTime).format(DATE_TIME_FORMAT) : null}",
-    "duration": "${event.endTime ? `${dayjs(event.endTime).diff(dayjs(event.startTime), "minutes")} mins` : null}",
-  }`
-}
-
-function formatEvents(events: CalendarEvent[]): string {
-  return JSON.stringify(events.map(formatEvent), null, 2)
-}
-
-function formatGoal(goal: Goal): string {
-  return `{
-    "id": "${goal.id}",
-    "title": "${goal.title}",
-    "description": "${goal.description}",
-    "deadline": "${goal.deadline}",
-    "commitment": "${goal.commitment ? `${goal.commitment} hrs/wk` : null}",
-    "preferredTimes": "${goal.preferredTimes}",
-    "minimumDuration": "${goal.minimumDuration} mins",
-    "maximumDuration": "${goal.maximumDuration} mins",
-  }`
-}
-
-function formatGoals(goals: Goal[]): string {
-  return JSON.stringify(goals.map(formatGoal), null, 2)
-}
-
-async function getGoals(logger: Logger, userId: string, sessionId: string): Promise<LLMGoal[]> {
-  const prisma = await getPrismaClient(userId);
-  const goals = await prisma.goal.findMany({
-    where: {
-      userId,
-    },
-  });
-  const relevantGoals: LLMGoal[] = [];
-  const memory = await zep.memory.get(sessionId);
-  const systemPrompt = `{
-    "role": "You are to determine if the user is asking for advice about a goal that they already have.",
-    "context": ${JSON.stringify(memory.context, null, 2)},
-    "goals": ${formatGoals(goals)},
-  }`;
-  const messagesToSend = buildMessages(systemPrompt, memory.messages);
-  const response = await generateText({
-    model: openai("gpt-4o-mini"),
-    messages: messagesToSend,
-    toolChoice: "required",
-    tools: {
-      answer: {
-        description: "Give the goal(s) that the user is referencing.",
-        parameters: z.object({
-          answer: z.array(LLMGoalSchema).nullable().optional(),
-        }),
-      },
-    },
-  })
-  for (const g of response.toolCalls[0].args.answer ?? []) {
-    logger.info(`Relevant goal: ${JSON.stringify(g, null, 2)}`);
-    relevantGoals.push(g);
-  }
-  return relevantGoals;
-}
-
-async function getEventsTimeframe(sessionId: string): Promise<Interval> {
-  const instruction = `You are to determine if the user is asking for information about event(s) in the past or future.`;
-  const classes = [
-    "Past event(s)",
-    "Future event(s)",
-  ];
-  const classification = await zep.memory.classifySession(sessionId, {
-    name: "event-information",
-    classes,
-    instruction,
-  })
-  const now = dayjs();
-  if (classification.class === "Past event(s)") {
-    return {
-      start: now.subtract(7, "days").toDate(),
-      end: now.toDate(),
-    };
-  }
-  return {
-    start: now.toDate(),
-    end: now.add(7, "days").toDate(),
-  };
-}
-
-async function getEvents(userId: string, timeframe: Interval): Promise<CalendarEvent[]> {
-  const prisma = await getPrismaClient(userId);
-  const events = await prisma.calendarEvent.findMany({
-    where: {
-      userId,
-      goalId: {
-        not: null,
-      },
-      OR: [
-        {
-          startTime: {
-            gte: timeframe.start,
-            lte: timeframe.end,
-          },
-        },
-        {
-          endTime: {
-            gte: timeframe.start,
-            lte: timeframe.end,
-          },
-        },
-      ],
-    },
-  });
-  return events;
-}
-
-async function eventInformation(logger: Logger, profile: UserProfile, sessionId: string): Promise<string> {
-  const now = dayjs.tz(new Date(), profile.timezone);
-  const eventTimeframe = await getEventsTimeframe(sessionId);
-  const events = await getEvents(profile.userId, eventTimeframe);
-  logger.info(`Timeframe:\n\tStart: ${eventTimeframe.start}\n\tEnd: ${eventTimeframe.end}`);
-  logger.info(`Events: ${formatEvents(events)}`);
-  // TODO: Figure out if they are asking for future or past events
-  const systemPrompt = `{
-    "role": "You are to answer questions about the user's events.",
-    "now": "${now.format(DATE_TIME_FORMAT)}",
-    "events": ${formatEvents(events)},
-    "timezone": "${profile.timezone}",
-    "instructions": "You are given a list of events sorted by start time within the time frame the user is asking about. All events are in the same timezone as the user.
-    Answer the user's question about the event(s) they are referencing. You may use only one tool call to get the information you need and one to answer the user's question.",
-    "constraints": [
-      "You are to respond in 1600 characters or less.",
-      "You are to respond in a colloquial and concise manner befitting an sms conversation.",
-      "Don't mention the time frame or the current time in your response.",
-    ]
-  }`;
-  logger.info(`System prompt: ${systemPrompt}`);
-  const memory = await zep.memory.get(sessionId);
-  const messagesToSend = buildMessages(systemPrompt, memory.messages);
-  const response = await generateText({
-    model: openai("gpt-4o-mini"),
-    messages: messagesToSend,
-    toolChoice: "required",
-    maxSteps: 2,
-    tools: {
-      answer: {
-        description: "Answer the user's question about the event(s) they are referencing.",
-        parameters: z.object({
-          answer: z.string().describe("The answer to the user's question."),
-        }),
-      },
-      getTimeBetweenEvents: {
-        description: "Get the time between two events.",
-        parameters: z.object({
-          timeA: z.string().describe("Time A."),
-          timeB: z.string().describe("Time B."),
-        }),
-        execute: async (args) => {
-          const timeA = dayjs(args.timeA);
-          const timeB = dayjs(args.timeB);
-          return `${Math.abs(timeA.diff(timeB, "minutes"))} mins`;
-        },
-      },
-    },
-  })
-  const answer = response.toolCalls.find((call) => call.toolName === "answer")?.args.answer;
-  if (!answer) {
-    throw new Error("No answer provided");
-  }
-  return answer;
-}
-
-async function goalAdvice(logger: Logger, userId: string, sessionId: string): Promise<string> {
-  const goals = await getGoals(logger, userId, sessionId);
-  if (goals.length === 0) {
-    return "I couldn't find any relevant goals for you. Please create a goal first.";
-  }
-  const systemPrompt = `{
-    "role": "You are to assist the user with their goal(s).
-    You should respond to each goal individually as colloquially as possible.
-    Only give the user what they asked for. Do not over-explain or advise them on any thing other than what they asked for.",
-    "capabilities": [
-      "Help the user understand what their goal means for their life.",
-      "Suggest realistic ways to achieve their goal steadily over time.",
-      "Suggest best practices related to their goal.",
-      "Give relevant examples of how others have achieved similar goals.",
-      "Recommend tools or resources that can help them achieve their goal.",
-      "Provide motivational quotes or stories to inspire them.",
-      "Offer tips on how to stay consistent and motivated.",
-      "Encourage self-reflection and goal-setting.",
-      "Provide emotional support and encouragement.",
-    ],
-    "constraints": [
-      "Respond in 1600 characters or less.",
-      "Answers should be appropriate for sms conversations.",
-    ],
-    "goals": ${JSON.stringify(goals, null, 2)},
-  }`;
-  const memory = await zep.memory.get(sessionId);
-  const messagesToSend = buildMessages(systemPrompt, memory.messages);
-  const response = await generateText({
-    model: openai("gpt-4o-mini"),
-    messages: messagesToSend,
-  })
-  return response.text;
 }
 
 async function getDirectResponse(logger: Logger, userId: string, sessionId: string): Promise<string> {
@@ -534,15 +298,15 @@ export const chat = inngest.createFunction({
     switch (intent) {
       case InformationIntent.NeedsHelp:
         logger.info(`User ${userId} needs help using this agent`);
-        response = await step.ai.wrap("get-help", getHelpMessage, sessionId);
+        response = await step.ai.wrap("get-help", helpAgent, sessionId);
         break;
       case InformationIntent.InquireAboutGoals:
         logger.info(`Asking for advice regarding a goal for user ${userId}`);
-        response = await step.ai.wrap("get-goal-advice", goalAdvice, logger, userId, sessionId);
+        response = await step.ai.wrap("get-goal-advice", goalInformationAgent, logger, userId, sessionId);
         break;
       case InformationIntent.InquireAboutEvents:
         logger.info(`Asking for advice regarding an event for user ${userId}`);
-        response = await step.ai.wrap("get-event-advice", eventInformation, logger, userProfile, sessionId);
+        response = await step.ai.wrap("get-event-advice", eventInformationAgent, logger, userProfile, sessionId);
         break;
     }
   } else if (type === ConversationCategory.Action) {
