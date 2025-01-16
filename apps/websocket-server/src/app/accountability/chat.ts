@@ -12,15 +12,40 @@ import { getPrismaClient } from "@/server-utils/prisma";
 import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
 import { LLMGoal, LLMGoalSchema } from "@/shared/zod";
 
-enum Intent {
-  AccountabilityUpdate = "Give accountability update on an event.",
-  AlterGoal = "Change scheduling preferences for a goal.",
-  EndConversation = "End conversation.",
+enum ConversationCategory {
+  Information = "Asking for help or information",
+  Action = "Asking for an action to be taken",
+  Other = "Other",
+}
+
+enum InformationIntent {
+  NeedsHelp = "Give help on how to use this agent.",
   InquireAboutGoals = "Answer questions about one or more goals.",
   InquireAboutEvents = "Answer questions about one or more events, either upcoming or past.",
-  NeedsHelp = "Give help on how to use this agent.",
+}
+
+enum ActionIntent {
+  AccountabilityUpdate = "Give accountability update on an event.",
+  AlterGoal = "Change scheduling preferences for a goal.",
   RescheduleEvent = "Reschedule an upcoming event.",
 }
+
+type ActionConversationIntent = {
+  type: ConversationCategory.Action;
+  intent: ActionIntent;
+}
+
+type InformationConversationIntent = {
+  type: ConversationCategory.Information;
+  intent: InformationIntent;
+}
+
+type OtherConversationIntent = {
+  type: ConversationCategory.Other;
+  intent: string;
+}
+
+type ConversationIntent = ActionConversationIntent | InformationConversationIntent | OtherConversationIntent;
 
 export const WELCOME_MESSAGE = `Looks like you're new here. I'm GoalTime AI, your personal accountability assistant to keep you on track to hit all your goals. Please create an account at https://goaltime.ai`;
 
@@ -55,9 +80,8 @@ async function generateNotificationMessage(notification: NotificationPayload<str
   return response.text;
 }
 
-async function getHelpMessage(session: Session) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const memory = await zep.memory.get(session.sessionId!);
+async function getHelpMessage(sessionId: string) {
+  const memory = await zep.memory.get(sessionId);
   const messages = memory.messages;
   const systemPrompt = `{
     role: "You are to help the user understand how to use this agent. 
@@ -164,7 +188,7 @@ async function getGoals(logger: Logger, userId: string, sessionId: string): Prom
   return relevantGoals;
 }
 
-async function goalAdvice(logger: Logger, userId: string, sessionId: string) {
+async function goalAdvice(logger: Logger, userId: string, sessionId: string): Promise<string> {
   const goals = await getGoals(logger, userId, sessionId);
   if (goals.length === 0) {
     return "I couldn't find any relevant goals for you. Please create a goal first.";
@@ -191,6 +215,20 @@ async function goalAdvice(logger: Logger, userId: string, sessionId: string) {
     "goals": ${JSON.stringify(goals, null, 2)},
   }`;
   const memory = await zep.memory.get(sessionId);
+  const messagesToSend = buildMessages(systemPrompt, memory.messages);
+  const response = await generateText({
+    model: openai("gpt-4o-mini"),
+    messages: messagesToSend,
+  })
+  return response.text;
+}
+
+async function getDirectResponse(logger: Logger, userId: string, sessionId: string): Promise<string> {
+  const memory = await zep.memory.get(sessionId);
+  const systemPrompt = `{
+    "role": "You are to respond to the user in a colloquial and concise manner befitting an sms conversation.",
+    "return": "A response to the user's message.",
+  }`;
   const messagesToSend = buildMessages(systemPrompt, memory.messages);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
@@ -314,66 +352,93 @@ export const chat = inngest.createFunction({
   if (!session?.sessionId) {
     throw new Error("Failed to retrieve or create chat session");
   }
+  const sessionId = session.sessionId;
 
   const agentSelection = await step.run("select-agent", async () => {
-    const instruction = `Select the agent that should respond given the context`;
-    logger.info(`Selecting agent for user ${userId} with instruction:\n${instruction}`);
-    const classes = [
-      Intent.AccountabilityUpdate,
-      Intent.AlterGoal,
-      Intent.EndConversation,
-      Intent.InquireAboutEvents,
-      Intent.InquireAboutGoals,
-      Intent.NeedsHelp,
-      Intent.RescheduleEvent,
+    let instruction = `Categorize the latest intent of the conversation for the user.`;
+    logger.info(`Determining conversation category for user ${userId}`);
+    let classes: string[] = [
+      ConversationCategory.Information,
+      ConversationCategory.Action,
+      ConversationCategory.Other,
     ];
-    // TODO: Should first classify the session on whether the user is asking for help, action, or something else that can be responded to directly.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const classification = await zep.memory.classifySession(session.sessionId!, {
+
+    const conversationClassification = await zep.memory.classifySession(sessionId, {
+      name: "conversation-category",
+      classes,
+      persist: false,
+      instruction,
+    })
+    logger.info(`Conversation category: "${conversationClassification.class}"`);
+
+    logger.info(`Selecting agent for user ${userId}`);
+    if (conversationClassification.class === ConversationCategory.Information) {
+      instruction = `Select the agent that should provide the information given the context`;
+      classes = [
+        InformationIntent.NeedsHelp,
+        InformationIntent.InquireAboutGoals,
+        InformationIntent.InquireAboutEvents,
+      ];
+    } else if (conversationClassification.class === ConversationCategory.Action) {
+      instruction = `Select the action that should be taken given the context`;
+      classes = [
+        ActionIntent.AccountabilityUpdate,
+        ActionIntent.AlterGoal,
+        ActionIntent.RescheduleEvent,
+      ];
+    } else {
+      return { type: ConversationCategory.Other, intent: "" };
+    }
+
+    const intentClassification = await zep.memory.classifySession(sessionId, {
       name: "intent",
       classes,
       persist: false,
       instruction,
     })
-    return classification.class;
+    return { type: conversationClassification.class, intent: intentClassification.class };
   })
 
-  logger.info(`Session metadata:\n${JSON.stringify(session.metadata, null, 2)}`);
+
+  const { type, intent } = agentSelection;
   let response: string;
-  switch (agentSelection) {
-    case Intent.AccountabilityUpdate:
-      logger.info(`Giving accountability update for user ${userId}`);
-      response = `Giving accountability update`;
-      break;
-    case Intent.AlterGoal:
-      logger.info(`Changing a goal for user ${userId}`);
-      response = `Changing a goal`;
-      break;
-    case Intent.InquireAboutEvents:
-      logger.info(`Inquiring about events for user ${userId}`);
-      response = `Inquiring about events`;
-      break;
-    case Intent.InquireAboutGoals:
-      logger.info(`Asking for advice regarding a goal for user ${userId}`);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      response = await goalAdvice(logger, userId, session.sessionId!);
-      break;
-    case Intent.EndConversation:
-      logger.info(`Ending conversation for user ${userId}`);
-      response = `Ending conversation`;
-      break;
-    case Intent.NeedsHelp:
-      logger.info(`User ${userId} needs help using this agent`);
-      response = await getHelpMessage(session);
-      break;
-    case Intent.RescheduleEvent:
-      logger.info(`Rescheduling upcoming event for user ${userId}`);
-      response = `Rescheduling upcoming event`;
-      break;
-    default:
-      logger.info(`Unknown intent for user ${userId}`);
-      response = `Not implemented`;
-      break;
+  if (type === ConversationCategory.Information) {
+    switch (intent) {
+      case InformationIntent.NeedsHelp:
+        logger.info(`User ${userId} needs help using this agent`);
+        response = await step.ai.wrap("get-help", getHelpMessage, sessionId);
+        break;
+      case InformationIntent.InquireAboutGoals:
+        logger.info(`Asking for advice regarding a goal for user ${userId}`);
+        response = await step.ai.wrap("get-goal-advice", goalAdvice, logger, userId, sessionId);
+        break;
+      case InformationIntent.InquireAboutEvents:
+        logger.info(`Asking for advice regarding an event for user ${userId}`);
+        response = `Asking for advice regarding an event`;
+        break;
+    }
+  } else if (type === ConversationCategory.Action) {
+    switch (intent) {
+      case ActionIntent.AccountabilityUpdate:
+        logger.info(`Giving accountability update for user ${userId}`);
+        response = `Giving accountability update`;
+        break;
+      case ActionIntent.AlterGoal:
+        logger.info(`Changing a goal for user ${userId}`);
+        response = `Changing a goal`;
+        break;
+      case ActionIntent.RescheduleEvent:
+        logger.info(`Rescheduling upcoming event for user ${userId}`);
+        response = `Rescheduling upcoming event`;
+        break;
+      default:
+        logger.info(`Unknown intent for user ${userId}`);
+        response = `Not implemented`;
+        break;
+    }
+  } else {
+    logger.info(`Unknown intent for user ${userId}`);
+    response = await step.ai.wrap("direct-response", getDirectResponse, logger, userId, sessionId);
   }
   await step.run("store-response", async () => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
