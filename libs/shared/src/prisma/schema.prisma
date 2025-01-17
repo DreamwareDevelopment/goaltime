@@ -323,7 +323,6 @@ model User {
   is_anonymous                Boolean           @default(false)
   googleAuth                  GoogleAuth?
   profile                     UserProfile?
-  calendarEvents              CalendarEvent[]
   identities                  Identity[]
   mfa_factors                 mfa_factors[]
   one_time_tokens             one_time_tokens[]
@@ -415,6 +414,7 @@ model UserProfile {
   goals               Goal[]
   notifications       NotificationSettings[]
   milestones          Milestone[]
+  calendarEvents      CalendarEvent[]
   User                User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
@@ -550,12 +550,13 @@ model CalendarEvent {
   startTime   DateTime?        @map("start_time")
   endTime     DateTime?        @map("end_time")
   duration    Int?             @map("duration")
+  completed   Int              @default(0)
   timeZone    String?          @map("time_zone") // Required if recurrence is set, otherwise it indicates a custom timezone
   eventType   EventType        @default(default)
   allDay      DateTime?        @map("all_day")
   color       String
   goal        Goal?            @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user        UserProfile      @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([userId, startTime, allDay])
   @@index([userId, goalId, startTime, duration])

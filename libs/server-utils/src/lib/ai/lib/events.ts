@@ -1,7 +1,8 @@
 import { CalendarEvent } from "@prisma/client"
 import { DATE_TIME_FORMAT, dayjs } from "@/shared/utils"
+import { Jsonify } from "inngest/helpers/jsonify"
 
-export function formatEvent(event: CalendarEvent): string {
+export function formatEvent(event: CalendarEvent | Jsonify<CalendarEvent>): string {
   const startTime = event.startTime ? dayjs(event.startTime) : null
   const endTime = event.endTime ? dayjs(event.endTime) : null
   const duration = endTime ? endTime.diff(startTime, "minutes") : null
@@ -14,6 +15,6 @@ export function formatEvent(event: CalendarEvent): string {
   }`
 }
 
-export function formatEvents(events: CalendarEvent[]): string {
+export function formatEvents(events: Array<CalendarEvent | Jsonify<CalendarEvent>>): string {
   return JSON.stringify(events.map(formatEvent), null, 2)
 }

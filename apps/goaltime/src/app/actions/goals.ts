@@ -118,10 +118,7 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
 
 export async function deleteGoalAction(goalId: string, userId: string): Promise<void> {
   const prisma = await getPrismaClient(userId)
-  await prisma.$transaction(async tx => {
-    await tx.goal.delete({ where: { id: goalId, userId } })
-    await tx.calendarEvent.deleteMany({ where: { userId, goalId } })
-  })
+  await prisma.goal.delete({ where: { id: goalId, userId } })
   await inngest.send({
     name: InngestEvent.ScheduleUpdated,
     data: {} as never,
