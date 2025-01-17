@@ -5,6 +5,7 @@ import z from 'zod';
 
 import {
   dayjs,
+  DATE_TIME_FORMAT,
   ExternalEvent,
   GoalEvent,
   Interval,
@@ -18,8 +19,6 @@ import {
   WakeUpOrSleepEvent,
 } from '@/shared/utils';
 import { IntervalsWithExplanationsSchema, MinimalScheduleableGoal, ScheduleableGoal } from '@/shared/zod';
-
-import { DATE_TIME_FORMAT } from '../../inngest';
 
 export function validateSchedule(goal: ScheduleableGoal, schedule: Interval<string>[], freeIntervals: IntervalWithScore<string>[], freeWorkIntervals: IntervalWithScore<string>[]) {
   const errors: string[] = [];

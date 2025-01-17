@@ -1,12 +1,11 @@
 import { openai } from "@ai-sdk/openai";
-import { dayjs, Interval } from "@/shared/utils";
+import { dayjs, DATE_TIME_FORMAT, Interval } from "@/shared/utils";
 import { CalendarEvent, UserProfile } from "@prisma/client";
 
 import { generateText } from "ai";
 import { Logger } from "inngest/middleware/logger";
 import z from "zod";
 
-import { DATE_TIME_FORMAT } from "../../inngest";
 import { getPrismaClient } from "../../prisma/client";
 import { buildMessages, formatEvents, zep } from "../lib";
 

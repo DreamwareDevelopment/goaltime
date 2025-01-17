@@ -3,12 +3,11 @@ import { OAuth2Client } from "google-auth-library";
 import { Logger } from "inngest/middleware/logger";
 
 import { CalendarEvent, CalendarProvider, EventType, GoogleAuth, PrismaClient, UserProfile } from "@prisma/client";
-import { dayjs, truncateText } from "@/shared/utils";
+import { dayjs, DATE_TIME_FORMAT, truncateText } from "@/shared/utils";
 import { SerializableCalendarEvent } from "@/shared/zod";
 
 import { getPrismaClient } from "../../../prisma/client";
 import { inngest, InngestEvent, InngestEventData } from "../../client";
-import { DATE_TIME_FORMAT } from "../scheduling";
 import { Jsonify } from "inngest/helpers/jsonify";
 
 // Relevant docs:

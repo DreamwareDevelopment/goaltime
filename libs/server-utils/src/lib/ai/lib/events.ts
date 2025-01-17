@@ -1,7 +1,5 @@
 import { CalendarEvent } from "@prisma/client"
-import { dayjs } from "@/shared/utils"
-
-import { DATE_TIME_FORMAT } from "../../inngest"
+import { DATE_TIME_FORMAT, dayjs } from "@/shared/utils"
 
 export function formatEvent(event: CalendarEvent): string {
   const startTime = event.startTime ? dayjs(event.startTime) : null
