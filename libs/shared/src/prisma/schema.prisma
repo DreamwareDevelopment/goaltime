@@ -394,7 +394,6 @@ model GoogleAuth {
 model UserProfile {
   id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId              String    @unique @db.Uuid @map("user_id")
-  userFactsSessionId  String?   @db.Uuid @map("user_facts_session_id")
   lastChatSessionId   String?   @db.Uuid @map("last_chat_session_id")
   avatarUrl           String    @db.VarChar(255) @map("avatar_url")
   name                String    @default("GT User") @db.VarChar(100)
