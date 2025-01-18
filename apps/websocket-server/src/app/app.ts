@@ -6,9 +6,9 @@ import inngestFastify from 'inngest/fastify';
 import * as path from 'path';
 
 import { inngest, InngestEvent } from '@/server-utils/inngest';
-import { checkIn } from '@/server-utils/ai';
 
 import { syncToClient } from './lib/sync';
+import { checkIn } from './accountability/check-in';
 import { chat } from './accountability/chat';
 import { startAccountabilityLoop } from './accountability/loop';
 import { incomingSMS } from './routes/webhooks/messaging';
@@ -50,7 +50,7 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
   });
 
   fastify.addHook('onReady', async function () {
-    console.log('Sending start accountability loop event');
+    console.log('Restarting accountability loop...');
     setTimeout(async () => {
       await inngest.send({
         name: InngestEvent.StopAccountabilityLoop,

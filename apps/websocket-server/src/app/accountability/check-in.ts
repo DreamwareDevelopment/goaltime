@@ -1,21 +1,15 @@
-/* eslint-disable no-case-declarations */
 // import { Logger } from "inngest/middleware/logger";
 
-import { getPrismaClient } from "../../prisma/client";
-import { inngest, InngestEvent } from "../../inngest";
-import { sendSMS } from "../tools/sendMessage";
-import { NotificationDestination, NotificationPayload, NotificationType } from "@/shared/utils";
+import { getPrismaClient } from "@/server-utils/prisma";
+import { inngest, InngestEvent } from "@/server-utils/inngest";
+import { sendSMS } from "@/server-utils/ai";
+import { NotificationDestination, NotificationPayload } from "@/shared/utils";
+import { chat } from "./chat";
 
+// TODO: Remove this function, I think we can just use the chat function inside the accountability loop
 export const checkIn = inngest.createFunction(
   {
     id: 'check-in',
-    concurrency: [{
-      // global concurrency queue for this function,
-      // limit to 5 concurrent syncs as per the free tier quota
-      scope: "fn",
-      key: "checkIn",
-      limit: 5,
-    }],
     retries: 1,
   },
   [{
@@ -48,12 +42,17 @@ export const checkIn = inngest.createFunction(
     for (const user of users) {
       const notification = notificationLookup[user.userId];
       const settings = notification.settings;
-      const event = notification.event;
+      const message = await step.invoke('get-notification-message', {
+        function: chat,
+        data: {
+          userId: user.userId,
+          notification,
+        },
+      });
       await step.run(`check-in-${user.userId}`, async () => {
         switch (notification.destination) {
           case NotificationDestination.SMS:
-            const minutes = notification.type === NotificationType.Before ? settings.textBefore : settings.textAfter;
-            await sendSMS(settings.phone, `It's ${minutes} minutes ${notification.type} ${event.title}, are you ready?`);
+            await sendSMS(settings.phone, message);
             break;
           default:
             logger.error(`Unsupported notification destination: ${notification.destination}`);
