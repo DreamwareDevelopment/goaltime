@@ -1,8 +1,8 @@
-import { DATE_TIME_FORMAT, inngest, InngestEvent, InngestEventData } from "@/server-utils/inngest";
+import { inngest, InngestEvent, InngestEventData } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { getUserIds } from "@/server-utils/queries/user";
 import { MAX_NOTIFICATION_EVENT_OFFSET } from "@/shared/zod";
-import { dayjs, GoalWithNotifications, NotificationData, NotificationDestination, NotificationType, NotificationTimes } from "@/shared/utils";
+import { dayjs, DATE_TIME_FORMAT, GoalWithNotifications, NotificationData, NotificationDestination, NotificationType, NotificationTimes } from "@/shared/utils";
 import { CalendarEvent, Goal, NotificationSettings } from "@prisma/client";
 import { Jsonify } from "inngest/helpers/jsonify";
 import { Logger } from "inngest/middleware/logger";
@@ -103,7 +103,7 @@ function getNextEvents(logger: Logger, state: Jsonify<AccountabilityLoopState>):
       if (notification.fireAt.isBefore(result.nextEventTime)) {
         // We've found a new event that's closer than the current one
         result.nextEventTime = notification.fireAt;
-        logger.warn(`Found a new event that's closer than the current one, resetting the results:\n${result.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}\nTo ${notification.type} "${goal.title}"\nfireAt: ${notification.fireAt}\nEvent time: ${dayjs(event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(event.endTime).format(DATE_TIME_FORMAT)}`);
+        logger.warn(`Found a new event that's closer than the current one, resetting the results:\n${result.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${dayjs(e.fireAt).format(DATE_TIME_FORMAT)}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}\nTo ${notification.type} "${goal.title}"\nfireAt: ${dayjs(notification.fireAt).format(DATE_TIME_FORMAT)}\nEvent time: ${dayjs(event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(event.endTime).format(DATE_TIME_FORMAT)}`);
         result.data = [];
       } else if (notification.fireAt.isAfter(result.nextEventTime)) {
         // We've found an event that's after the current set. Since the notifications are sorted we should exit the inner loop
@@ -255,8 +255,9 @@ export const startAccountabilityLoop = inngest.createFunction({
           startTime: 'asc',
         },
       });
+      const state = getAccountabilityState(now, goalsAndNotifications, calendarEvents);
       logger.info(`Got ${calendarEvents.length} calendar events`);
-      return getAccountabilityState(now, goalsAndNotifications, calendarEvents);
+      return state;
     });
 
     let j = 0;
@@ -277,7 +278,7 @@ export const startAccountabilityLoop = inngest.createFunction({
         logger.info(`No upcoming events remaining after ${j} events, so we're re-fetching state`);
         break;
       }
-      logger.info(`Waiting to send notifications:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      logger.info(`Waiting to send notifications:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${dayjs(e.fireAt).format(DATE_TIME_FORMAT)}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
       let nextEventTime = nextEvents.nextEventTime;
       if (!nextEventTime) {
         nextEventTime = dayjs().add(1, 'day').second(0);
@@ -289,12 +290,8 @@ export const startAccountabilityLoop = inngest.createFunction({
         event: InngestEvent.ScheduleUpdated,
         timeout: '1d',
       });
-      const stopPromise = step.waitForEvent(`wait-for-stop-${i}-${j}`, {
-        event: InngestEvent.StopAccountabilityLoop,
-        timeout: '1d',
-      });
 
-      const command = await Promise.race([stopPromise, updatePromise, sleepPromise]);
+      const command = await Promise.race([updatePromise, sleepPromise]);
       j++;
       if (!command) {
         logger.info(`Accountability loop ${i}-${j} sleep finished`, nextEvents.data);
@@ -326,10 +323,6 @@ export const startAccountabilityLoop = inngest.createFunction({
         now = dayjs().second(0);
         state.now = now.format(DATE_TIME_FORMAT); // Reset now since we've slept
         continue;
-      }
-      if (command.name === InngestEvent.StopAccountabilityLoop) {
-        logger.info(`Accountability loop ${i}-${j} stopped`);
-        return;
       }
       if (command.name === InngestEvent.ScheduleUpdated) {
         logger.info(`Accountability loop ${i}-${j} schedule updated`);
