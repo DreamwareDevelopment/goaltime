@@ -4,7 +4,6 @@ import { CalendarEvent, UserProfile } from "@prisma/client";
 
 import { generateText } from "ai";
 import { Logger } from "inngest/middleware/logger";
-import z from "zod";
 
 import { getPrismaClient } from "../../prisma/client";
 import { buildMessages, formatEvents, zep } from "../lib";
@@ -56,6 +55,9 @@ async function getEvents(userId: string, timeframe: Interval): Promise<CalendarE
         },
       ],
     },
+    orderBy: {
+      startTime: "asc",
+    },
   });
   return events;
 }
@@ -73,7 +75,7 @@ export async function eventInformationAgent(logger: Logger, profile: UserProfile
     "events": ${formatEvents(events)},
     "timezone": "${profile.timezone}",
     "instructions": "You are given a list of events sorted by start time within the time frame the user is asking about. All events are in the same timezone as the user.
-    Answer the user's question about the event(s) they are referencing. You may use only one tool call to get the information you need and one to answer the user's question.",
+    Answer the user's question about the event(s) they are referencing.",
     "constraints": [
       "You are to respond in 1600 characters or less.",
       "You are to respond in a colloquial and concise manner befitting an sms conversation.",
@@ -86,32 +88,6 @@ export async function eventInformationAgent(logger: Logger, profile: UserProfile
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     messages: messagesToSend,
-    toolChoice: "required",
-    maxSteps: 2,
-    tools: {
-      answer: {
-        description: "Answer the user's question about the event(s) they are referencing.",
-        parameters: z.object({
-          answer: z.string().describe("The answer to the user's question."),
-        }),
-      },
-      getTimeBetweenEvents: {
-        description: "Get the time between two events.",
-        parameters: z.object({
-          timeA: z.string().describe("Time A."),
-          timeB: z.string().describe("Time B."),
-        }),
-        execute: async (args) => {
-          const timeA = dayjs(args.timeA);
-          const timeB = dayjs(args.timeB);
-          return `${Math.abs(timeA.diff(timeB, "minutes"))} mins`;
-        },
-      },
-    },
   })
-  const answer = response.toolCalls.find((call) => call.toolName === "answer")?.args.answer;
-  if (!answer) {
-    throw new Error("No answer provided");
-  }
-  return answer;
+  return response.text;
 }
