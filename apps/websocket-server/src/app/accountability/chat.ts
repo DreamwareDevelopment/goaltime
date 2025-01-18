@@ -5,12 +5,13 @@ import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
 
 import { UserProfile } from "@prisma/client";
-import { buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
+import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngest, InngestEvent } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
 
 enum ConversationCategory {
+  AccountabilityUpdate = "User gives an accountability update on an event.",
   Information = "Asking for help or information",
   Action = "Asking for an action to be taken",
   Other = "Other",
@@ -23,7 +24,6 @@ enum InformationIntent {
 }
 
 enum ActionIntent {
-  AccountabilityUpdate = "Give accountability update on an event.",
   AlterGoal = "Change scheduling preferences for a goal.",
   RescheduleEvent = "Reschedule an upcoming event.",
 }
@@ -33,6 +33,11 @@ type ActionConversationIntent = {
   intent: ActionIntent;
 }
 
+type AccountabilityUpdateConversationIntent = {
+  type: ConversationCategory.AccountabilityUpdate;
+  intent: never;
+}
+
 type InformationConversationIntent = {
   type: ConversationCategory.Information;
   intent: InformationIntent;
@@ -40,14 +45,14 @@ type InformationConversationIntent = {
 
 type OtherConversationIntent = {
   type: ConversationCategory.Other;
-  intent: string;
+  intent: never;
 }
 
-type ConversationIntent = ActionConversationIntent | InformationConversationIntent | OtherConversationIntent;
+type ConversationIntent = AccountabilityUpdateConversationIntent | ActionConversationIntent | InformationConversationIntent | OtherConversationIntent;
 
 export const WELCOME_MESSAGE = `Looks like you're new here. I'm GoalTime AI, your personal accountability assistant to keep you on track to hit all your goals. Please create an account at https://goaltime.ai`;
 
-async function generateNotificationMessage(notification: NotificationPayload<string>) {
+async function generateNotificationMessage(notification: NotificationPayload<string>): Promise<string> {
   const { goal, event } = notification;
   let prompt: string;
   if (notification.type === NotificationType.Before) {
@@ -60,6 +65,10 @@ async function generateNotificationMessage(notification: NotificationPayload<str
       "minutesUntilEvent": ${minutesUntilEvent},
       "tone": "colloquial, concise, encouraging",
       "format": "sms",
+      "constraints": [
+        "Use the event name colloquially, it doesn't need to be the full title if it's obvious what it is.",
+        "Use the minutesUntilEvent to inform the user how long they have until the event.",
+      ],
       "return": "A message informing them how long they have until the event.",
     }`;
   } else {
@@ -68,6 +77,9 @@ async function generateNotificationMessage(notification: NotificationPayload<str
       "event": ${JSON.stringify(event, null, 2)},
       "tone": "colloquial, concise, accountable",
       "format": "sms",
+      "constraints": [
+        "Use the event name colloquially, it doesn't need to be the full title if it's obvious what it is.",
+      ],
       "return": "A message asking them how it went and if they spent the entire time on the event.",
     }`;
   }
@@ -124,7 +136,7 @@ async function getDirectResponse(logger: Logger, userId: string, sessionId: stri
   return response.text;
 }
 
-async function handleNotification(logger: Logger, profile: UserProfile, notification: NotificationPayload<string>) {
+async function handleNotification(logger: Logger, profile: UserProfile, notification: NotificationPayload<string>): Promise<string> {
   let session: Session;
   logger.info(`Generating notification message for user ${profile.userId} with notification:\n${JSON.stringify(notification, null, 2)}`);
   const message = await generateNotificationMessage(notification);
@@ -246,8 +258,9 @@ export const chat = inngest.createFunction({
     let instruction = `Categorize the latest intent of the conversation for the user.`;
     logger.info(`Determining conversation category for user ${userId}`);
     let classes: string[] = [
-      ConversationCategory.Information,
+      ConversationCategory.AccountabilityUpdate,
       ConversationCategory.Action,
+      ConversationCategory.Information,
       ConversationCategory.Other,
     ];
 
@@ -270,12 +283,13 @@ export const chat = inngest.createFunction({
     } else if (conversationClassification.class === ConversationCategory.Action) {
       instruction = `Select the action that should be taken given the context`;
       classes = [
-        ActionIntent.AccountabilityUpdate,
         ActionIntent.AlterGoal,
         ActionIntent.RescheduleEvent,
       ];
+    } else if (conversationClassification.class === ConversationCategory.AccountabilityUpdate) {
+      return { type: ConversationCategory.AccountabilityUpdate };
     } else {
-      return { type: ConversationCategory.Other, intent: "" };
+      return { type: ConversationCategory.Other };
     }
 
     const intentClassification = await zep.memory.classifySession(sessionId, {
@@ -294,7 +308,10 @@ export const chat = inngest.createFunction({
 
   const { type, intent } = agentSelection;
   let response = `Sorry, I don't know how to respond to that.`;
-  if (type === ConversationCategory.Information) {
+  if (type === ConversationCategory.AccountabilityUpdate) {
+    logger.info(`Giving accountability update for user ${userId}`);
+    response = await step.ai.wrap("get-accountability-update", accountabilityUpdateAgent, logger, userProfile, sessionId);
+  } else if (type === ConversationCategory.Information) {
     switch (intent) {
       case InformationIntent.NeedsHelp:
         logger.info(`User ${userId} needs help using this agent`);
@@ -311,10 +328,6 @@ export const chat = inngest.createFunction({
     }
   } else if (type === ConversationCategory.Action) {
     switch (intent) {
-      case ActionIntent.AccountabilityUpdate:
-        logger.info(`Giving accountability update for user ${userId}`);
-        response = `Giving accountability update`;
-        break;
       case ActionIntent.AlterGoal:
         logger.info(`Changing a goal for user ${userId}`);
         response = `Changing a goal`;
