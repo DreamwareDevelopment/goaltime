@@ -1,6 +1,7 @@
 import { Goal } from "@prisma/client";
+import { Jsonify } from "inngest/helpers/jsonify";
 
-export function formatGoal(goal: Goal): string {
+export function formatGoal(goal: Goal | Jsonify<Goal>): string {
   return `{
     "id": "${goal.id}",
     "title": "${goal.title}",

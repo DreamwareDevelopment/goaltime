@@ -39,6 +39,7 @@ export const checkIn = inngest.createFunction(
       acc[event.settings.userId] = event;
       return acc;
     }, {} as Record<string, NotificationPayload<string>>);
+    // TODO: Refactor this to use less step calls
     for (const user of users) {
       const notification = notificationLookup[user.userId];
       const settings = notification.settings;

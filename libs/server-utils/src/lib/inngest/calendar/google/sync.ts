@@ -242,6 +242,7 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
     id: event.id ?? event.iCalUID!,
     userId,
     title: event.summary ?? "External event",
+    completed: 0,
     subtitle: null,
     description: event.description ?? null,
     location: event.location ?? null,

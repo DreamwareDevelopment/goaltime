@@ -227,8 +227,9 @@ export const scheduleGoalEvents = inngest.createFunction(
       const newEvents = await saveSchedule(userId, goalMap, timezone, schedule);
       return { deletedEvents, newEvents };
     });
+    logger.info(`Deleted ${deletedEvents.length} events and saved ${newEvents.length} events`);
 
-    await step.sendEvent('sync-to-client', {
+    const syncPromise = step.sendEvent('sync-to-client', {
       name: InngestEvent.SyncToClient,
       data: {
         userId,
@@ -236,13 +237,14 @@ export const scheduleGoalEvents = inngest.createFunction(
         calendarEventsToDelete: deletedEvents,
       },
     });
-    await step.sendEvent('schedule-updated', {
+    const scheduleUpdatedPromise = step.sendEvent('schedule-updated', {
       name: InngestEvent.ScheduleUpdated,
       data: {
         userId,
         schedule: newEvents,
       },
     });
+    await Promise.all([syncPromise, scheduleUpdatedPromise]);
   }
 )
 

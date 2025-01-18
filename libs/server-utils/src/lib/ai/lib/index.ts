@@ -4,6 +4,7 @@ import { CoreMessage } from 'ai';
 export * from './agent';
 export * from './events';
 export * from './goals';
+export * from './user';
 export * from './zep';
 
 export function zepMessageToCoreMessage(message: Zep.Message): CoreMessage {

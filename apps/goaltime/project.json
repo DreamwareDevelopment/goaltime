@@ -17,7 +17,7 @@
     "local-inngest": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["npx inngest-cli@latest dev --no-discovery --poll-interval 60 -u http://localhost:3000//api/inngest,http://localhost:8888/api/inngest"]
+        "commands": ["npx inngest-cli@latest dev --no-discovery --poll-interval 180 -u http://localhost:3000//api/inngest,http://localhost:8888/api/inngest"]
       }
     },
     "dev": {

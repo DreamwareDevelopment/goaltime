@@ -57,7 +57,7 @@ async function generateNotificationMessage(notification: NotificationPayload<str
   let prompt: string;
   if (notification.type === NotificationType.Before) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const minutesUntilEvent = dayjs(event.startTime!).diff(dayjs(), "minutes");
+    const minutesUntilEvent = dayjs(event.startTime!).diff(dayjs(), "minutes") + 1;
     prompt = `{
       "role": "You are a scheduling assistant. There is an event coming up.",
       "relatedGoal": ${JSON.stringify(goal, null, 2)},
@@ -67,9 +67,8 @@ async function generateNotificationMessage(notification: NotificationPayload<str
       "format": "sms",
       "constraints": [
         "Use the event name colloquially, it doesn't need to be the full title if it's obvious what it is.",
-        "Use the minutesUntilEvent to inform the user how long they have until the event.",
       ],
-      "return": "A message informing them how long they have until the event.",
+      "return": "A message informing them they have minutesUntilEvent until the event.",
     }`;
   } else {
     prompt = `{
