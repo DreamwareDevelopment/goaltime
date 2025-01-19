@@ -152,7 +152,12 @@ async function handleNotification(logger: Logger, profile: UserProfile, notifica
     })
   } else {
     logger.info(`Continuing chat session for user ${profile.userId} for event ${notification.event}`);
-    session = await zep.memory.getSession(profile.lastChatSessionId);
+    session = await zep.memory.updateSession(profile.lastChatSessionId, {
+      metadata: {
+        goal: notification.goal,
+        event: notification.event,
+      },
+    })
   }
   if (!session || !session.sessionId) {
     logger.error(`Failed to retrieve chat session for user ${profile.userId}`);
@@ -309,7 +314,15 @@ export const chat = inngest.createFunction({
   let response = `Sorry, I don't know how to respond to that.`;
   if (type === ConversationCategory.AccountabilityUpdate) {
     logger.info(`Giving accountability update for user ${userId}`);
-    response = await step.ai.wrap("get-accountability-update", accountabilityUpdateAgent, logger, userProfile, sessionId);
+    const updateResult = await step.ai.wrap("get-accountability-update", accountabilityUpdateAgent, logger, userProfile, sessionId);
+    response = updateResult.response;
+    await step.sendEvent("sync-to-client", {
+      name: InngestEvent.SyncToClient,
+      data: {
+        userId,
+        goals: [updateResult.goal],
+      },
+    })
   } else if (type === ConversationCategory.Information) {
     switch (intent) {
       case InformationIntent.NeedsHelp:

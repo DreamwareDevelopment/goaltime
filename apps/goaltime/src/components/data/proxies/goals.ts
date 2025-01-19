@@ -13,6 +13,7 @@ export const goalStore = proxy<{
   createGoal(input: GoalInput): Promise<void>,
   deleteGoal(goalId: string, userId: string): Promise<void>,
   init(goals: Goal[], notifications: NotificationSettings[], goalAggregates: Record<string, number>): void,
+  setGoals(goals: Goal[]): void,
 }>({
   goals: null,
   notifications: null,
@@ -54,6 +55,19 @@ export const goalStore = proxy<{
     const index = goalStore.goals.findIndex(g => g.id === goalId)
     if (index >= 0) {
       goalStore.goals.splice(index, 1)
+    }
+  },
+  setGoals(goals) {
+    if (!goalStore.goals) {
+      goalStore.goals = []
+    }
+    for (const goal of goals) {
+      console.log(`Setting goal ${goal.id} to completed: ${goal.completed} hours`)
+      for (let i = 0; i < goalStore.goals.length; i++) {
+        if (goalStore.goals[i].id === goal.id) {
+          goalStore.goals[i] = goal
+        }
+      }
     }
   },
   init(goals, notifications, goalAggregates) {

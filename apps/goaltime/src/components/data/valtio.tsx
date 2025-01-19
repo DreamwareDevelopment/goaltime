@@ -56,8 +56,13 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
             processSyncEvent(data)
             if (data.calendarEvents?.length) {
               toast({
-                title: `${data.calendarEvents?.length} events synced`,
+                title: `${data.calendarEvents?.length} ${data.calendarEvents?.length === 1 ? 'event' : 'events'} synced`,
                 description: 'Your schedule has been updated'
+              })
+            } else if (data.goals?.length) {
+              toast({
+                title: `${data.goals?.length} ${data.goals?.length === 1 ? 'goal' : 'goals'} synced`,
+                description: 'Your goals have been updated'
               })
             }
           },

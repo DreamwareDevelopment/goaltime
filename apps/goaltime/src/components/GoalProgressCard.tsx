@@ -39,14 +39,14 @@ export function GoalProgressCard() {
                 {aggregate && process.env.NODE_ENV === 'development' && isDesktop && <span className="lg:hidden text-sm text-muted-foreground">{(aggregate / 60).toFixed(2)} hours scheduled</span>}
                 <span className="hidden md:block text-sm text-muted-foreground">
                   {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-                  {goal.completed}/{goal.commitment ?? goal.estimate!} hours
+                  {parseFloat(goal.completed.toFixed(2)).toString()}/{parseFloat((goal.commitment ?? goal.estimate!).toFixed(2)).toString()} hours
                 </span>
               </div>
               {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
               <Progress value={(goal.completed / (goal.commitment ?? goal.estimate!)) * 100} className="h-3" color={goal.color} />
               <span className="block md:hidden text-sm text-center text-muted-foreground">
                 {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-                {goal.completed}/{goal.commitment ?? goal.estimate!} hours
+                {goal.completed.toFixed(2)}/{goal.commitment ?? goal.estimate!} hours
               </span>
             </div>
           )

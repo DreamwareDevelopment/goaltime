@@ -214,7 +214,7 @@ export const startAccountabilityLoop = inngest.createFunction({
     key: "accountability",
     limit: 1,
   }],
-  retries: 1,
+  retries: 20,
   cancelOn: [
     {
       event: InngestEvent.StopAccountabilityLoop,
