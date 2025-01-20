@@ -74,7 +74,7 @@ export function MilestonesCard({ goalId, view, className }: MilestonesCardProps)
       </CardContent>
       { milestones.length > 0 &&
         <CardFooter className="w-full flex flex-row items-center justify-center pb-2">
-          <Button className="text-destructive bg-destructive/10 hover:bg-destructive/20" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
+          <Button className="text-destructive bg-destructive/10 hover:bg-destructive/60" variant="outline" onClick={clearCompletedMilestones}>Clear Completed</Button>
         </CardFooter>
       }
     </Card>

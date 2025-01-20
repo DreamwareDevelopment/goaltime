@@ -104,7 +104,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
             <p className="text-xl text-foreground text-center">Work</p>
             <WorkFields form={form} />
             <Separator />
-            <RoutineFieldsContainer defaultOpen="Custom" form={form} />
+            <RoutineFieldsContainer defaultOpen="Everyday" form={form} />
           </CardContent>
           <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
             <ShinyButton

@@ -109,11 +109,13 @@ export const RoutineActivitiesSchema = z.object({
   breakfast: OptionalRoutineDaysSchema,
   lunch: OptionalRoutineDaysSchema,
   dinner: OptionalRoutineDaysSchema,
+  custom: z.record(z.string(), OptionalRoutineDaysSchema).optional().default({}),
 }).default({
   sleep: getDefaults(RoutineDaysSchema),
   breakfast: getDefaults(OptionalRoutineDaysSchema),
   lunch: getDefaults(OptionalRoutineDaysSchema),
   dinner: getDefaults(OptionalRoutineDaysSchema),
+  custom: {},
 })
 
 export type RoutineActivities = z.infer<typeof RoutineActivitiesSchema>
@@ -123,6 +125,7 @@ export const SerializedRoutineActivitiesSchema = z.object({
   breakfast: SerializedOptionalRoutineDaysSchema,
   lunch: SerializedOptionalRoutineDaysSchema,
   dinner: SerializedOptionalRoutineDaysSchema,
+  custom: z.record(z.string(), SerializedOptionalRoutineDaysSchema.optional()).optional().default({}),
 })
 
 export type SerializedRoutineActivities = z.infer<typeof SerializedRoutineActivitiesSchema>
@@ -134,27 +137,57 @@ export function getProfileRoutine(profile: UserProfile): RoutineActivities {
   if (!parsed.sleep || !parsed.breakfast || !parsed.lunch || !parsed.dinner) {
     throw new Error('No routine found')
   }
+  const routine: RoutineActivities = {
+    custom: {},
+  } as RoutineActivities
   for (const activity in parsed) {
+    if (activity === 'custom') {
+      for (const key in parsed.custom) {
+        routine.custom[key] = getDefaults(RoutineDaysSchema)
+        const entry = parsed.custom[key];
+        if (!entry) {
+          throw new Error(`No entry found for ${key}`)
+        }
+        entry.Everyday = { ...entry.Monday }
+        entry.Weekdays = { ...entry.Monday }
+        entry.Weekends = { ...entry.Saturday }
+
+        for (const day in entry) {
+          const dayKey = day as RoutineDay
+          const dayEntry = entry[dayKey]
+          routine.custom[key][dayKey] = {
+            ...dayEntry,
+            start: dayEntry.start ? dayjs(dayEntry.start).toDate() : null,
+            end: dayEntry.end ? dayjs(dayEntry.end).toDate() : null,
+          }
+        }
+      }
+      continue
+    }
     const key = activity as RoutineActivity
-    parsed[key].Everyday = { ...parsed[key].Monday }
-    parsed[key].Weekdays = { ...parsed[key].Monday }
-    parsed[key].Weekends = { ...parsed[key].Saturday }
-  }
-  const routineDays: RoutineActivities = {} as RoutineActivities
-  for (const activity in parsed) {
-    const activityKey = activity as RoutineActivity
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    routineDays[activityKey] = {} as any
-    for (const day in parsed[activityKey]) {
+    routine[key] = getDefaults(RoutineDaysSchema)
+    const entry = parsed[key];
+    if (!entry) {
+      throw new Error(`No entry found for ${key}`)
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    entry.Everyday = { ...entry.Monday! }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    entry.Weekdays = { ...entry.Monday! }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    entry.Weekends = { ...entry.Saturday! }
+  
+    for (const day in entry) {
       const dayKey = day as RoutineDay
-      routineDays[activityKey][dayKey] = {
-        ...parsed[activityKey][dayKey],
-        start: parsed[activityKey][dayKey].start ? dayjs(parsed[activityKey][dayKey].start).toDate() : null,
-        end: parsed[activityKey][dayKey].end ? dayjs(parsed[activityKey][dayKey].end).toDate() : null,
+      const dayEntry = entry[dayKey] as Routine
+      routine[key][dayKey] = {
+        ...dayEntry,
+        start: dayEntry.start ? dayjs(dayEntry.start).toDate() : null,
+        end: dayEntry.end ? dayjs(dayEntry.end).toDate() : null,
       }
     }
   }
-  return routineDays
+  return routine
 }
 
 export const UserProfileSchema = z.object({
@@ -167,7 +200,7 @@ export const UserProfileSchema = z.object({
   name: z.string().max(100, {
     message: 'Could you please be more concise?',
   }),
-  phone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$/, {
+  phone: z.string().regex(/^\+\d{1,2}\d{10}$/, {
     message: 'Please provide a valid phone number',
   }),
   otp: z.string().optional(),
@@ -197,6 +230,7 @@ export const UserProfileSchema = z.object({
     breakfast: getDefaults(OptionalRoutineDaysSchema),
     lunch: getDefaults(OptionalRoutineDaysSchema),
     dinner: getDefaults(OptionalRoutineDaysSchema),
+    custom: {},
   }),
   timezone: z.string({
     message: 'Please provide a valid time zone',

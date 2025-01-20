@@ -243,7 +243,7 @@ export function GoalSettingsCard({
               <div className="flex flex-col justify-center items-center mt-4 gap-4 w-full">
                 <div className="flex flex-row gap-4 w-full">
                   { goal && (
-                    <ShinyButton variant="outline" onClick={handleDelete} className="h-[34px] sm:h-[51px] text-destructive bg-destructive/10 hover:bg-destructive/20">
+                    <ShinyButton variant="outline" onClick={handleDelete} className="h-[34px] sm:h-[51px] text-destructive bg-destructive/10 hover:bg-destructive/60">
                       Delete Goal
                     </ShinyButton>
                   )}

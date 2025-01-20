@@ -24,7 +24,7 @@ export const MAX_NOTIFICATION_EVENT_OFFSET = 60;
 export const NotificationSettingsSchema = z.object({
   id: z.string().uuid().optional(),
   userId: z.string().uuid(),
-  phone: z.string().regex(/^(\+\d{1,2}\s?)?\(?\d{3}\)?\s?\d{3}\s?\d{4}$/, {
+  phone: z.string().regex(/^\+\d{1,2}\d{10}$/, {
     message: 'Please provide a valid phone number',
   }),
   pushBefore: z.number().int().min(0).max(MAX_NOTIFICATION_EVENT_OFFSET).optional().nullable().default(null),
