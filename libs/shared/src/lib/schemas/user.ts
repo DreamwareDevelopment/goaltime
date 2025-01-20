@@ -2,6 +2,7 @@ import z from 'zod'
 import { FieldErrors } from 'react-hook-form'
 import { getDefaults, ZodSchemaResolver } from '.'
 import { dayjs } from '../utils'
+import { UserProfile } from '@prisma/client'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 export type DaysOfTheWeekType = z.infer<typeof daysOfTheWeek>
@@ -15,106 +16,142 @@ export type SupportedLanguagesType = z.infer<typeof SupportedLanguages>
 export const SupportedCurrencies = z.enum(['USD'])
 export type SupportedCurrenciesType = z.infer<typeof SupportedCurrencies>
 
-export const SerializedRoutineSchema = z.object({
-  day: DaysSelectionEnum.default('Everyday'),
-  wakeUpTime: z.string().nullable().default(null),
-  sleepTime: z.string().nullable().default(null),
-  breakfastStart: z.string().nullable().default(null),
-  breakfastEnd: z.string().nullable().default(null),
-  skipBreakfast: z.boolean().default(false),
-  lunchStart: z.string().nullable().default(null),
-  lunchEnd: z.string().nullable().default(null),
-  skipLunch: z.boolean().default(false),
-  dinnerStart: z.string().nullable().default(null),
-  dinnerEnd: z.string().nullable().default(null),
-  skipDinner: z.boolean().default(false),
-})
-
-export type SerializedRoutine = z.infer<typeof SerializedRoutineSchema>
-
-export const SerializedRoutineDaysSchema = z.object({
-  Everyday: SerializedRoutineSchema.optional(),
-  Weekdays: SerializedRoutineSchema.optional(),
-  Weekends: SerializedRoutineSchema.optional(),
-  Monday: SerializedRoutineSchema.optional(),
-  Tuesday: SerializedRoutineSchema.optional(),
-  Wednesday: SerializedRoutineSchema.optional(),
-  Thursday: SerializedRoutineSchema.optional(),
-  Friday: SerializedRoutineSchema.optional(),
-  Saturday: SerializedRoutineSchema.optional(),
-  Sunday: SerializedRoutineSchema.optional(),
-})
-
-export type SerializedRoutineDays = z.infer<typeof SerializedRoutineDaysSchema>
-
 export const RoutineSchema = z.object({
-  day: DaysSelectionEnum.default('Everyday'),
-  wakeUpTime: z.date({
-    message: 'Please provide a valid date and time for wakeUpTime',
-  }).nullable().default(null),
-  sleepTime: z.date({
-    message: 'Please provide a valid date and time for sleepTime',
-  }).nullable().default(null),
-  breakfastStart: z.date({
-    message: 'Please provide a valid date and time for breakfastStart',
-  }).nullable().default(null),
-  breakfastEnd: z.date({
-    message: 'Please provide a valid date and time for breakfastEnd',
-  }).nullable().default(null),
-  skipBreakfast: z.boolean().default(false),
-  lunchStart: z.date({
-    message: 'Please provide a valid date and time for lunchStart',
-  }).nullable().default(null),
-  lunchEnd: z.date({
-    message: 'Please provide a valid date and time for lunchEnd',
-  }).nullable().default(null),
-  skipLunch: z.boolean().default(false),
-  dinnerStart: z.date({
-    message: 'Please provide a valid date and time for dinnerStart',
-  }).nullable().default(null),
-  dinnerEnd: z.date({
-    message: 'Please provide a valid date and time for dinnerEnd',
-  }).nullable().default(null),
-  skipDinner: z.boolean().default(false),
+  start: z.date().nullable().default(null),
+  end: z.date().nullable().default(null),
 })
 
 export type Routine = z.infer<typeof RoutineSchema>
 
+export const SerializedRoutineSchema = z.object({
+  start: z.string().nullable().default(null),
+  end: z.string().nullable().default(null),
+})
+
+export type SerializedRoutine = z.infer<typeof SerializedRoutineSchema>
+
 export const RoutineDaysSchema = z.object({
-  Everyday: RoutineSchema.optional(),
-  Weekdays: RoutineSchema.optional(),
-  Weekends: RoutineSchema.optional(),
-  Monday: RoutineSchema.optional(),
-  Tuesday: RoutineSchema.optional(),
-  Wednesday: RoutineSchema.optional(),
-  Thursday: RoutineSchema.optional(),
-  Friday: RoutineSchema.optional(),
-  Saturday: RoutineSchema.optional(),
-  Sunday: RoutineSchema.optional(),
+  Everyday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Weekdays: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Weekends: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Monday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Tuesday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Wednesday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Thursday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Friday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Saturday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
+  Sunday: RoutineSchema.optional().default(getDefaults(RoutineSchema)),
 })
 
 export type RoutineDays = z.infer<typeof RoutineDaysSchema>
 
-export function getProfileRoutine(profile: UserProfile): RoutineDays {
-  const parsed = SerializedRoutineDaysSchema.parse(profile.routine)
-  if (!parsed.Monday || !parsed.Saturday) {
+export type RoutineDay = keyof RoutineDays;
+
+export const SerializedRoutineDaysSchema = z.object({
+  Everyday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Weekdays: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Weekends: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Monday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Tuesday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Wednesday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Thursday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Friday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Saturday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+  Sunday: SerializedRoutineSchema.optional().default(getDefaults(SerializedRoutineSchema)),
+})
+
+export type SerializedRoutineDays = z.infer<typeof SerializedRoutineDaysSchema>
+
+export const OptionalRoutineSchema = RoutineSchema.extend({
+  skip: z.boolean().default(false),
+})
+
+export type OptionalRoutine = z.infer<typeof OptionalRoutineSchema>
+
+export const SerializedOptionalRoutineSchema = SerializedRoutineSchema.extend({
+  skip: z.boolean().default(false),
+})
+
+export type SerializedOptionalRoutine = z.infer<typeof SerializedOptionalRoutineSchema>
+
+export const OptionalRoutineDaysSchema = z.object({
+  Everyday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Weekdays: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Weekends: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Monday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Tuesday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Wednesday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Thursday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Friday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Saturday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+  Sunday: OptionalRoutineSchema.optional().default(getDefaults(OptionalRoutineSchema)),
+})
+
+export type OptionalRoutineDays = z.infer<typeof OptionalRoutineDaysSchema>
+
+export const SerializedOptionalRoutineDaysSchema = z.object({
+  Everyday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Weekdays: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Weekends: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Monday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Tuesday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Wednesday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Thursday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Friday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Saturday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+  Sunday: SerializedOptionalRoutineSchema.optional().default(getDefaults(SerializedOptionalRoutineSchema)),
+})
+
+export type SerializedOptionalRoutineDays = z.infer<typeof SerializedOptionalRoutineDaysSchema>
+
+export const RoutineActivitiesSchema = z.object({
+  sleep: RoutineDaysSchema,
+  breakfast: OptionalRoutineDaysSchema,
+  lunch: OptionalRoutineDaysSchema,
+  dinner: OptionalRoutineDaysSchema,
+}).default({
+  sleep: getDefaults(RoutineDaysSchema),
+  breakfast: getDefaults(OptionalRoutineDaysSchema),
+  lunch: getDefaults(OptionalRoutineDaysSchema),
+  dinner: getDefaults(OptionalRoutineDaysSchema),
+})
+
+export type RoutineActivities = z.infer<typeof RoutineActivitiesSchema>
+
+export const SerializedRoutineActivitiesSchema = z.object({
+  sleep: SerializedRoutineDaysSchema,
+  breakfast: SerializedOptionalRoutineDaysSchema,
+  lunch: SerializedOptionalRoutineDaysSchema,
+  dinner: SerializedOptionalRoutineDaysSchema,
+})
+
+export type SerializedRoutineActivities = z.infer<typeof SerializedRoutineActivitiesSchema>
+
+export type RoutineActivity = keyof RoutineActivities;
+
+export function getProfileRoutine(profile: UserProfile): RoutineActivities {
+  const parsed = SerializedRoutineActivitiesSchema.parse(profile.routine)
+  if (!parsed.sleep || !parsed.breakfast || !parsed.lunch || !parsed.dinner) {
     throw new Error('No routine found')
   }
-  parsed.Everyday = { ...parsed.Monday, day: 'Everyday' }
-  parsed.Weekdays = { ...parsed.Monday, day: 'Weekdays' }
-  parsed.Weekends = { ...parsed.Saturday, day: 'Weekends' }
-  const routineDays: RoutineDays = {}
-  for (const day in parsed) {
-    routineDays[day] = {
-      ...parsed[day],
-      sleepTime: parsed[day].sleepTime ? dayjs(parsed[day].sleepTime).toDate() : null,
-      wakeUpTime: parsed[day].wakeUpTime ? dayjs(parsed[day].wakeUpTime).toDate() : null,
-      breakfastStart: parsed[day].breakfastStart ? dayjs(parsed[day].breakfastStart).toDate() : null,
-      breakfastEnd: parsed[day].breakfastEnd ? dayjs(parsed[day].breakfastEnd).toDate() : null,
-      lunchStart: parsed[day].lunchStart ? dayjs(parsed[day].lunchStart).toDate() : null,
-      lunchEnd: parsed[day].lunchEnd ? dayjs(parsed[day].lunchEnd).toDate() : null,
-      dinnerStart: parsed[day].dinnerStart ? dayjs(parsed[day].dinnerStart).toDate() : null,
-      dinnerEnd: parsed[day].dinnerEnd ? dayjs(parsed[day].dinnerEnd).toDate() : null,
+  for (const activity in parsed) {
+    const key = activity as RoutineActivity
+    parsed[key].Everyday = { ...parsed[key].Monday }
+    parsed[key].Weekdays = { ...parsed[key].Monday }
+    parsed[key].Weekends = { ...parsed[key].Saturday }
+  }
+  const routineDays: RoutineActivities = {} as RoutineActivities
+  for (const activity in parsed) {
+    const activityKey = activity as RoutineActivity
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    routineDays[activityKey] = {} as any
+    for (const day in parsed[activityKey]) {
+      const dayKey = day as RoutineDay
+      routineDays[activityKey][dayKey] = {
+        ...parsed[activityKey][dayKey],
+        start: parsed[activityKey][dayKey].start ? dayjs(parsed[activityKey][dayKey].start).toDate() : null,
+        end: parsed[activityKey][dayKey].end ? dayjs(parsed[activityKey][dayKey].end).toDate() : null,
+      }
     }
   }
   return routineDays
@@ -155,8 +192,11 @@ export const UserProfileSchema = z.object({
   }).nullable().optional().default(null), // Default to 5:30 PM after timezone is applied by client
   preferredLanguage: SupportedLanguages.default('en'),
   preferredCurrency: SupportedCurrencies.default('USD'),
-  routine: RoutineDaysSchema.default({
-    Everyday: getDefaults(RoutineSchema),
+  routine: RoutineActivitiesSchema.default({
+    sleep: getDefaults(RoutineDaysSchema),
+    breakfast: getDefaults(OptionalRoutineDaysSchema),
+    lunch: getDefaults(OptionalRoutineDaysSchema),
+    dinner: getDefaults(OptionalRoutineDaysSchema),
   }),
   timezone: z.string({
     message: 'Please provide a valid time zone',

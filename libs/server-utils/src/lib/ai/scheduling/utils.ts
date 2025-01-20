@@ -91,7 +91,7 @@ export function getFreeIntervals(
   const start = dayjs(timeframe.start);
   const end = dayjs(timeframe.end);
   const daysBetween = end.diff(start, 'days');
-  const routineDays = getProfileRoutine(profile);
+  const routine = getProfileRoutine(profile);
   logger.info(`Days between: ${daysBetween}`);
   // TODO: Take holidays into account
   const workdays = Array.isArray(profile.workDays) ? profile.workDays : [];
@@ -111,16 +111,16 @@ export function getFreeIntervals(
     const dayName = currentTime.format('dddd');
     const isLastDay = daysBetween + 1 === i;
     const upcomingEvents = events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay));
-    const routine = routineDays[dayName as DaysOfTheWeekType]
-    if (!routine) {
-      throw new Error(`Routine for ${dayName} is not defined`);
+    const sleepRoutine = routine.sleep[dayName as DaysOfTheWeekType]
+    if (!sleepRoutine || !sleepRoutine.start || !sleepRoutine.end) {
+      throw new Error(`sleepRoutine for ${dayName} is not defined`);
     }
-    const preferredWakeUpTime = dayjs(routine.wakeUpTime)
+    const preferredWakeUpTime = dayjs(sleepRoutine.end)
     const wakeUpTime = currentTime
       .hour(preferredWakeUpTime.hour())
       .minute(preferredWakeUpTime.minute())
     // This makes sure we don't schedule past the next full sync
-    const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(routine.sleepTime);
+    const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(sleepRoutine.start);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
       .hour(sleepHour < wakeUpTime.hour() ? sleepHour + 24 : sleepHour)
@@ -207,13 +207,13 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, start:
     throw new Error('Preferred times must be an array');
   }
   const dayName = start.format('dddd') as DaysOfTheWeekType;
-  const routineDays = getProfileRoutine(profile);
-  const routine = routineDays[dayName];
-  if (!routine) {
-    throw new Error(`Routine for ${dayName} is not defined`);
+  const routine = getProfileRoutine(profile);
+  const sleepRoutine = routine.sleep[dayName as DaysOfTheWeekType]
+  if (!sleepRoutine || !sleepRoutine.start || !sleepRoutine.end) {
+    throw new Error(`sleepRoutine for ${dayName} is not defined`);
   }
-  const preferredWakeUpTime = dayjs(routine.wakeUpTime);
-  const preferredSleepTime = dayjs(routine.sleepTime);
+  const preferredWakeUpTime = dayjs(sleepRoutine.end);
+  const preferredSleepTime = dayjs(sleepRoutine.start);
   const timeToIntervalLookup = getTimeToIntervalLookup(start);
   const adjustedPreferredTimes = preferredTimes.map(time => {
     const interval = timeToIntervalLookup[time as PreferredTimesEnumType];

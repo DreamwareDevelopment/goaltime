@@ -1,6 +1,6 @@
 'use server'
 
-import { RoutineDaysSchema, UserProfileInput } from '@/shared/zod'
+import { RoutineActivitiesSchema, RoutineActivity, UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
@@ -26,10 +26,16 @@ function getZepUserMetadata(userProfile: UserProfile) {
 export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
   delete profile.otp
   const prisma = await getPrismaClient()
-  const routine = RoutineDaysSchema.parse(profile.routine)
-  delete routine.Everyday
-  delete routine.Weekdays
-  delete routine.Weekends
+  const routine = RoutineActivitiesSchema.parse(profile.routine)
+  for (const activity in routine) {
+    const key = activity as RoutineActivity
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (routine[key] as any).Everyday
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (routine[key] as any).Weekdays
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (routine[key] as any).Weekends
+  }
   const userProfile = await prisma.userProfile.create({
     data: {
       ...profile,
@@ -58,10 +64,16 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
 
 export async function updateUserProfileAction(original: UserProfile, profile: Partial<UserProfileInput>) {
   const prisma = await getPrismaClient(profile.userId)
-  const routine = profile.routine ? RoutineDaysSchema.parse(profile.routine) : undefined
-  delete routine?.Everyday
-  delete routine?.Weekdays
-  delete routine?.Weekends
+  const routine = profile.routine ? RoutineActivitiesSchema.parse(profile.routine) : undefined
+  for (const activity in routine) {
+    const key = activity as RoutineActivity
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (routine[key] as any).Everyday
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (routine[key] as any).Weekdays
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (routine[key] as any).Weekends
+  }
   const updated = await prisma.userProfile.update({
     where: { userId: profile.userId },
     data: {

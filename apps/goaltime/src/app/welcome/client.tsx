@@ -64,15 +64,14 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
     const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     setValue('timezone', clientTimezone)
     for (const day of Object.values(DaysSelectionEnum.Values)) {
-      setValue(`routine.${day}.day`, day)
-      setValue(`routine.${day}.wakeUpTime`, getTime('07:00', clientTimezone).toDate())
-      setValue(`routine.${day}.breakfastStart`, getTime('07:30', clientTimezone).toDate())
-      setValue(`routine.${day}.breakfastEnd`, getTime('08:00', clientTimezone).toDate())
-      setValue(`routine.${day}.lunchStart`, getTime('12:00', clientTimezone).toDate())
-      setValue(`routine.${day}.lunchEnd`, getTime('13:00', clientTimezone).toDate())
-      setValue(`routine.${day}.dinnerStart`, getTime('18:00', clientTimezone).toDate())
-      setValue(`routine.${day}.dinnerEnd`, getTime('19:00', clientTimezone).toDate())
-      setValue(`routine.${day}.sleepTime`, getTime('23:30', clientTimezone).toDate())
+      setValue(`routine.sleep.${day}.end`, getTime('07:00', clientTimezone).toDate())
+      setValue(`routine.breakfast.${day}.start`, getTime('07:30', clientTimezone).toDate())
+      setValue(`routine.breakfast.${day}.end`, getTime('08:00', clientTimezone).toDate())
+      setValue(`routine.lunch.${day}.start`, getTime('12:00', clientTimezone).toDate())
+      setValue(`routine.lunch.${day}.end`, getTime('13:00', clientTimezone).toDate())
+      setValue(`routine.dinner.${day}.start`, getTime('18:00', clientTimezone).toDate())
+      setValue(`routine.dinner.${day}.end`, getTime('19:00', clientTimezone).toDate())
+      setValue(`routine.sleep.${day}.start`, getTime('23:30', clientTimezone).toDate())
     }
     setValue('startsWorkAt', getTime('08:30', clientTimezone).toDate())
     setValue('endsWorkAt', getTime('17:30', clientTimezone).toDate())
@@ -208,7 +207,9 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
   return (
     <>
       <CardHeader>
-        <CardTitle className="flex justify-center gap-2 w-full text-center text-xl">{steps[currentStep].title}</CardTitle>
+        { !currentStepFields.includes('routine') && (
+          <CardTitle className="flex justify-center gap-2 w-full text-center text-xl">{steps[currentStep].title}</CardTitle>
+        )}
       </CardHeader>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
