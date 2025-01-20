@@ -13,6 +13,7 @@ const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumT
   const seventeen = start.hour(17).minute(0);
   const twenty = start.hour(20).minute(0);
   const twentyThree = start.hour(23).minute(0);
+  const two = start.hour(26).minute(0);
   return {
     'Early Morning': {
       start: five,
@@ -37,6 +38,10 @@ const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumT
     'Night': {
       start: twenty,
       end: twentyThree,
+    },
+    'Late Night': {
+      start: twentyThree,
+      end: two,
     },
   };
 }

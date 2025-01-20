@@ -152,6 +152,7 @@ const timeSlots: { [key in PreferredTimesEnumType]: string } = {
   'Afternoon': '2-5PM',
   'Evening': '5-8PM',
   'Night': '8-11PM',
+  'Late Night': '11PM-2AM',
 }
 
 export const PreferredTimes = ({ form }: FormInputProps) => {
