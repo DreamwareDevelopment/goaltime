@@ -406,8 +406,7 @@ model UserProfile {
   workDays            Json?     @map("work_days")
   preferredLanguage   String    @default("en") @db.VarChar(10) @map("preferred_language")
   preferredCurrency   String    @default("USD") @db.VarChar(10) @map("preferred_currency")
-  preferredWakeUpTime DateTime  @map("preferred_wake_up_time")
-  preferredSleepTime  DateTime  @map("preferred_sleep_time")
+  routine             Json
   timezone            String    @default("America/Los_Angeles") @db.VarChar(255)
   hasOnboarded        Boolean   @default(false) @map("has_onboarded")
   goals               Goal[]

@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_completed_to_calendar_event",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_routine_to_user_profile",
         "cwd": "libs/shared"
       }
     },

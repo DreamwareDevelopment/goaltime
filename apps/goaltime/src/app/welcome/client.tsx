@@ -9,13 +9,13 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny"
 
 import { Form } from "@/ui-components/form"
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { getDefaults, getZodResolver, refineUserProfileSchema, UserProfileInput, UserProfileSchema } from '@/shared/zod'
+import { DaysSelectionEnum, getDefaults, getZodResolver, refineUserProfileSchema, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { getTime } from '@/shared/utils'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
 import { PersonalFields } from '../../components/Profile/PersonalFields'
 import { OTPField, PhoneField } from '../../components/Profile/PhoneFields'
-import { PreferencesFields } from '../../components/Profile/PreferencesFields'
+import { RoutineFieldsContainer } from '../../components/Profile/RoutineFields'
 import { WorkFields } from '../../components/Profile/WorkFields'
 import { useValtio } from '../../components/data/valtio'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
@@ -24,10 +24,10 @@ import { useToast } from '@/ui-components/hooks/use-toast'
 import { SanitizedUser } from '@/shared/utils'
 
 const steps = [
-  { title: "Profile Setup", fields: ['name', 'avatarUrl', 'birthday', 'timezone', 'phone'] },
+  { title: "Profile Setup", fields: ['name', 'avatarUrl', 'birthday', 'timezone', 'phone', 'preferredLanguage', 'preferredCurrency'] },
   { title: 'Verify Phone Number', fields: ['otp'] },
   { title: 'Work Details', fields: ['occupation', 'unemployed', 'workDays', 'startsWorkAt', 'endsWorkAt'] },
-  { title: 'Preferences', fields: ['preferredLanguage', 'preferredCurrency', 'preferredWakeUpTime', 'preferredSleepTime'] },
+  { title: 'Routine', fields: ['routine'] },
 ]
 
 export interface WelcomeFlowClientProps {
@@ -63,8 +63,17 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
   useEffect(() => {
     const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     setValue('timezone', clientTimezone)
-    setValue('preferredWakeUpTime', getTime('07:00', clientTimezone).toDate())
-    setValue('preferredSleepTime', getTime('23:00', clientTimezone).toDate())
+    for (const day of Object.values(DaysSelectionEnum.Values)) {
+      setValue(`routine.${day}.day`, day)
+      setValue(`routine.${day}.wakeUpTime`, getTime('07:00', clientTimezone).toDate())
+      setValue(`routine.${day}.breakfastStart`, getTime('07:30', clientTimezone).toDate())
+      setValue(`routine.${day}.breakfastEnd`, getTime('08:00', clientTimezone).toDate())
+      setValue(`routine.${day}.lunchStart`, getTime('12:00', clientTimezone).toDate())
+      setValue(`routine.${day}.lunchEnd`, getTime('13:00', clientTimezone).toDate())
+      setValue(`routine.${day}.dinnerStart`, getTime('18:00', clientTimezone).toDate())
+      setValue(`routine.${day}.dinnerEnd`, getTime('19:00', clientTimezone).toDate())
+      setValue(`routine.${day}.sleepTime`, getTime('23:30', clientTimezone).toDate())
+    }
     setValue('startsWorkAt', getTime('08:30', clientTimezone).toDate())
     setValue('endsWorkAt', getTime('17:30', clientTimezone).toDate())
   }, [setValue])
@@ -239,8 +248,8 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
                 {currentStepFields.includes('occupation') && (
                   <WorkFields form={form} />
                 )}
-                {currentStepFields.includes('preferredWakeUpTime') && currentStepFields.includes('preferredSleepTime') && (
-                  <PreferencesFields form={form} />
+                {currentStepFields.includes('routine') && (
+                  <RoutineFieldsContainer defaultOpen="Everyday" form={form} />
                 )}
               </motion.div>
             </AnimatePresence>

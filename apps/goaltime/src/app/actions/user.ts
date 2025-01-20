@@ -1,6 +1,6 @@
 'use server'
 
-import { UserProfileInput } from '@/shared/zod'
+import { RoutineDaysSchema, UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
@@ -26,14 +26,15 @@ function getZepUserMetadata(userProfile: UserProfile) {
 export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
   delete profile.otp
   const prisma = await getPrismaClient()
+  const routine = RoutineDaysSchema.parse(profile.routine)
+  delete routine.Everyday
+  delete routine.Weekdays
+  delete routine.Weekends
   const userProfile = await prisma.userProfile.create({
     data: {
       ...profile,
       phone: profile.phone.replace(/[^+\d]/g, ''),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      preferredWakeUpTime: profile.preferredWakeUpTime!,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      preferredSleepTime: profile.preferredSleepTime!,
+      routine,
     },
   })
   const [firstName, ...lastName] = profile.name.split(' ')
@@ -57,14 +58,15 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
 
 export async function updateUserProfileAction(original: UserProfile, profile: Partial<UserProfileInput>) {
   const prisma = await getPrismaClient(profile.userId)
+  const routine = profile.routine ? RoutineDaysSchema.parse(profile.routine) : undefined
+  delete routine?.Everyday
+  delete routine?.Weekdays
+  delete routine?.Weekends
   const updated = await prisma.userProfile.update({
     where: { userId: profile.userId },
     data: {
       ...profile,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      preferredWakeUpTime: profile.preferredWakeUpTime!,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      preferredSleepTime: profile.preferredSleepTime!,
+      routine,
     },
   })
   if (updated.timezone !== original.timezone) {

@@ -12,8 +12,7 @@ export function formatUser(user: UserProfile | Jsonify<UserProfile>): string {
     "startsWorkAt": "${user.startsWorkAt}",
     "endsWorkAt": "${user.endsWorkAt}",
     "workDays": "${user.workDays}",
-    "preferredSleepTime": "${user.preferredSleepTime}",
-    "preferredWakeUpTime": "${user.preferredWakeUpTime}",
+    "routine": "${user.routine}",
     "unemployed": "${user.unemployed}",
   }`
     // TODO: These are good ideas, but we need to get the user to set them

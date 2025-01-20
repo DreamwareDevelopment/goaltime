@@ -8,12 +8,12 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny"
 
 import { Form } from "@/ui-components/form"
 import { Separator } from '@/ui-components/separator'
-import { getZodResolver, refineUserProfileSchema, UserProfileInput, UserProfileSchema } from '@/shared/zod'
+import { DaysOfTheWeekType, getZodResolver, refineUserProfileSchema, RoutineDays, RoutineDaysSchema, SupportedCurrenciesType, SupportedLanguagesType, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
 import { PersonalFields } from '../../components/Profile/PersonalFields'
 import { WorkFields } from '../../components/Profile/WorkFields'
-import { PreferencesFields } from '../../components/Profile/PreferencesFields'
+import { RoutineFieldsContainer } from '../../components/Profile/RoutineFields'
 import { useValtio } from '../../components/data/valtio'
 import { UserProfile } from '@prisma/client'
 import { useSnapshot } from 'valtio'
@@ -23,6 +23,17 @@ import { ArrowLeft } from 'lucide-react'
 
 export interface SettingsClientProps {
   profile: UserProfile
+}
+
+export function getProfileRoutine(profile: UserProfile): RoutineDays {
+  const parsed = RoutineDaysSchema.parse(profile.routine)
+  if (!parsed.Monday || !parsed.Saturday) {
+    throw new Error('No routine found')
+  }
+  parsed.Everyday = { ...parsed.Monday, day: 'Everyday' }
+  parsed.Weekdays = { ...parsed.Monday, day: 'Weekdays' }
+  parsed.Weekends = { ...parsed.Saturday, day: 'Weekends' }
+  return parsed
 }
 
 export default function SettingsClient({ profile: p }: SettingsClientProps) {
@@ -35,7 +46,13 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
 
   const form = useForm<UserProfileInput>({
     resolver: getZodResolver(UserProfileSchema, refineUserProfileSchema),
-    values: profile as UserProfileInput,
+    values: {
+      ...profile,
+      workDays: profile.workDays as DaysOfTheWeekType[],
+      routine: getProfileRoutine(profile),
+      preferredLanguage: profile.preferredLanguage as SupportedLanguagesType,
+      preferredCurrency: profile.preferredCurrency as SupportedCurrenciesType,
+    },
   })
   const { handleSubmit, formState, setError } = form
   const { isSubmitting, isValidating, isDirty } = formState
@@ -96,7 +113,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
             <Separator />
             <WorkFields form={form} />
             <Separator />
-            <PreferencesFields form={form} />
+            <RoutineFieldsContainer defaultOpen="Custom" form={form} />
           </CardContent>
           <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
             <ShinyButton
