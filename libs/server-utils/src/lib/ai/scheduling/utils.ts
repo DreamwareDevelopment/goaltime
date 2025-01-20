@@ -2,7 +2,7 @@
 import { dayjs, DATE_TIME_FORMAT, ExternalEvent, Interval, MIN_BLOCK_SIZE, WakeUpOrSleepEvent } from "@/shared/utils";
 import { Goal, UserProfile } from "@prisma/client";
 import { Logger } from "inngest/middleware/logger";
-import { DaysOfTheWeekType, PreferredTimesEnumType, RoutineDaysSchema } from "@/shared/zod";
+import { DaysOfTheWeekType, getProfileRoutine, PreferredTimesEnumType } from "@/shared/zod";
 import { JsonValue } from "inngest/helpers/jsonify";
 
 const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumType, Interval<dayjs.Dayjs>> => {
@@ -91,7 +91,7 @@ export function getFreeIntervals(
   const start = dayjs(timeframe.start);
   const end = dayjs(timeframe.end);
   const daysBetween = end.diff(start, 'days');
-  const routineDays = RoutineDaysSchema.parse(profile.routine);
+  const routineDays = getProfileRoutine(profile);
   logger.info(`Days between: ${daysBetween}`);
   // TODO: Take holidays into account
   const workdays = Array.isArray(profile.workDays) ? profile.workDays : [];
@@ -207,7 +207,7 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, start:
     throw new Error('Preferred times must be an array');
   }
   const dayName = start.format('dddd') as DaysOfTheWeekType;
-  const routineDays = RoutineDaysSchema.parse(profile.routine);
+  const routineDays = getProfileRoutine(profile);
   const routine = routineDays[dayName];
   if (!routine) {
     throw new Error(`Routine for ${dayName} is not defined`);

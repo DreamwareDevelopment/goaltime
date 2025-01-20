@@ -8,7 +8,7 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny"
 
 import { Form } from "@/ui-components/form"
 import { Separator } from '@/ui-components/separator'
-import { DaysOfTheWeekType, getZodResolver, refineUserProfileSchema, RoutineDays, RoutineDaysSchema, SupportedCurrenciesType, SupportedLanguagesType, UserProfileInput, UserProfileSchema } from '@/shared/zod'
+import { DaysOfTheWeekType, getProfileRoutine, getZodResolver, refineUserProfileSchema, SupportedCurrenciesType, SupportedLanguagesType, UserProfileInput, UserProfileSchema } from '@/shared/zod'
 import { useRouter } from 'next/navigation'
 import { AvatarUrlField } from '../../components/Profile/AvatarUrlField'
 import { PersonalFields } from '../../components/Profile/PersonalFields'
@@ -23,17 +23,6 @@ import { ArrowLeft } from 'lucide-react'
 
 export interface SettingsClientProps {
   profile: UserProfile
-}
-
-export function getProfileRoutine(profile: UserProfile): RoutineDays {
-  const parsed = RoutineDaysSchema.parse(profile.routine)
-  if (!parsed.Monday || !parsed.Saturday) {
-    throw new Error('No routine found')
-  }
-  parsed.Everyday = { ...parsed.Monday, day: 'Everyday' }
-  parsed.Weekdays = { ...parsed.Monday, day: 'Weekdays' }
-  parsed.Weekends = { ...parsed.Saturday, day: 'Weekends' }
-  return parsed
 }
 
 export default function SettingsClient({ profile: p }: SettingsClientProps) {
@@ -106,13 +95,16 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
       </CardHeader>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="flex flex-col gap-6">
+          <CardContent className="flex flex-col gap-4">
             <AvatarUrlField form={form} setImage={setImage} />
             <Separator />
+            <p className="text-xl text-foreground text-center">Personal</p>
             <PersonalFields form={form} />
             <Separator />
+            <p className="text-xl text-foreground text-center">Work</p>
             <WorkFields form={form} />
             <Separator />
+            <p className="text-xl text-foreground text-center">Routine</p>
             <RoutineFieldsContainer defaultOpen="Custom" form={form} />
           </CardContent>
           <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">

@@ -1,6 +1,7 @@
 import z from 'zod'
 import { FieldErrors } from 'react-hook-form'
 import { getDefaults, ZodSchemaResolver } from '.'
+import { dayjs } from '../utils'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 export type DaysOfTheWeekType = z.infer<typeof daysOfTheWeek>
@@ -13,6 +14,38 @@ export type SupportedLanguagesType = z.infer<typeof SupportedLanguages>
 
 export const SupportedCurrencies = z.enum(['USD'])
 export type SupportedCurrenciesType = z.infer<typeof SupportedCurrencies>
+
+export const SerializedRoutineSchema = z.object({
+  day: DaysSelectionEnum.default('Everyday'),
+  wakeUpTime: z.string().nullable().default(null),
+  sleepTime: z.string().nullable().default(null),
+  breakfastStart: z.string().nullable().default(null),
+  breakfastEnd: z.string().nullable().default(null),
+  skipBreakfast: z.boolean().default(false),
+  lunchStart: z.string().nullable().default(null),
+  lunchEnd: z.string().nullable().default(null),
+  skipLunch: z.boolean().default(false),
+  dinnerStart: z.string().nullable().default(null),
+  dinnerEnd: z.string().nullable().default(null),
+  skipDinner: z.boolean().default(false),
+})
+
+export type SerializedRoutine = z.infer<typeof SerializedRoutineSchema>
+
+export const SerializedRoutineDaysSchema = z.object({
+  Everyday: SerializedRoutineSchema.optional(),
+  Weekdays: SerializedRoutineSchema.optional(),
+  Weekends: SerializedRoutineSchema.optional(),
+  Monday: SerializedRoutineSchema.optional(),
+  Tuesday: SerializedRoutineSchema.optional(),
+  Wednesday: SerializedRoutineSchema.optional(),
+  Thursday: SerializedRoutineSchema.optional(),
+  Friday: SerializedRoutineSchema.optional(),
+  Saturday: SerializedRoutineSchema.optional(),
+  Sunday: SerializedRoutineSchema.optional(),
+})
+
+export type SerializedRoutineDays = z.infer<typeof SerializedRoutineDaysSchema>
 
 export const RoutineSchema = z.object({
   day: DaysSelectionEnum.default('Everyday'),
@@ -28,18 +61,21 @@ export const RoutineSchema = z.object({
   breakfastEnd: z.date({
     message: 'Please provide a valid date and time for breakfastEnd',
   }).nullable().default(null),
+  skipBreakfast: z.boolean().default(false),
   lunchStart: z.date({
     message: 'Please provide a valid date and time for lunchStart',
   }).nullable().default(null),
   lunchEnd: z.date({
     message: 'Please provide a valid date and time for lunchEnd',
   }).nullable().default(null),
+  skipLunch: z.boolean().default(false),
   dinnerStart: z.date({
     message: 'Please provide a valid date and time for dinnerStart',
   }).nullable().default(null),
   dinnerEnd: z.date({
     message: 'Please provide a valid date and time for dinnerEnd',
   }).nullable().default(null),
+  skipDinner: z.boolean().default(false),
 })
 
 export type Routine = z.infer<typeof RoutineSchema>
@@ -58,6 +94,31 @@ export const RoutineDaysSchema = z.object({
 })
 
 export type RoutineDays = z.infer<typeof RoutineDaysSchema>
+
+export function getProfileRoutine(profile: UserProfile): RoutineDays {
+  const parsed = SerializedRoutineDaysSchema.parse(profile.routine)
+  if (!parsed.Monday || !parsed.Saturday) {
+    throw new Error('No routine found')
+  }
+  parsed.Everyday = { ...parsed.Monday, day: 'Everyday' }
+  parsed.Weekdays = { ...parsed.Monday, day: 'Weekdays' }
+  parsed.Weekends = { ...parsed.Saturday, day: 'Weekends' }
+  const routineDays: RoutineDays = {}
+  for (const day in parsed) {
+    routineDays[day] = {
+      ...parsed[day],
+      sleepTime: parsed[day].sleepTime ? dayjs(parsed[day].sleepTime).toDate() : null,
+      wakeUpTime: parsed[day].wakeUpTime ? dayjs(parsed[day].wakeUpTime).toDate() : null,
+      breakfastStart: parsed[day].breakfastStart ? dayjs(parsed[day].breakfastStart).toDate() : null,
+      breakfastEnd: parsed[day].breakfastEnd ? dayjs(parsed[day].breakfastEnd).toDate() : null,
+      lunchStart: parsed[day].lunchStart ? dayjs(parsed[day].lunchStart).toDate() : null,
+      lunchEnd: parsed[day].lunchEnd ? dayjs(parsed[day].lunchEnd).toDate() : null,
+      dinnerStart: parsed[day].dinnerStart ? dayjs(parsed[day].dinnerStart).toDate() : null,
+      dinnerEnd: parsed[day].dinnerEnd ? dayjs(parsed[day].dinnerEnd).toDate() : null,
+    }
+  }
+  return routineDays
+}
 
 export const UserProfileSchema = z.object({
   userId: z.string({

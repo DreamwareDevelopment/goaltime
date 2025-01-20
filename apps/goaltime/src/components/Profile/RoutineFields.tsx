@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form";
 import { dayjs } from '@/shared/utils'
 import { DatetimePicker } from "@/ui-components/datetime-picker";
 import { DaysSelectionEnum, DaysSelectionEnumType, UserProfileInput } from "@/shared/zod";
 import { CircularTabsTrigger, Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
 import { UseFormReturn } from "react-hook-form";
-import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from "@/libs/ui-components/src/components/ui/accordion";
+import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from "@/ui-components/accordion";
+import { Checkbox } from "@/ui-components/checkbox";
 
 export interface RoutineFieldsContainerProps {
   defaultOpen: 'Everyday' | 'Weekly' | 'Custom'
@@ -21,14 +23,15 @@ type RoutineField = 'wakeUpTime' | 'breakfastStart' | 'breakfastEnd' | 'lunchSta
 interface RoutineFieldsProps {
   form: UseFormReturn<UserProfileInput>
   days: DaysSelectionEnumType
-  onChange?: (field: RoutineField, date: Date) => void
+  onChange?: (field: RoutineField, date: Date | boolean) => void
 }
 
 
 function RoutineFields({ form, days, onChange }: RoutineFieldsProps) {
   const timezone = form.watch('timezone')
+  const [value, setValue] = useState('sleep')
   return (
-    <Accordion type="single" collapsible defaultValue="sleep" className="w-full h-full">
+    <Accordion type="single" collapsible defaultValue="sleep" value={value} onValueChange={setValue} className="w-full h-full">
       <AccordionItem value="sleep" className="w-full">
         <AccordionTrigger className="text-md font-bold">Sleep</AccordionTrigger>
         <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
@@ -90,179 +93,266 @@ function RoutineFields({ form, days, onChange }: RoutineFieldsProps) {
       </AccordionItem>
       <AccordionItem value="breakfast">
         <AccordionTrigger className="text-md font-bold">Breakfast</AccordionTrigger>
-        <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
-          <FormField
-            control={form.control}
-            name={`routine.${days}.breakfastStart`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="pl-1">
-                  Breakfast Start Time
-                </FormLabel>
-                <FormControl>
-                  <DatetimePicker
-                    {...field}
-                    format={[
-                      [],
-                      ["hours", "minutes", "am/pm"]
-                    ]}
-                    value={field.value}
-                    onChange={(e) => {
-                      const newDate = dayjs.tz(e, timezone).toDate()
-                      field.onChange(newDate)
-                      onChange?.(field.name.split('.').pop() as RoutineField, newDate)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="pl-2" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`routine.${days}.breakfastEnd`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="pl-1">
-                  Breakfast End Time
-                </FormLabel>
-                <FormControl>
-                  <DatetimePicker
-                    {...field}
-                    format={[
-                      [],
-                      ["hours", "minutes", "am/pm"]
-                    ]}
-                    value={field.value}
-                    onChange={(e) => {
-                      const newDate = dayjs.tz(e, timezone).toDate()
-                      field.onChange(newDate)
-                      onChange?.(field.name.split('.').pop() as RoutineField, newDate)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="pl-2" />
-              </FormItem>
-            )}
-          />
+        <AccordionContent className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <FormField
+              control={form.control}
+              name={`routine.${days}.breakfastStart`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="pl-1">
+                    Breakfast Start Time
+                  </FormLabel>
+                  <FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        [],
+                        ["hours", "minutes", "am/pm"]
+                      ]}
+                      value={form.watch(`routine.${days}.skipBreakfast`) ? null : field.value}
+                      onChange={(e) => {
+                        const newDate = dayjs.tz(e, timezone).toDate()
+                        field.onChange(newDate)
+                        onChange?.(field.name.split('.').pop() as RoutineField, newDate)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`routine.${days}.breakfastEnd`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="pl-1">
+                    Breakfast End Time
+                  </FormLabel>
+                  <FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        [],
+                        ["hours", "minutes", "am/pm"]
+                      ]}
+                      value={form.watch(`routine.${days}.skipBreakfast`) ? null : field.value}
+                      onChange={(e) => {
+                        const newDate = dayjs.tz(e, timezone).toDate()
+                        field.onChange(newDate)
+                        onChange?.(field.name.split('.').pop() as RoutineField, newDate)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <FormField
+              control={form.control}
+              name={`routine.${days}.skipBreakfast`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <FormLabel>
+                        Skip Breakfast
+                      </FormLabel>
+                      <Checkbox checked={field.value} onCheckedChange={checked => {
+                        field.onChange(checked)
+                        onChange?.('skipBreakfast', checked)
+                        if (checked) {
+                          form.setValue(`routine.${days}.breakfastStart`, null)
+                          form.setValue(`routine.${days}.breakfastEnd`, null)
+                          setValue('lunch')
+                        }
+                      }}/>
+                    </div>
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+          </div>
         </AccordionContent>
       </AccordionItem>
       <AccordionItem value="lunch">
         <AccordionTrigger className="text-md font-bold">Lunch</AccordionTrigger>
-        <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
-          <FormField
-            control={form.control}
-            name={`routine.${days}.lunchStart`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="pl-1">
-                  Lunch Start Time
-                </FormLabel>
-                <FormControl>
-                  <DatetimePicker
-                    {...field}
-                    format={[
-                      [],
-                      ["hours", "minutes", "am/pm"]
-                    ]}
-                    value={field.value}
-                    onChange={(e) => {
-                      const newDate = dayjs.tz(e, timezone).toDate()
-                      field.onChange(newDate)
-                      onChange?.(field.name.split('.').pop() as RoutineField, newDate)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="pl-2" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`routine.${days}.lunchEnd`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="pl-1">
-                  Lunch End Time
-                </FormLabel>
-                <FormControl>
-                  <DatetimePicker
-                    {...field}
-                    format={[
-                      [],
-                      ["hours", "minutes", "am/pm"]
-                    ]}
-                    value={field.value}
-                    onChange={(e) => {
-                      const newDate = dayjs.tz(e, timezone).toDate()
-                      field.onChange(newDate)
-                      onChange?.(field.name.split('.').pop() as RoutineField, newDate)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="pl-2" />
-              </FormItem>
-            )}
-          />
+        <AccordionContent className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <FormField
+              control={form.control}
+              name={`routine.${days}.lunchStart`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="pl-1">
+                    Lunch Start Time
+                  </FormLabel>
+                  <FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        [],
+                        ["hours", "minutes", "am/pm"]
+                      ]}
+                      value={form.watch(`routine.${days}.skipLunch`) ? null : field.value}
+                      onChange={(e) => {
+                        const newDate = dayjs.tz(e, timezone).toDate()
+                        field.onChange(newDate)
+                        onChange?.(field.name.split('.').pop() as RoutineField, newDate)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`routine.${days}.lunchEnd`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="pl-1">
+                    Lunch End Time
+                  </FormLabel>
+                  <FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        [],
+                        ["hours", "minutes", "am/pm"]
+                      ]}
+                      value={form.watch(`routine.${days}.skipLunch`) ? null : field.value}
+                      onChange={(e) => {
+                        const newDate = dayjs.tz(e, timezone).toDate()
+                        field.onChange(newDate)
+                        onChange?.(field.name.split('.').pop() as RoutineField, newDate)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <FormField
+              control={form.control}
+              name={`routine.${days}.skipLunch`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <FormLabel>
+                        Skip Lunch
+                      </FormLabel>
+                      <Checkbox checked={field.value} onCheckedChange={checked => {
+                        field.onChange(checked)
+                        onChange?.('skipLunch', checked)
+                        if (checked) {
+                          form.setValue(`routine.${days}.lunchStart`, null)
+                          form.setValue(`routine.${days}.lunchEnd`, null)
+                          setValue('dinner')
+                        }
+                      }}/>
+                    </div>
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+          </div>
         </AccordionContent>
       </AccordionItem>
-      <AccordionItem value="dinner">
+      <AccordionItem value="dinner" className="border-none">
         <AccordionTrigger className="text-md font-bold">Dinner</AccordionTrigger>
-        <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
-          <FormField
-            control={form.control}
-            name={`routine.${days}.dinnerStart`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="pl-1">
-                  Dinner Start Time
-                </FormLabel>
-                <FormControl>
-                  <DatetimePicker
-                    {...field}
-                    format={[
-                      [],
-                      ["hours", "minutes", "am/pm"]
-                    ]}
-                    value={field.value}
-                    onChange={(e) => {
-                      const newDate = dayjs.tz(e, timezone).toDate()
-                      field.onChange(newDate)
-                      onChange?.(field.name.split('.').pop() as RoutineField, newDate)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="pl-2" />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`routine.${days}.dinnerEnd`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="pl-1">
-                  Dinner End Time
-                </FormLabel>
-                <FormControl>
-                  <DatetimePicker
-                    {...field}
-                    format={[
-                      [],
-                      ["hours", "minutes", "am/pm"]
-                    ]}
-                    value={field.value}
-                    onChange={(e) => {
-                      const newDate = dayjs.tz(e, timezone).toDate()
-                      field.onChange(newDate)
-                      onChange?.(field.name.split('.').pop() as RoutineField, newDate)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage className="pl-2" />
-              </FormItem>
-            )}
-          />
+        <AccordionContent className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <FormField
+              control={form.control}
+              name={`routine.${days}.dinnerStart`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="pl-1">
+                    Dinner Start Time
+                  </FormLabel>
+                  <FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        [],
+                        ["hours", "minutes", "am/pm"]
+                      ]}
+                      value={form.watch(`routine.${days}.skipDinner`) ? null : field.value}
+                      onChange={(e) => {
+                        const newDate = dayjs.tz(e, timezone).toDate()
+                        field.onChange(newDate)
+                        onChange?.(field.name.split('.').pop() as RoutineField, newDate)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`routine.${days}.dinnerEnd`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="pl-1">
+                    Dinner End Time
+                  </FormLabel>
+                  <FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        [],
+                        ["hours", "minutes", "am/pm"]
+                      ]}
+                      value={form.watch(`routine.${days}.skipDinner`) ? null : field.value}
+                      onChange={(e) => {
+                        const newDate = dayjs.tz(e, timezone).toDate()
+                        field.onChange(newDate)
+                        onChange?.(field.name.split('.').pop() as RoutineField, newDate)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <FormField
+              control={form.control}
+              name={`routine.${days}.skipDinner`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <FormLabel>
+                        Skip Dinner
+                      </FormLabel>
+                      <Checkbox checked={field.value} onCheckedChange={checked => {
+                        field.onChange(checked)
+                        onChange?.('skipDinner', checked)
+                        if (checked) {
+                          form.setValue(`routine.${days}.dinnerStart`, null)
+                          form.setValue(`routine.${days}.dinnerEnd`, null)
+                          setValue('sleep')
+                        }
+                      }}/>
+                    </div>
+                  </FormControl>
+                  <FormMessage className="pl-2" />
+                </FormItem>
+              )}
+            />
+          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
