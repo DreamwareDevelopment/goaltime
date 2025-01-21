@@ -10,7 +10,7 @@ import { inngest, InngestEvent } from "../client";
 
 interface PreparedSchedulingData {
   interval: Interval<string>;
-  externalEvents: ExternalEvent<string>[];
+  eventsAndRoutines: ExternalEvent<string>[];
   data: ScheduleInputData;
   goalMap: Record<string, GoalSchedulingData>;
   timezone: string;
@@ -36,9 +36,9 @@ export const scheduleGoalEvents = inngest.createFunction(
   async ({ step, event, logger }) => {
     logger.info('Scheduling goal events');
     const { userId } = event.data;
-    const { data, interval, goalMap, externalEvents, timezone } = await step.run('get-scheduling-data', async () => {
+    const { data, interval, goalMap, eventsAndRoutines, timezone } = await step.run('get-scheduling-data', async () => {
       const { goals, interval, profile, schedule, fullSyncTimeframe } = await getSchedulingData(userId);
-      const { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
+      const { eventsAndRoutines, freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
       logger.info(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
       // freeIntervals.map(interval => logger.info(`Free interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
       // freeWorkIntervals.map(interval => logger.info(`Free work interval: ${dayjs.tz(interval.start, profile.timezone).format(DATE_TIME_FORMAT)} - ${dayjs.tz(interval.end, profile.timezone).format(DATE_TIME_FORMAT)}`));
@@ -61,7 +61,7 @@ export const scheduleGoalEvents = inngest.createFunction(
           start: timeframe.start.format(DATE_TIME_FORMAT),
           end: timeframe.end.format(DATE_TIME_FORMAT),
         },
-        externalEvents: schedule.map(event => ({
+        eventsAndRoutines: eventsAndRoutines.map(event => ({
           ...event,
           start: event.start.format(DATE_TIME_FORMAT),
           end: event.end.format(DATE_TIME_FORMAT),
@@ -145,7 +145,7 @@ export const scheduleGoalEvents = inngest.createFunction(
         minimumDuration: goal.minimumDuration,
         maximumDuration: goal.maximumDuration,
       }
-      const instructions = await step.ai.wrap(`get-${goal.id}-scoring-instructions`, getGoalScoringInstructions, minimalGoal, goalsScheduledSoFar, externalEvents);
+      const instructions = await step.ai.wrap(`get-${goal.id}-scoring-instructions`, getGoalScoringInstructions, minimalGoal, goalsScheduledSoFar, eventsAndRoutines);
       logger.info(`${instructions}`);
 
       const preferredTimes: Interval<dayjs.Dayjs>[] = goal.preferredTimes.map(time => ({
@@ -168,7 +168,7 @@ export const scheduleGoalEvents = inngest.createFunction(
         preferredFreeIntervals,
         preferredFreeWorkIntervals,
         data.wakeUpOrSleepEvents,
-        externalEvents,
+        eventsAndRoutines,
         schedule,
       );
 
@@ -363,15 +363,15 @@ function scheduleGoalBFS(
   scheduledDayLookup: Record<string, boolean>,
 ): { scheduled: Array<GoalEvent<dayjs.Dayjs>>, duration: number } {
   const originalRemainingCommitment = remainingCommitment;
-  let updatedRemainingCommitment = remainingCommitment;
+  let currentRemainingCommitment = remainingCommitment;
   const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];
-  const queue: Array<{ intervals: Interval<dayjs.Dayjs>[], remainingCommitment: number }> = [
-    { intervals, remainingCommitment },
+  const queue: Array<{ intervals: Interval<dayjs.Dayjs>[] }> = [
+    { intervals },
   ];
 
   while (queue.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const { intervals, remainingCommitment: currentRemainingCommitment } = queue.shift()!;
+    const { intervals } = queue.shift()!;
 
     logger.info(`Scheduling goal ${goal.title} with ${currentRemainingCommitment} minutes of remaining commitment`);
     if (intervals.length === 0 || currentRemainingCommitment < goal.minimumDuration) {
@@ -380,24 +380,26 @@ function scheduleGoalBFS(
 
     const middle = Math.floor(intervals.length / 2);
     const middleResult = scheduleGoalInternal(logger, goal, currentRemainingCommitment, intervals[middle], scheduledDayLookup);
-    updatedRemainingCommitment = currentRemainingCommitment - middleResult.duration;
+    currentRemainingCommitment -= middleResult.duration;
 
     if (middleResult.scheduled) {
       schedule.push(middleResult.scheduled);
     }
 
-    if (updatedRemainingCommitment >= goal.minimumDuration) {
+    if (currentRemainingCommitment >= goal.minimumDuration) {
       if (intervals.length > 2) {
-        queue.push({ intervals: intervals.slice(0, middle), remainingCommitment: updatedRemainingCommitment });
-        queue.push({ intervals: intervals.slice(middle + 1), remainingCommitment: updatedRemainingCommitment });
+        queue.push({ intervals: intervals.slice(0, middle) });
+        queue.push({ intervals: intervals.slice(middle + 1) });
       } else if (intervals.length === 2) {
         // We just scheduled the interval at 1, so we need to schedule the interval at 0
-        queue.push({ intervals: [intervals[0]], remainingCommitment: updatedRemainingCommitment });
+        queue.push({ intervals: [intervals[0]] });
       } // If there is only one interval, we don't need to schedule it again
+    } else {
+      break;
     }
   }
 
-  return { scheduled: schedule, duration: originalRemainingCommitment - updatedRemainingCommitment };
+  return { scheduled: schedule, duration: originalRemainingCommitment - currentRemainingCommitment };
 }
 
 interface IntervalsState {
@@ -504,6 +506,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
     if (goal.canDoDuringWork) {
       totalTimeAvailable += freeWorkIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0);
       logger.info(`Free work intervals:\n${freeWorkIntervals.map(interval => `  ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+      // Schedule the leftmost interval
       let { scheduled, duration } = scheduleGoalBFS(logger, goal, freeWorkIntervals.slice(0, 1), remainingCommitment, scheduledDayLookup);
       remainingCommitment -= duration;
       schedule.push(...scheduled);
@@ -513,6 +516,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
         return schedule;
       }
       if (freeWorkIntervals.length > 1) {
+        // Schedule the rightmost interval
         ({ scheduled, duration } = scheduleGoalBFS(logger, goal, freeWorkIntervals.slice(-1), remainingCommitment, scheduledDayLookup));
         remainingCommitment -= duration;
         schedule.push(...scheduled);
@@ -523,6 +527,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
         return schedule;
       }
       if (freeWorkIntervals.length > 2) {
+        // BFS the middle
         ({ scheduled, duration } = scheduleGoalBFS(logger, goal, freeWorkIntervals.slice(1, -1), remainingCommitment, scheduledDayLookup));
         remainingCommitment -= duration;
         schedule.push(...scheduled);
@@ -534,6 +539,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
       }
     }
     logger.info(`Free intervals:\n${freeIntervals.map(interval => `  ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    // Schedule the leftmost interval
     let { scheduled, duration } = scheduleGoalBFS(logger, goal, freeIntervals.slice(0, 1), remainingCommitment, scheduledDayLookup);
     remainingCommitment -= duration;
     schedule.push(...scheduled);
@@ -543,6 +549,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
       return schedule;
     }
     if (freeIntervals.length > 1) {
+      // Schedule the rightmost interval
       ({ scheduled, duration } = scheduleGoalBFS(logger, goal, freeIntervals.slice(-1), remainingCommitment, scheduledDayLookup));
       remainingCommitment -= duration;
       schedule.push(...scheduled);
@@ -553,6 +560,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
       return schedule;
     }
     if (freeIntervals.length > 2) {
+      // BFS the middle
       ({ scheduled, duration } = scheduleGoalBFS(logger, goal, freeIntervals.slice(1, -1), remainingCommitment, scheduledDayLookup));
       remainingCommitment -= duration;
       schedule.push(...scheduled);
