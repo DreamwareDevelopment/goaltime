@@ -28,6 +28,17 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
   const prisma = await getPrismaClient()
   const routine = RoutineActivitiesSchema.parse(profile.routine)
   for (const activity in routine) {
+    if (activity === 'custom') {
+      for (const customActivity in routine[activity]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (routine[activity][customActivity] as any).Everyday
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (routine[activity][customActivity] as any).Weekdays
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (routine[activity][customActivity] as any).Weekends
+      }
+      continue
+    }
     const key = activity as RoutineActivity
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (routine[key] as any).Everyday
@@ -66,6 +77,17 @@ export async function updateUserProfileAction(original: UserProfile, profile: Pa
   const prisma = await getPrismaClient(profile.userId)
   const routine = profile.routine ? RoutineActivitiesSchema.parse(profile.routine) : undefined
   for (const activity in routine) {
+    if (activity === 'custom') {
+      for (const customActivity in routine[activity]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (routine[activity][customActivity] as any).Everyday
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (routine[activity][customActivity] as any).Weekdays
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (routine[activity][customActivity] as any).Weekends
+      }
+      continue
+    }
     const key = activity as RoutineActivity
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (routine[key] as any).Everyday

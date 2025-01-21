@@ -2,7 +2,7 @@
 import { dayjs, DATE_TIME_FORMAT, ExternalEvent, Interval, MIN_BLOCK_SIZE, WakeUpOrSleepEvent } from "@/shared/utils";
 import { Goal, UserProfile } from "@prisma/client";
 import { Logger } from "inngest/middleware/logger";
-import { DaysOfTheWeekType, getProfileRoutine, PreferredTimesEnumType } from "@/shared/zod";
+import { daysOfTheWeek, DaysOfTheWeekType, getProfileRoutine, PreferredTimesEnumType, Routine, RoutineActivities, RoutineActivity } from "@/shared/zod";
 import { JsonValue } from "inngest/helpers/jsonify";
 
 const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumType, Interval<dayjs.Dayjs>> => {
@@ -72,6 +72,54 @@ function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: Ext
   return timeblocks;
 }
 
+function routineToExternalEvents(routine: RoutineActivities): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
+  const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  };
+  for (const activity in routine) {
+    if (activity === 'sleep' || activity === 'custom') {
+      continue;
+    }
+    const routineDays = routine[activity as RoutineActivity];
+    for (const day of Object.values(daysOfTheWeek.Values)) {
+      const routine = routineDays[day] as Routine;
+      events[day].push({
+        id: activity,
+        title: activity,
+        start: dayjs(routine.start),
+        end: dayjs(routine.end),
+      });
+    }
+  }
+  for (const activity in routine.custom) {
+    const routineDays = routine.custom[activity];
+    for (const day of Object.values(daysOfTheWeek.Values)) {
+      const routine = routineDays[day] as Routine;
+      events[day].push({
+        id: activity,
+        title: activity,
+        start: dayjs(routine.start),
+        end: dayjs(routine.end),
+      });
+    }
+  }
+  return events;
+}
+
+function addDayOffset(event: ExternalEvent<dayjs.Dayjs>, day: dayjs.Dayjs): ExternalEvent<dayjs.Dayjs> {
+  return {
+    ...event,
+    start: event.start.year(day.year()).month(day.month()).date(day.date()),
+    end: event.end.year(day.year()).month(day.month()).date(day.date()),
+  };
+}
+
 /**
  * Get the free and work intervals for a given timeframe.
  * @param profile - The user profile to get the free and work intervals for.
@@ -88,6 +136,7 @@ export function getFreeIntervals(
   freeIntervals: Interval[],
   freeWorkIntervals: Interval[],
   wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
+  eventsAndRoutines: ExternalEvent<dayjs.Dayjs>[],
 } {
   logger.info(`Getting free intervals for ${dayjs(timeframe.start).format(DATE_TIME_FORMAT)} - ${dayjs(timeframe.end).format(DATE_TIME_FORMAT)}`);
   const wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[] = [];
@@ -97,6 +146,8 @@ export function getFreeIntervals(
   const end = dayjs(timeframe.end);
   const daysBetween = end.diff(start, 'days');
   const routine = getProfileRoutine(profile);
+  const routineEventsByDay = routineToExternalEvents(routine);
+  const eventsAndRoutines: ExternalEvent<dayjs.Dayjs>[] = [];
   logger.info(`Days between: ${daysBetween}`);
   // TODO: Take holidays into account
   const workdays = Array.isArray(profile.workDays) ? profile.workDays : [];
@@ -114,8 +165,11 @@ export function getFreeIntervals(
     }
 
     const dayName = currentTime.format('dddd');
+    const routineEvents = routineEventsByDay[dayName as DaysOfTheWeekType].map(event => addDayOffset(event, currentTime));
+    logger.info(`Routine events for ${dayName}:\n${routineEvents.map(event => `${event.title}: ${event.start.format(DATE_TIME_FORMAT)} - ${event.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     const isLastDay = daysBetween + 1 === i;
-    const upcomingEvents = events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay));
+    const upcomingEvents = [...routineEvents, ...events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay))].sort((a, b) => a.start.diff(b.start, 'minutes'));
+    eventsAndRoutines.push(...upcomingEvents);
     const sleepRoutine = routine.sleep[dayName as DaysOfTheWeekType]
     if (!sleepRoutine || !sleepRoutine.start || !sleepRoutine.end) {
       throw new Error(`sleepRoutine for ${dayName} is not defined`);
@@ -203,7 +257,7 @@ export function getFreeIntervals(
       logger.error('Finished loop without finding any free intervals');
     }
   }
-  return { freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents };
+  return { eventsAndRoutines, freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents };
 }
 
 // Get the preferred times for a goal in the format of HH:mm-HH:mm, merging time blocks and adhering to the preferred wake up and sleep times
@@ -287,10 +341,15 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   callback: (intersection: T, duringWork: boolean) => void,
 ): void {
   function getPreferredTimesForDay(day: dayjs.Dayjs): Interval<dayjs.Dayjs>[] {
-    return preferredTimes.map(time => ({
-      start: time.start.year(day.year()).month(day.month()).date(day.date()),
-      end: time.end.year(day.year()).month(day.month()).date(day.date()),
-    }));
+    const preferredTimesForDay: Interval<dayjs.Dayjs>[] = [];
+    for (const time of preferredTimes) {
+      const endsNextDay = time.end.date() !== time.start.date();
+      preferredTimesForDay.push({
+        start: time.start.year(day.year()).month(day.month()).date(day.date()),
+        end: time.end.year(day.year()).month(day.month()).date(endsNextDay ? day.date() + 1 : day.date()),
+      });
+    }
+    return preferredTimesForDay;
   }
   if (!freeIntervals || !freeWorkIntervals) {
     if (freeIntervals || freeWorkIntervals) {
@@ -360,6 +419,16 @@ export function getPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   return result;
 }
 
+/*
+TODO: Refactor into multiple functions.
+I hate paragraph comments, but this function is a bit complex.
+Essentially it's approximating how many overlapping free + preferred intervals there are in period to get the total time available
+Then using the remaining free + preferred intervals to calculate the remaining commitment based on the priority of the goal and the ratio of time remaining vs total time in the period.
+The period being either a week, or the total time between the goal creation and deadline which may exceed the given timeframe.
+Because the period can exceed the given timeframe, we don't have the exact free intervals for the period, so we approximate by scaling down the free intervals
+based on the number of days between the start of the period and the start of the timeframe, thus assuming there are likely events scheduled in the period that intersect with the free + preferred intervals.
+It could be more deterministic if we got the exact free intervals for the period, but that would be more complex and require more data fetching and free interval calculations. This scheduling process is expensive enough as it is.
+*/
 /**
  * Get the remaining commitment for a goal for a given period, this does not take into account the amount completed.
  * @param goal - The goal to get the remaining commitment for.
@@ -386,21 +455,26 @@ export function getRemainingCommitmentForPeriod(
   });
   const getScalingFactor = (timeframe: Interval<dayjs.Dayjs>) => {
     const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
-    const scalingFactor = Math.pow(0.95, daysBetween); // The more days between, the higher likelihood that we are accounting for non-free intervals
+    const scalingFactor = Math.pow(0.925, daysBetween); // The more days between, the higher likelihood that we are accounting for non-free intervals
     logger.info(`Scaling factor for ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}: ${scalingFactor}`);
     return scalingFactor;
   }
   if (goal.commitment) {
+    const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
+    if (daysBetween === 7) {
+      logger.info(`A full week remains, returning commitment: ${goal.commitment * 60}`);
+      return goal.commitment * 60
+    }
     const amountToComplete = (goal.commitment - goal.completed) * 60;
     logger.info(`Amount to complete: ${amountToComplete}`);
     if (!goal.allowMultiplePerDay) {
-      const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
       const maxDuration = daysBetween * goal.maximumDuration;
       return Math.min(Math.floor(maxDuration / 5) * 5, amountToComplete) / 60;
     }
     const periodScalingFactor = getScalingFactor(fullSyncTimeframe);
     let totalMinutesThisPeriod = 0;
     iterateOverPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, null, null, fullSyncTimeframe, (intersection, duringWork) => {
+      // logger.info(`Intersection: ${intersection.start.format(DATE_TIME_FORMAT)} - ${intersection.end.format(DATE_TIME_FORMAT)}`);
       if (duringWork && goal.canDoDuringWork) {
         totalMinutesThisPeriod += intersection.end.diff(intersection.start, 'minutes');
       } else if (!duringWork) {
@@ -409,9 +483,9 @@ export function getRemainingCommitmentForPeriod(
     });
     logger.info(`Remaining minutes this period: ${remainingMinutesThisPeriod}`);
     logger.info(`Total minutes this period: ${totalMinutesThisPeriod * periodScalingFactor}`);
-    const adjustmentFactor = Math.min(1, remainingMinutesThisPeriod / totalMinutesThisPeriod * periodScalingFactor);
+    const adjustmentFactor = Math.min(1, remainingMinutesThisPeriod / (totalMinutesThisPeriod * periodScalingFactor));
     logger.info(`Adjustment factor: ${adjustmentFactor}`);
-    const minutesToComplete = Math.ceil(adjustmentFactor * priorityRestFactor * amountToComplete / 5) * 5;
+    const minutesToComplete = Math.ceil((adjustmentFactor * priorityRestFactor * amountToComplete) / 5) * 5;
     logger.info(`Minutes to complete: ${minutesToComplete}`);
     return Math.max(goal.minimumDuration, minutesToComplete) / 60;
   }

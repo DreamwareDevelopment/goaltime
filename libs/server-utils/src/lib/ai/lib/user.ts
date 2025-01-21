@@ -15,9 +15,4 @@ export function formatUser(user: UserProfile | Jsonify<UserProfile>): string {
     "routine": "${user.routine}",
     "unemployed": "${user.unemployed}",
   }`
-    // TODO: These are good ideas, but we need to get the user to set them
-    // "preferredMealTime": "${user.preferredMealTime}",
-    // "preferredExerciseTime": "${user.preferredExerciseTime}",
-    // "preferredSocialTime": "${user.preferredSocialTime}",
-    // "preferredRelaxTime": "${user.preferredRelaxTime}",
 }
