@@ -1,6 +1,6 @@
 'use server'
 
-import { RoutineActivitiesSchema, RoutineActivity, UserProfileInput } from '@/shared/zod'
+import { RoutineActivities, RoutineActivity, UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
@@ -23,10 +23,7 @@ function getZepUserMetadata(userProfile: UserProfile) {
   return Object.fromEntries(Object.entries(userProfile).filter(([key]) => !zepIgnoredUserFields.includes(key)))
 }
 
-export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
-  delete profile.otp
-  const prisma = await getPrismaClient()
-  const routine = RoutineActivitiesSchema.parse(profile.routine)
+function getRoutineForUpsert(routine: RoutineActivities) {
   for (const activity in routine) {
     if (activity === 'custom') {
       for (const customActivity in routine[activity]) {
@@ -47,6 +44,13 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (routine[key] as any).Weekends
   }
+  return routine
+}
+
+export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
+  delete profile.otp
+  const prisma = await getPrismaClient()
+  const routine = getRoutineForUpsert(profile.routine)
   const userProfile = await prisma.userProfile.create({
     data: {
       ...profile,
@@ -75,27 +79,7 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
 
 export async function updateUserProfileAction(original: UserProfile, profile: Partial<UserProfileInput>) {
   const prisma = await getPrismaClient(profile.userId)
-  const routine = profile.routine ? RoutineActivitiesSchema.parse(profile.routine) : undefined
-  for (const activity in routine) {
-    if (activity === 'custom') {
-      for (const customActivity in routine[activity]) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (routine[activity][customActivity] as any).Everyday
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (routine[activity][customActivity] as any).Weekdays
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (routine[activity][customActivity] as any).Weekends
-      }
-      continue
-    }
-    const key = activity as RoutineActivity
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (routine[key] as any).Everyday
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (routine[key] as any).Weekdays
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (routine[key] as any).Weekends
-  }
+  const routine = profile.routine ? getRoutineForUpsert(profile.routine) : undefined
   const updated = await prisma.userProfile.update({
     where: { userId: profile.userId },
     data: {

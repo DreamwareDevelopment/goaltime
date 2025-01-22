@@ -38,7 +38,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
     values: {
       ...profile,
       workDays: profile.workDays as DaysOfTheWeekType[],
-      routine: getProfileRoutine(profile),
+      routine: getProfileRoutine(profile, false),
       preferredLanguage: profile.preferredLanguage as SupportedLanguagesType,
       preferredCurrency: profile.preferredCurrency as SupportedCurrenciesType,
     },

@@ -133,7 +133,8 @@ export type SerializedRoutineActivities = z.infer<typeof SerializedRoutineActivi
 
 export type RoutineActivity = keyof RoutineActivities;
 
-export function getProfileRoutine(profile: UserProfile): RoutineActivities {
+// TODO: For some reason, zod defaults are being applied when they're not supposed to be, so this skipping nulls on read is a workaround
+export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): RoutineActivities {
   const parsed = SerializedRoutineActivitiesSchema.parse(profile.routine)
   if (!parsed.sleep || !parsed.breakfast || !parsed.lunch || !parsed.dinner) {
     throw new Error('No routine found')
@@ -156,6 +157,9 @@ export function getProfileRoutine(profile: UserProfile): RoutineActivities {
         for (const day in entry) {
           const dayKey = day as RoutineDay
           const dayEntry = entry[dayKey]
+          if (excludeSkipped && dayEntry.start === null && dayEntry.end === null) {
+            continue;
+          }
           routine.custom[key][dayKey] = {
             ...dayEntry,
             start: dayEntry.start ? dayjs(dayEntry.start).toDate() : null,
@@ -181,6 +185,9 @@ export function getProfileRoutine(profile: UserProfile): RoutineActivities {
     for (const day in entry) {
       const dayKey = day as RoutineDay
       const dayEntry = entry[dayKey] as Routine
+      if (excludeSkipped && dayEntry.start === null && dayEntry.end === null) {
+        continue;
+      }
       routine[key][dayKey] = {
         ...dayEntry,
         start: dayEntry.start ? dayjs(dayEntry.start).toDate() : null,
@@ -191,6 +198,7 @@ export function getProfileRoutine(profile: UserProfile): RoutineActivities {
   return routine
 }
 
+// TODO: For some reason, zod defaults are being applied when they're not supposed to be, so this skipping nulls on read is a workaround
 export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
   const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
     Monday: [],
@@ -208,6 +216,9 @@ export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs
     const routineDays = routine[activity as RoutineActivity];
     for (const day of Object.values(daysOfTheWeek.Values)) {
       const routine = routineDays[day] as Routine;
+      if (routine.start === null && routine.end === null) {
+        continue;
+      }
       events[day].push({
         id: activity,
         title: activity.charAt(0).toUpperCase() + activity.slice(1),
@@ -220,6 +231,9 @@ export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs
     const routineDays = routine.custom[activity];
     for (const day of Object.values(daysOfTheWeek.Values)) {
       const routine = routineDays[day] as Routine;
+      if (routine.start === null && routine.end === null) {
+        continue;
+      }
       events[day].push({
         id: activity,
         title: activity,
