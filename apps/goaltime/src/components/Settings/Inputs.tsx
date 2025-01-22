@@ -133,7 +133,7 @@ export const AllowMultiplePerDayCheckbox: React.FC<FormInputProps> = ({ form }) 
                     <Input
                       {...field}
                       value={field.value ?? undefined}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : '')}
                       min={10}
                       max={60 * 12}
                       type="number"
@@ -148,7 +148,7 @@ export const AllowMultiplePerDayCheckbox: React.FC<FormInputProps> = ({ form }) 
                       <HelpCircleIcon className="w-10 h-10 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>The minimum duration between consecutive sessions</p>
+                      <p>The minimum duration between sessions</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

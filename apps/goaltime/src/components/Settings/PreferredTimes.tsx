@@ -35,7 +35,7 @@ export const PreferredTimes = ({ day, form, onChange }: PreferredTimesProps) => 
       render={({ field }) => (
         <FormItem className="space-y-2">
           <FormControl>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-center items-center">
               {Object.entries(timeSlots).map(([slot, time]) => {
                 const timeSlot = slot as PreferredTimesEnumType;
                 const isSelected = field.value?.includes(timeSlot) ?? false;
