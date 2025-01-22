@@ -36,15 +36,25 @@ export const MinimalScheduleableGoalSchema = z.object({
 
 export type MinimalScheduleableGoal = z.infer<typeof MinimalScheduleableGoalSchema>;
 
+export const SerializedIntervalDaysSchema = z.object({
+  Everyday: IntervalSchema.array(),
+  Weekdays: IntervalSchema.array(),
+  Weekends: IntervalSchema.array(),
+  Monday: IntervalSchema.array(),
+  Tuesday: IntervalSchema.array(),
+  Wednesday: IntervalSchema.array(),
+  Thursday: IntervalSchema.array(),
+  Friday: IntervalSchema.array(),
+  Saturday: IntervalSchema.array(),
+  Sunday: IntervalSchema.array(),
+})
+
 export const ScheduleableGoalSchema = MinimalScheduleableGoalSchema.extend({
   id: z.string().describe('The unique identifier for the goal'),
   remainingCommitment: z.number().describe('The remaining time commitment in hours to be scheduled over the period of the free intervals'),
   breakDuration: z.number().optional().nullable().default(null).describe('The duration of the break in minutes'),
   priority: z.enum(['High', 'Medium', 'Low']).describe('The priority of the goal'),
-  preferredTimes: z.array(z.object({
-    start: z.string().describe('The start time of the preferred time interval in HH:mm format'),
-    end: z.string().describe('The end time of the preferred time interval in HH:mm format'),
-  })).describe('The preferred times for the goal'),
+  preferredTimes: SerializedIntervalDaysSchema.describe('The preferred times for the goal'),
 })
 
 export type ScheduleableGoal = z.infer<typeof ScheduleableGoalSchema>;

@@ -1,5 +1,6 @@
 import z from "zod";
 import { isValidHexColor } from "../utils";
+import { Goal } from "@prisma/client";
 
 // Enums
 export const PriorityEnum = z.enum(["High", "Medium", "Low"]);
@@ -37,6 +38,29 @@ export const NotificationSettingsSchema = z.object({
 });
 export type NotificationSettingsInput = z.infer<typeof NotificationSettingsSchema>
 
+export const PreferredTimesDaysSchema = z.object({
+  Everyday: PreferredTimesEnum.array().default([]).optional(),
+  Weekdays: PreferredTimesEnum.array().default([]).optional(),
+  Weekends: PreferredTimesEnum.array().default([]).optional(),
+  Monday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Tuesday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Wednesday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Thursday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Friday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Saturday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Sunday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+})
+
+export type PreferredTimesDays = z.infer<typeof PreferredTimesDaysSchema>
+
+export function getGoalPreferredTimes(goal: Goal): PreferredTimesDays {
+  const parsed = PreferredTimesDaysSchema.parse(goal.preferredTimes)
+  parsed.Everyday = [...parsed.Monday]
+  parsed.Weekdays = [...parsed.Monday]
+  parsed.Weekends = [...parsed.Saturday]
+  return parsed
+}
+
 // Goal Schema
 export const GoalSchema = z.object({
   id: z.string().uuid().optional(),
@@ -67,9 +91,7 @@ export const GoalSchema = z.object({
     .max(100.0, { message: "Completed must be less than 100 hours" })
     .default(0.0),
   priority: PriorityEnum.default("Medium"),
-  preferredTimes: z.array(PreferredTimesEnum)
-    .default([])
-    .refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  preferredTimes: PreferredTimesDaysSchema.describe("The preferred times of the goal."),
   breakDuration: z.number().int().min(10, "Break duration must be at least 10 minutes").optional().nullable().default(null),
   minimumDuration: z.number().int().min(10, "Minimum duration must be at least 10 minutes").default(30),
   maximumDuration: z.number().int().min(10, "Maximum duration must be at least 10 minutes").max(1000, "Maximum duration must be less than 1000 minutes").default(120),
@@ -87,7 +109,7 @@ export const LLMGoalSchema = z.object({
   description: z.string().describe("A description of the goal."),
   deadline: z.string().describe("The deadline of the goal.").nullable(),
   commitment: z.number().describe("The hours per week committed to the goal.").nullable(),
-  preferredTimes: z.array(z.string()).describe("The preferred times of the goal.").nullable(),
+  preferredTimes: PreferredTimesDaysSchema.describe("The preferred times of the goal.").nullable(),
   minimumDuration: z.number().describe("The minimum duration in minutes that the user should spend on the goal.").nullable(),
   maximumDuration: z.number().describe("The maximum duration in minutes that the user should spend on the goal.").nullable(),
 });

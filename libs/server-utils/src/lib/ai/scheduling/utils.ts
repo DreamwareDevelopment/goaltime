@@ -2,7 +2,7 @@
 import { dayjs, DATE_TIME_FORMAT, ExternalEvent, Interval, MIN_BLOCK_SIZE, WakeUpOrSleepEvent } from "@/shared/utils";
 import { Goal, UserProfile } from "@prisma/client";
 import { Logger } from "inngest/middleware/logger";
-import { daysOfTheWeek, DaysOfTheWeekType, getProfileRoutine, PreferredTimesEnumType, Routine, RoutineActivities, RoutineActivity } from "@/shared/zod";
+import { daysOfTheWeek, DaysOfTheWeekType, getProfileRoutine, PreferredTimesDaysSchema, PreferredTimesEnumType, Routine, RoutineActivities, RoutineActivity } from "@/shared/zod";
 import { JsonValue } from "inngest/helpers/jsonify";
 
 const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumType, Interval<dayjs.Dayjs>> => {
@@ -261,62 +261,75 @@ export function getFreeIntervals(
 }
 
 // Get the preferred times for a goal in the format of HH:mm-HH:mm, merging time blocks and adhering to the preferred wake up and sleep times
-export function parsePreferredTimes(logger: Logger, profile: UserProfile, start: dayjs.Dayjs, preferredTimes: JsonValue): Interval<dayjs.Dayjs>[] {
-  if (!Array.isArray(preferredTimes)) {
-    throw new Error('Preferred times must be an array');
-  }
-  const dayName = start.format('dddd') as DaysOfTheWeekType;
-  const routine = getProfileRoutine(profile);
-  const sleepRoutine = routine.sleep[dayName as DaysOfTheWeekType]
-  if (!sleepRoutine || !sleepRoutine.start || !sleepRoutine.end) {
-    throw new Error(`sleepRoutine for ${dayName} is not defined`);
-  }
-  const preferredWakeUpTime = dayjs(sleepRoutine.end);
-  const preferredSleepTime = dayjs(sleepRoutine.start);
-  const timeToIntervalLookup = getTimeToIntervalLookup(start);
-  const adjustedPreferredTimes = preferredTimes.map(time => {
-    const interval = timeToIntervalLookup[time as PreferredTimesEnumType];
-    if (preferredWakeUpTime.isAfter(interval.start) && preferredWakeUpTime.isBefore(interval.end)) {
-      return {
-        start: preferredWakeUpTime,
-        end: interval.end,
-      };
+export function parsePreferredTimes(logger: Logger, profile: UserProfile, timeframe: Interval<dayjs.Dayjs>, json: JsonValue): Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]> {
+  const result: Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]> = {
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  };
+  const parsed = PreferredTimesDaysSchema.parse(json)
+  const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
+  for (let i = 0; i < daysBetween; i++) {
+    const day = timeframe.start.add(i, 'days');
+    const dayName = day.format('dddd') as DaysOfTheWeekType;
+    const preferredTimes = parsed[dayName]
+    const routine = getProfileRoutine(profile);
+    const sleepRoutine = routine.sleep[dayName as DaysOfTheWeekType]
+    if (!sleepRoutine || !sleepRoutine.start || !sleepRoutine.end) {
+      throw new Error(`sleepRoutine for ${dayName} is not defined`);
     }
-    if (preferredSleepTime.isAfter(interval.start) && preferredSleepTime.isBefore(interval.end)) {
+    const preferredWakeUpTime = dayjs(sleepRoutine.end);
+    const preferredSleepTime = dayjs(sleepRoutine.start);
+    const timeToIntervalLookup = getTimeToIntervalLookup(day);
+    const adjustedPreferredTimes = preferredTimes.map(time => {
+      const interval = timeToIntervalLookup[time as PreferredTimesEnumType];
+      if (preferredWakeUpTime.isAfter(interval.start) && preferredWakeUpTime.isBefore(interval.end)) {
+        return {
+          start: preferredWakeUpTime,
+          end: interval.end,
+        };
+      }
+      if (preferredSleepTime.isAfter(interval.start) && preferredSleepTime.isBefore(interval.end)) {
+        return {
+          start: interval.start,
+          end: preferredSleepTime,
+        };
+      }
       return {
         start: interval.start,
-        end: preferredSleepTime,
+        end: interval.end,
       };
-    }
-    return {
-      start: interval.start,
-      end: interval.end,
-    };
-  })
-  // for (const time of adjustedPreferredTimes) {
-  //   logger.info(`Adjusted preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
-  // }
-  const sortedPreferredTimes = adjustedPreferredTimes.sort((a, b) => a.start.diff(b.start, 'minutes'))
-  const mergedPreferredTimes = sortedPreferredTimes.reduce((prev, curr) => {
-    if (!prev.length) {
-      prev.push(curr);
-    } else {
-      const last = prev[prev.length - 1];
-      if (last.end.isSame(curr.start, 'minute')) {
-        prev[prev.length - 1] = {
-          start: last.start,
-          end: curr.end,
-        };
-      } else {
+    })
+    // for (const time of adjustedPreferredTimes) {
+    //   logger.info(`Adjusted preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
+    // }
+    const sortedPreferredTimes = adjustedPreferredTimes.sort((a, b) => a.start.diff(b.start, 'minutes'))
+    const mergedPreferredTimes = sortedPreferredTimes.reduce((prev, curr) => {
+      if (!prev.length) {
         prev.push(curr);
+      } else {
+        const last = prev[prev.length - 1];
+        if (last.end.isSame(curr.start, 'minute')) {
+          prev[prev.length - 1] = {
+            start: last.start,
+            end: curr.end,
+          };
+        } else {
+          prev.push(curr);
+        }
       }
-    }
-    return prev;
-  }, [] as Interval<dayjs.Dayjs>[]);
-  // for (const time of mergedPreferredTimes) {
-  //   logger.info(`Merged preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
-  // }
-  return mergedPreferredTimes;
+      return prev;
+    }, [] as Interval<dayjs.Dayjs>[]);
+    result[dayName] = mergedPreferredTimes;
+  }
+  for (const dayName in result) {
+    logger.info(`Preferred times for ${dayName}:\n${result[dayName as DaysOfTheWeekType].map(time => `${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+  }
+  return result;
 }
 
 function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Interval<dayjs.Dayjs>, b: T): T | null {
@@ -334,7 +347,7 @@ function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Int
 export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   logger: Logger,
   canDoDuringWork: boolean,
-  preferredTimes: Interval<dayjs.Dayjs>[],
+  preferredTimes: Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]>,
   freeIntervals: T[] | null,
   freeWorkIntervals: T[] | null,
   timeframe: Interval<dayjs.Dayjs>,
@@ -342,7 +355,8 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
 ): void {
   function getPreferredTimesForDay(day: dayjs.Dayjs): Interval<dayjs.Dayjs>[] {
     const preferredTimesForDay: Interval<dayjs.Dayjs>[] = [];
-    for (const time of preferredTimes) {
+    const dayName = day.format('dddd') as DaysOfTheWeekType;
+    for (const time of preferredTimes[dayName]) {
       const endsNextDay = time.end.date() !== time.start.date();
       preferredTimesForDay.push({
         start: time.start.year(day.year()).month(day.month()).date(day.date()),
@@ -366,7 +380,7 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   let preferredTimesToday: Interval<dayjs.Dayjs>[] = getPreferredTimesForDay(timeframe.start);
   let currentDay = timeframe.start.date();
   if (canDoDuringWork) {
-    // logger.info(`Free work intervals:\n${freeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    // logger.info(`Preferred work intervals:\n${freeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     for (const interval of freeWorkIntervals) {
       if (interval.start.date() !== currentDay) {
         preferredTimesToday = getPreferredTimesForDay(interval.start);
@@ -394,7 +408,7 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
 export function getPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   logger: Logger,
   canDoDuringWork: boolean,
-  preferredTimes: Interval<dayjs.Dayjs>[],
+  preferredTimes: Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]>,
   freeIntervals: T[],
   freeWorkIntervals: T[],
   timeframe: Interval<dayjs.Dayjs>,
@@ -438,7 +452,7 @@ It could be more deterministic if we got the exact free intervals for the period
 export function getRemainingCommitmentForPeriod(
   logger: Logger,
   goal: Goal,
-  preferredTimes: Interval<dayjs.Dayjs>[],
+  preferredTimes: Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]>,
   freeIntervals: Interval<dayjs.Dayjs>[],
   freeWorkIntervals: Interval<dayjs.Dayjs>[],
   timeframe: Interval<dayjs.Dayjs>,
@@ -532,7 +546,7 @@ export function getRemainingCommitmentForPeriod(
 export function getRemainingCommitmentForCatchup(
   logger: Logger,
   goal: Goal,
-  preferredTimes: Interval<dayjs.Dayjs>[],
+  preferredTimes: Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]>,
   freeIntervals: Interval<dayjs.Dayjs>[],
   freeWorkIntervals: Interval<dayjs.Dayjs>[],
   timeframe: Interval<dayjs.Dayjs>,

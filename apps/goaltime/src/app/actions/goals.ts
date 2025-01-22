@@ -20,8 +20,10 @@ async function upsertGoalToGraph(goal: Goal): Promise<void> {
 }
 
 export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotifications> {
+  delete goal.preferredTimes.Everyday
+  delete goal.preferredTimes.Weekdays
+  delete goal.preferredTimes.Weekends
   const prisma = await getPrismaClient(goal.userId)
-
   const newGoal = await prisma.goal.create({
     data: {
       ...goal,
@@ -77,6 +79,9 @@ function shouldScheduleGoals(original: Goal, updated: GoalInput): boolean {
 }
 
 export async function updateGoalAction(original: Goal, updated: GoalInput): Promise<Goal> {
+  delete updated.preferredTimes.Everyday
+  delete updated.preferredTimes.Weekdays
+  delete updated.preferredTimes.Weekends
   const prisma = await getPrismaClient(updated.userId)
   updated.updatedAt = new Date()
   const updatedGoal = await prisma.goal.update({

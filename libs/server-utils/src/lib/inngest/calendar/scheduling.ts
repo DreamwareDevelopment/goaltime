@@ -2,7 +2,7 @@ import { JsonValue } from "inngest/helpers/jsonify";
 import { Logger } from "inngest/middleware/logger";
 
 import { dayjs, DATE_TIME_FORMAT, ExternalEvent, GoalEvent, Interval, IntervalWithScore, TypedIntervalWithScore } from "@/shared/utils";
-import { MinimalScheduleableGoal, ScheduleableGoal, ScheduleInputData } from "@/shared/zod";
+import { DaysOfTheWeekType, MinimalScheduleableGoal, ScheduleableGoal, ScheduleInputData } from "@/shared/zod";
 
 import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
 import { getFreeIntervals, getGoalScoringInstructions, getPreferredTimes, getRemainingCommitmentForPeriod, parsePreferredTimes, scoreIntervals } from "../../ai/scheduling";
@@ -71,18 +71,23 @@ export const scheduleGoalEvents = inngest.createFunction(
           wakeUpOrSleepEvents,
           goals: goals.map(goal => 
             {
-              const preferredTimes = parsePreferredTimes(logger, profile, timeframe.start, goal.preferredTimes as JsonValue);
+              const preferredTimes = parsePreferredTimes(logger, profile, timeframe, goal.preferredTimes as JsonValue);
+              const stringifiedPreferredTimes = Object.entries(preferredTimes).reduce((acc, [day, times]) => {
+                acc[day as DaysOfTheWeekType] = times.map(time => ({
+                  start: time.start.format(DATE_TIME_FORMAT),
+                  end: time.end.format(DATE_TIME_FORMAT),
+                }));
+                return acc;
+              }, {} as Record<DaysOfTheWeekType, Interval<string>[]>);
               return {
                 id: goal.id,
                 title: goal.title,
                 description: goal.description,
+                breakDuration: goal.breakDuration,
                 allowMultiplePerDay: goal.allowMultiplePerDay,
                 canDoDuringWork: goal.canDoDuringWork,
                 priority: goal.priority,
-                preferredTimes: preferredTimes.map(time => ({
-                  start: time.start.format(DATE_TIME_FORMAT),
-                  end: time.end.format(DATE_TIME_FORMAT),
-                })),
+                preferredTimes: stringifiedPreferredTimes,
                 remainingCommitment: getRemainingCommitmentForPeriod(
                   logger,
                   goal,
@@ -148,10 +153,13 @@ export const scheduleGoalEvents = inngest.createFunction(
       const instructions = await step.ai.wrap(`get-${goal.id}-scoring-instructions`, getGoalScoringInstructions, minimalGoal, goalsScheduledSoFar, eventsAndRoutines);
       logger.info(`${instructions}`);
 
-      const preferredTimes: Interval<dayjs.Dayjs>[] = goal.preferredTimes.map(time => ({
-        start: dayjs(time.start),
-        end: dayjs(time.end),
-      }));
+      const preferredTimes = Object.entries(goal.preferredTimes).reduce((acc, [day, times]) => {
+        acc[day as DaysOfTheWeekType] = times.map(time => ({
+          start: dayjs(time.start),
+          end: dayjs(time.end),
+        }));
+        return acc;
+      }, {} as Record<DaysOfTheWeekType, Interval<dayjs.Dayjs>[]>);
       const { freeIntervals: preferredFreeIntervals, freeWorkIntervals: preferredFreeWorkIntervals } = getPreferredTimes(logger, goal.canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, timeframe);
       const preferredFreeIntervalsString = preferredFreeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n');
       logger.info(`${preferredFreeIntervals.reduce((acc, curr) => acc + curr.end.diff(curr.start, 'minutes'), 0)} minutes of preferred free intervals\n${preferredFreeIntervalsString}`);
@@ -439,6 +447,7 @@ function splitIntervals(
   intervals: IntervalWithScore<dayjs.Dayjs>[]
 ): IntervalWithScore<dayjs.Dayjs>[] {
   const breakDuration = goal.breakDuration ?? DEFAULT_BREAK_DURATION;
+  logger.info(`Break duration: ${breakDuration} minutes`);
   const minDuration = Math.ceil(goal.minimumDuration / 5) * 5;
   const maxDuration = Math.floor(goal.maximumDuration / 5) * 5;
   const result: IntervalWithScore<dayjs.Dayjs>[] = [];
@@ -483,7 +492,7 @@ function scheduleGoal(logger: Logger, goal: ScheduleableGoal, freeIntervals: Int
     nextFreeIndex = freeIntervals.findIndex(interval => interval.score < currentHighScore);
     nextWorkIndex = freeWorkIntervals.findIndex(interval => interval.score < currentHighScore);
     const sameScoreFreeIntervals = currentFree ? freeIntervals.slice(currentFreeIndex, nextFreeIndex === -1 ? freeIntervals.length : nextFreeIndex) : [];
-    const sameScoreWorkIntervals = currentFree ? freeWorkIntervals.slice(currentWorkIndex, nextWorkIndex === -1 ? freeWorkIntervals.length : nextWorkIndex) : [];
+    const sameScoreWorkIntervals = currentWork ? freeWorkIntervals.slice(currentWorkIndex, nextWorkIndex === -1 ? freeWorkIntervals.length : nextWorkIndex) : [];
     if (sameScoreFreeIntervals.length <= 0 && sameScoreWorkIntervals.length <= 0) {
       continue;
     }

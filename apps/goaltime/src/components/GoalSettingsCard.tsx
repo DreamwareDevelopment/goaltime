@@ -8,7 +8,7 @@ import { Form } from '@/ui-components/form'
 import { getDefaults, getZodResolver, GoalInput, GoalSchema, NotificationSettingsSchema } from '@/shared/zod'
 
 import { NotificationSettings } from './Settings/Notifications'
-import { MaximumTimeInput, MinimumTimeInput, PreferredTimes } from './Settings/TimeInputs.tsx'
+import { MaximumTimeInput, MinimumTimeInput } from './Settings/TimeInputs.tsx'
 import { ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
 import { AllowMultiplePerDayCheckbox, CanDoDuringWorkCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
@@ -30,6 +30,7 @@ import { Button } from "@/ui-components/button"
 import { GoalTypeInput } from './Settings/GoalTypeInput'
 import { Separator } from '@/ui-components/separator'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
+import { PreferredTimesSelector } from './Settings/PreferredTimes.tsx'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -221,7 +222,7 @@ export function GoalSettingsCard({
                 <AccordionItem value="schedule">
                   <AccordionTrigger className="text-lg font-bold">Scheduling Settings</AccordionTrigger>
                   <AccordionContent className="space-y-4">
-                    <PreferredTimes form={form} />
+                    <PreferredTimesSelector form={form} defaultOpen="Everyday" />
                     <PrioritySelector form={form} />
                     <div className="flex flex-wrap gap-4">
                       <CanDoDuringWorkCheckbox form={form} />

@@ -1,7 +1,5 @@
 import { HelpCircleIcon } from "lucide-react";
 
-import { PreferredTimesEnumType } from "@/shared/zod";
-import { Button } from "@/ui-components/button";
 import { DatetimePicker } from "@/ui-components/datetime-picker"
 import { FormControl, FormDescription, FormField, FormItem, FormMessage } from "@/ui-components/form"
 import { Label } from "@/ui-components/label"
@@ -138,65 +136,6 @@ export const MaximumTimeInput: React.FC<FormInputProps> = ({ form }) => {
             />
           </FormControl>
           <FormMessage className="sm:pl-2 text-center sm:text-left" />
-        </FormItem>
-      )}
-    />
-  )
-}
-
-// TODO: Make this dynamic based on user's sleep schedule
-const timeSlots: { [key in PreferredTimesEnumType]: string } = {
-  'Early Morning': '5-8AM',
-  'Morning': '8-11AM',
-  'Midday': '11AM-2PM',
-  'Afternoon': '2-5PM',
-  'Evening': '5-8PM',
-  'Night': '8-11PM',
-  'Late Night': '11PM-2AM',
-}
-
-export const PreferredTimes = ({ form }: FormInputProps) => {
-  return (
-    <FormField
-      control={form.control}
-      name="preferredTimes"
-      render={({ field }) => (
-        <FormItem className="space-y-2">
-          <Label className="ml-2">Preferred Time Slots</Label>
-          <FormControl>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(timeSlots).map(([slot, time]) => {
-                const timeSlot = slot as PreferredTimesEnumType;
-                const isSelected = field.value?.includes(timeSlot) ?? false;
-
-                return (
-                  <TooltipProvider key={slot}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant={isSelected ? "default" : "secondary"}
-                          size="sm"
-                          onClick={() => {
-                            const newPreferredTimes = isSelected
-                              ? field.value.filter((t: PreferredTimesEnumType) => t !== timeSlot)
-                              : [...(field.value || []), timeSlot];
-                            field.onChange(newPreferredTimes);
-                          }}
-                        >
-                          {slot}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{time}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                );
-              })}
-            </div>
-          </FormControl>
-          <FormMessage className="ml-2" />
         </FormItem>
       )}
     />

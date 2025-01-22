@@ -1,6 +1,7 @@
 import { Goal, NotificationSettings, Priority, UserProfile } from '@prisma/client'
 
 import { getPrismaClient } from '../lib/prisma/client'
+import { daysOfTheWeek, PreferredTimesDays } from '@/shared/zod'
 
 export async function getGoals(profile: UserProfile): Promise<Goal[]> {
   const prisma = await getPrismaClient(profile.userId)
@@ -16,12 +17,20 @@ export function sortGoals(a: Goal, b: Goal) {
   if (a.priority === b.priority) {
     // Sort by the goal that has fewer exclusive preferred times
     // This is so that we are able to schedule more restrictive goals first
-    const aPreferredTimes = Array.isArray(a.preferredTimes) ? a.preferredTimes : [];
-    const bPreferredTimes = Array.isArray(b.preferredTimes) ? b.preferredTimes : [];
-    const intersection = aPreferredTimes.filter(time => bPreferredTimes.includes(time));
-    const aDiff = aPreferredTimes.length - intersection.length;
-    const bDiff = bPreferredTimes.length - intersection.length;
-    if (intersection.length > 0) {
+    const aPreferredTimes = a.preferredTimes as PreferredTimesDays
+    const bPreferredTimes = b.preferredTimes as PreferredTimesDays
+    let intersectionCount = 0;
+    let aDiff = 0;
+    let bDiff = 0;
+    for (const day of Object.values(daysOfTheWeek.Values)) {
+      const aTimes = aPreferredTimes[day]
+      const bTimes = bPreferredTimes[day]
+      const intersection = aTimes.filter(time => bTimes.includes(time));
+      intersectionCount += intersection.length;
+      aDiff += (aTimes.length - intersection.length);
+      bDiff += (bTimes.length - intersection.length);
+    }
+    if (intersectionCount > 0) {
       return aDiff - bDiff;
     }
     // Sort by the goal that allows multiple per day

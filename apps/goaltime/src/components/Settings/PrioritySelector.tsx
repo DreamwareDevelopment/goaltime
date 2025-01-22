@@ -28,7 +28,7 @@ export const PrioritySelector: React.FC<PrioritySelectorProps> = ({ form }) => {
               value={field.value}
               onValueChange={field.onChange}
             >
-              <SelectTrigger id="priority" className="bg-secondary">
+              <SelectTrigger id="priority" className="bg-secondary border-none">
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
               <SelectContent>

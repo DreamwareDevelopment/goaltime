@@ -2,10 +2,9 @@
 
 import dynamic from 'next/dynamic'
 import { useSnapshot } from "valtio";
-import z from "zod";
 
 import { Goal, NotificationSettings } from "@prisma/client";
-import { GoalInput, MilestoneViewEnum, PreferredTimesEnum } from "@/shared/zod";
+import { getGoalPreferredTimes, GoalInput, MilestoneViewEnum } from "@/shared/zod";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { useToast } from "@/ui-components/hooks/use-toast";
 import { ScrollArea } from "@/ui-components/scroll-area";
@@ -40,7 +39,7 @@ const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod
 function getMutableGoal(goal: Goal, notifications: NotificationSettings): GoalInput {
   return {
     ...goal,
-    preferredTimes: goal.preferredTimes && Array.isArray(goal.preferredTimes) ? goal.preferredTimes as Array<z.infer<typeof PreferredTimesEnum>> : [],
+    preferredTimes: getGoalPreferredTimes(goal),
     notifications,
   };
 }
