@@ -2,7 +2,7 @@
 import { dayjs, DATE_TIME_FORMAT, ExternalEvent, Interval, MIN_BLOCK_SIZE, WakeUpOrSleepEvent } from "@/shared/utils";
 import { Goal, UserProfile } from "@prisma/client";
 import { Logger } from "inngest/middleware/logger";
-import { daysOfTheWeek, DaysOfTheWeekType, getProfileRoutine, PreferredTimesDaysSchema, PreferredTimesEnumType, Routine, RoutineActivities, RoutineActivity } from "@/shared/zod";
+import { DaysOfTheWeekType, getProfileRoutine, PreferredTimesDaysSchema, PreferredTimesEnumType, routineToExternalEvents } from "@/shared/zod";
 import { JsonValue } from "inngest/helpers/jsonify";
 
 const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumType, Interval<dayjs.Dayjs>> => {
@@ -70,46 +70,6 @@ function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: Ext
     currentTime = end;
   }
   return timeblocks;
-}
-
-function routineToExternalEvents(routine: RoutineActivities): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
-  const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
-    Monday: [],
-    Tuesday: [],
-    Wednesday: [],
-    Thursday: [],
-    Friday: [],
-    Saturday: [],
-    Sunday: [],
-  };
-  for (const activity in routine) {
-    if (activity === 'sleep' || activity === 'custom') {
-      continue;
-    }
-    const routineDays = routine[activity as RoutineActivity];
-    for (const day of Object.values(daysOfTheWeek.Values)) {
-      const routine = routineDays[day] as Routine;
-      events[day].push({
-        id: activity,
-        title: activity,
-        start: dayjs(routine.start),
-        end: dayjs(routine.end),
-      });
-    }
-  }
-  for (const activity in routine.custom) {
-    const routineDays = routine.custom[activity];
-    for (const day of Object.values(daysOfTheWeek.Values)) {
-      const routine = routineDays[day] as Routine;
-      events[day].push({
-        id: activity,
-        title: activity,
-        start: dayjs(routine.start),
-        end: dayjs(routine.end),
-      });
-    }
-  }
-  return events;
 }
 
 function addDayOffset(event: ExternalEvent<dayjs.Dayjs>, day: dayjs.Dayjs): ExternalEvent<dayjs.Dayjs> {

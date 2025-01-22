@@ -66,7 +66,7 @@ export const CanDoDuringWorkCheckbox: React.FC<FormInputProps> = ({ form }) => {
       control={form.control}
       name="canDoDuringWork"
       render={({ field }) => (
-        <FormItem className="flex gap-4 h-6 pl-2 items-center">
+        <FormItem className="flex gap-4 pl-2 items-center">
           <Label>Can Do During Work</Label>
           <FormControl>
             <TooltipProvider>

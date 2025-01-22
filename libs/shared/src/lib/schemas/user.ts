@@ -3,6 +3,7 @@ import { FieldErrors } from 'react-hook-form'
 import { getDefaults, ZodSchemaResolver } from '.'
 import { dayjs } from '../utils'
 import { UserProfile } from '@prisma/client'
+import { ExternalEvent } from '../types/scheduling'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 export type DaysOfTheWeekType = z.infer<typeof daysOfTheWeek>
@@ -188,6 +189,46 @@ export function getProfileRoutine(profile: UserProfile): RoutineActivities {
     }
   }
   return routine
+}
+
+export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
+  const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  };
+  for (const activity in routine) {
+    if (activity === 'sleep' || activity === 'custom') {
+      continue;
+    }
+    const routineDays = routine[activity as RoutineActivity];
+    for (const day of Object.values(daysOfTheWeek.Values)) {
+      const routine = routineDays[day] as Routine;
+      events[day].push({
+        id: activity,
+        title: activity.charAt(0).toUpperCase() + activity.slice(1),
+        start: date ? dayjs(routine.start).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start),
+        end: date ? dayjs(routine.end).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end),
+      });
+    }
+  }
+  for (const activity in routine.custom) {
+    const routineDays = routine.custom[activity];
+    for (const day of Object.values(daysOfTheWeek.Values)) {
+      const routine = routineDays[day] as Routine;
+      events[day].push({
+        id: activity,
+        title: activity,
+        start: date ? dayjs(routine.start).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start),
+        end: date ? dayjs(routine.end).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end),
+      });
+    }
+  }
+  return events;
 }
 
 export const UserProfileSchema = z.object({

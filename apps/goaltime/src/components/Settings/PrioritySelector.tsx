@@ -6,9 +6,9 @@ import { GoalInput } from "@/shared/zod";
 
 export type Priority = 'High' | 'Medium' | 'Low'
 const PRIORITIES: { [key in Priority]: string } = {
-  High: 'Never reschedule',
-  Medium: 'Some flexibility',
-  Low: 'Very flexible',
+  High: 'Time allocated first',
+  Medium: 'Time allocated next',
+  Low: 'Time allocated last',
 }
 
 export interface PrioritySelectorProps {

@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import React, { useEffect, useRef, useState } from 'react';
 
 import { cn } from "@/ui-components/utils";
@@ -16,7 +17,7 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
-import { binarySearchInsert, dayjs, debounce, truncateText } from "@/shared/utils";
+import { binarySearchInsert, dayjs, debounce, ExternalEvent, truncateText } from "@/shared/utils";
 import { CalendarEvent, CalendarProvider } from "@prisma/client";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
@@ -26,7 +27,8 @@ import { Credenza, CredenzaTrigger } from "@/ui-components/credenza";
 import { EventModal } from "./Calendar/EventModal";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/ui-components/tooltip";
 import { syncCalendarAction } from "../app/actions/calendar";
-import { useMediaQuery } from "@/libs/ui-components/src/hooks/use-media-query";
+import { useMediaQuery } from "@/ui-components/hooks/use-media-query";
+import { DaysOfTheWeekType, getProfileRoutine, routineToExternalEvents } from "@/shared/zod";
 
 export interface ViewFields {
   top: number;
@@ -41,9 +43,20 @@ interface ViewFieldsWithCalendarEvent {
   viewFields: ViewFields;
 }
 
+interface ViewFieldsWithExternalEvent {
+  event: ExternalEvent<dayjs.Dayjs>;
+  viewFields: ViewFields;
+}
+
+function isRoutineEvent(event: ViewFieldsWithExternalEvent | ViewFieldsWithCalendarEvent): event is ViewFieldsWithExternalEvent {
+  return 'start' in event.event;
+}
+
 export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [date, setDate] = useState(new Date());
   const day = date.toDateString();
+  const dayjsDate = dayjs(date);
+  const dayName = dayjsDate.format('dddd') as DaysOfTheWeekType;
   const now = new Date();
   const { calendarStore, userStore } = useValtio();
   const isDesktop = useMediaQuery('(min-width: 500px)');
@@ -51,6 +64,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const schedule = useSnapshot(calendarStore.events[day]);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!);
+  const routine = getProfileRoutine(profile);
+  const routineEvents = routineToExternalEvents(routine, dayjsDate);
+  const routineEventsByDay = routineEvents[dayName];
   const { toast } = useToast();
   const isToday = now.toDateString() === date.toDateString();
   const [isLoading, setIsLoading] = useState(true)
@@ -132,13 +148,13 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const markerHeights: number[] = [];
   let currentHeight = 0;
   // Helper function to check if there are events between two hours
-  const hasEventsInHourRange = (startHour: number, endHour: number) => {
+  const hasEventsInHourRange = (startHour: number) => {
+    const markerStartHour = dayjs.tz(date, timezone).hour(startHour).minute(1);
+    const markerEndHour = dayjs.tz(date, timezone).hour(startHour).minute(59);
     return schedule.some(
       (event) => {
         const startTime = dayjs(event.startTime);
         const endTime = dayjs(event.endTime);
-        const markerStartHour = dayjs.tz(date, timezone).hour(startHour).minute(1);
-        const markerEndHour = dayjs.tz(date, timezone).hour(startHour).minute(59);
         // Check if the event starts in the range
         if (startTime.isSame(markerStartHour, 'hour')) return true;
         // Check if the event ends in the range, accounting for events that end on the hour
@@ -147,10 +163,18 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         if (startTime.isBefore(markerStartHour) && endTime.isAfter(markerEndHour)) return true;
         return false;
       }
-    );
+    ) || routineEventsByDay.some(event => {
+      // Check if the event starts in the range
+      if (event.start.isSame(markerStartHour, 'hour')) return true;
+      // Check if the event ends in the range, accounting for events that end on the hour
+      if (event.end.isAfter(markerStartHour) && event.end.isBefore(markerEndHour)) return true;
+      // Check if the event spans beyond the current hour range
+      if (event.start.isBefore(markerStartHour) && event.end.isAfter(markerEndHour)) return true;
+      return false;
+    });
   };
   for (let i = 0; i < 24; i++) {
-    if (hasEventsInHourRange(i, i + 1)) {
+    if (hasEventsInHourRange(i)) {
       markerHeights.push(currentHeight);
       currentHeight += HOUR_HEIGHT;
     } else {
@@ -170,7 +194,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   const allDayEvents: CalendarEvent[] = [];
-  const events: ViewFieldsWithCalendarEvent[] = [];
+  const events: Array<ViewFieldsWithCalendarEvent | ViewFieldsWithExternalEvent> = [];
   for (const event of schedule ?? []) {
     if (!event.allDay && event.startTime && event.endTime) {
       const startTime = dayjs.utc(event.startTime).tz(timezone);
@@ -187,7 +211,17 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       allDayEvents.push(event);
     }
   }
-  const shiftOverlappingEvents = (events: ViewFieldsWithCalendarEvent[]) => {
+  for (const event of routineEventsByDay) {
+    const viewFields = {
+      hours: event.start.hour(),
+      minutes: event.start.minute(),
+      top: getEventPosition(event.start),
+      height: getEventHeight(event.start, event.end),
+      left: 0
+    };
+    binarySearchInsert(events, { event, viewFields }, (a, b) => a.viewFields.top - b.viewFields.top);
+  }
+  const shiftOverlappingEvents = (events: Array<ViewFieldsWithCalendarEvent | ViewFieldsWithExternalEvent>) => {
     for (let i = 0; i < events.length; i++) {
       for (let j = i + 1; j < events.length; j++) {
         if (events[j].viewFields.top >= events[i].viewFields.top + events[i].viewFields.height) {
@@ -304,8 +338,45 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
             {/* Events */}
             <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
               {events.map((event, index) => {
-                const startTime = dayjs.utc(event.event.startTime).tz(timezone);
-                const endTime = dayjs.utc(event.event.endTime).tz(timezone);
+                const routineEvent = isRoutineEvent(event);
+                const startTime = routineEvent ? event.event.start : dayjs.utc(event.event.startTime).tz(timezone);
+                const endTime = routineEvent ? event.event.end : dayjs.utc(event.event.endTime).tz(timezone);
+                if (routineEvent) {
+                  return (
+                    <div
+                      key={event.event.id}
+                      className="absolute px-2 mt-2 rounded-sm w-[calc(100%-8px)] text-background bg-accent-foreground"
+                      style={{
+                        top: `${event.viewFields.top}px`,
+                        height: `${event.viewFields.height - 8}px`,
+                        minHeight: '8px',
+                        left: event.viewFields.left,
+                      }}
+                    >
+                      <div className="flex justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-sm text-left">
+                            <span className="font-semibold">
+                              {isDesktop || event.viewFields.height >= 60 ? event.event.title : truncateText(event.event.title, 22)}
+                            </span>
+                            {(isDesktop && event.viewFields.height < 60) && (
+                              <span> {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}</span>
+                            )}
+                          </span>
+                          {/* Show time on second row only if event is more than 60px */}
+                          {(!isDesktop || event.viewFields.height >= 60) && (
+                            <span className="text-xs text-left">
+                              {startTime.format(is24Hour ? 'HH:mm' : 'h:mm A')} - {endTime.format(is24Hour ? 'HH:mm' : 'h:mm A')}
+                            </span>
+                          )}
+                        </div>
+                        <Link href="/settings#routine" className="pr-1 text-xs text-right hover:underline pt-[2px]">
+                          <span className="font-bold">Routine</span>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <Credenza key={event.event.id} open={modalOpen[event.event.id]} onOpenChange={(open) => setModalOpen({ ...modalOpen, [event.event.id]: open })}>
                     <CredenzaTrigger>

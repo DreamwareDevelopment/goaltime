@@ -317,7 +317,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
     form.setValue('routine.custom', customActivities)
   }
   return (
-    <div className="flex flex-col gap-4 justify-center items-center w-full">
+    <div id="routine" className="flex flex-col gap-4 justify-center items-center w-full">
       <p className="text-xl font-bold text-center">Routine</p>
       <p className="text-xs text-muted-foreground text-center">We won&apos;t schedule activities during these times</p>
       <div className="flex flex-col gap-4 justify-center items-center w-full">
