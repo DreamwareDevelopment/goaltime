@@ -32,7 +32,7 @@ export function GoalCarousel() {
   return (
     <Carousel
       orientation={orientation}
-      className="w-full h-full flex flex-col lg:flex-row items-center gap-2"
+      className="w-full h-full flex flex-col-reverse lg:flex-row items-center gap-2"
     >
       <CarouselNext className="lg:hidden" />
       <CarouselPrevious className="lg:hidden" />

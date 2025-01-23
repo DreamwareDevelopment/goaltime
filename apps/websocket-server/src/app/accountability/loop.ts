@@ -274,13 +274,14 @@ export const startAccountabilityLoop = inngest.createFunction({
         });
         break;
       }
-      if (nextEvents.data.length < j) {
-        logger.info(`No upcoming events remaining after ${j} events, so we're re-fetching state`);
+      if (j >= nextEvents.data.length) {
+        logger.info(`No simultaneous events remaining after sending ${j} events, so we're re-fetching state`);
         break;
       }
       logger.info(`Waiting to send notifications:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${dayjs(e.fireAt).format(DATE_TIME_FORMAT)}\nEvent time: ${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
       let nextEventTime = nextEvents.nextEventTime;
       if (!nextEventTime) {
+        logger.info(`No next event time found, so we're waiting for the next day`);
         nextEventTime = dayjs().add(1, 'day').second(0);
       }
       logger.info(`Next event time: ${nextEventTime.format(DATE_TIME_FORMAT)}`);
@@ -305,7 +306,7 @@ export const startAccountabilityLoop = inngest.createFunction({
         }
 
         logger.info(`Sending notifications:\n${nextEvents.data.map(e => `${e.type} "${e.event.title}"\nfireAt: ${e.fireAt}\n${dayjs(e.event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(e.event.endTime).format(DATE_TIME_FORMAT)}`).join('\n')}`);
-        const sleepPromise = step.sleep(`one-minute-sleep-${i}-${j}`, 1);
+        const sleepPromise = step.sleep(`one-minute-sleep-${i}-${j}`, 1.5);
         const payload: NotificationData<string> = {
           data: nextEvents.data.map(e => ({
             ...e,

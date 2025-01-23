@@ -233,9 +233,10 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, timefr
   };
   const parsed = PreferredTimesDaysSchema.parse(json)
   const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
-  for (let i = 0; i < daysBetween; i++) {
+  for (let i = 0; i <= daysBetween; i++) {
     const day = timeframe.start.add(i, 'days');
     const dayName = day.format('dddd') as DaysOfTheWeekType;
+    // logger.info(`Parsing preferred times for ${dayName}`);
     const preferredTimes = parsed[dayName]
     const routine = getProfileRoutine(profile);
     const sleepRoutine = routine.sleep[dayName as DaysOfTheWeekType]
@@ -265,7 +266,7 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, timefr
       };
     })
     // for (const time of adjustedPreferredTimes) {
-    //   logger.info(`Adjusted preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
+    //   logger.info(`Adjusted ${dayName} preferred time: ${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`);
     // }
     const sortedPreferredTimes = adjustedPreferredTimes.sort((a, b) => a.start.diff(b.start, 'minutes'))
     const mergedPreferredTimes = sortedPreferredTimes.reduce((prev, curr) => {
@@ -287,7 +288,7 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, timefr
     result[dayName] = mergedPreferredTimes;
   }
   for (const dayName in result) {
-    logger.info(`Preferred times for ${dayName}:\n${result[dayName as DaysOfTheWeekType].map(time => `${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    logger.info(`${dayName} preferred times:\n${result[dayName as DaysOfTheWeekType].map(time => `${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
   }
   return result;
 }

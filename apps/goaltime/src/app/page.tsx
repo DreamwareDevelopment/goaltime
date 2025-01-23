@@ -6,13 +6,14 @@ import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui-components/card"
 
 import { MobileMenu } from '../components/Landing/MobileMenu'
-import { cookies } from 'next/headers'
-import { SUPABASE_COOKIE_NAME } from '@/server-utils/supabase'
+import { createClient } from '@/server-utils/supabase'
 import { MailingListForm } from '../components/Landing/MailingListForm'
 
 export default async function LandingPage() {
-  const cookieStore = await cookies()
-  const isLoggedIn = Boolean(SUPABASE_COOKIE_NAME && cookieStore.get(SUPABASE_COOKIE_NAME)?.value)
+  const supabase = await createClient()
+  const session = await supabase.auth.getSession()
+  const isLoggedIn = !!session.data.session
+  console.log(`isLoggedIn: ${isLoggedIn}`)
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-4 lg:px-6 h-14 flex items-center">

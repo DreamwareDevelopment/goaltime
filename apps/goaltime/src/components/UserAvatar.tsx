@@ -1,7 +1,6 @@
 'use client'
 
-import Link from "next/link"
-import { redirect } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
@@ -31,6 +30,7 @@ import { useSnapshot } from "valtio"
 export function UserAvatar() {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
   const supabase = createClient()
+  const router = useRouter()
   const { userStore } = useValtio();
   if (!userStore.profile || !userStore.user) {
     throw new Error('Invariant: User profile not initialized before using UserAvatar')
@@ -53,7 +53,7 @@ export function UserAvatar() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <Avatar className="h-11 w-11">
+            <Avatar className="h-11 w-11 hover:h-12 hover:w-12">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={profile?.name} />}
               <AvatarFallback>{!profile ? <LoadingSpinner /> : profile?.name.split(' ').map(n => n[0].toUpperCase()).join('')}</AvatarFallback>
             </Avatar>
@@ -70,16 +70,17 @@ export function UserAvatar() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/settings">Account</Link>
+            <Button variant="gooeyLeft" className="w-full bg-background text-foreground" onClick={() => router.push('/settings')}>Account</Button>
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setIsLogoutDialogOpen(true)}>
-            Log out
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Button variant="gooeyLeft" className="w-full bg-background text-foreground" onClick={() => setIsLogoutDialogOpen(true)}>Log out</Button>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] p-4">
           <DialogHeader>
             <DialogTitle>Log out</DialogTitle>
             <DialogDescription>

@@ -86,8 +86,7 @@ async function completedEvent(
 ): Promise<string> {
   logger.info(`Goal ${goal.id} completed extra`);
   const systemPrompt = `{
-    "role": "You are an accountability agent that congratulates the user for completing an event.",
-    "tone": "Congratulatory, but not overly so",
+    "role": "You are an accountability agent that briefly congratulates the user for completing an event.",
     "user": ${formatUser(profile)},
     "goal": ${formatGoal(goal)},
     "event": ${formatEvent(event)},
@@ -117,7 +116,7 @@ async function completedSome(
 ): Promise<string> {
   logger.info(`Goal ${goal.id} completed extra`);
   const systemPrompt = `{
-    "role": "You are an accountability agent that recognizes the user for completing some of an event and encourages them to do better next time.",
+    "role": "You are an accountability agent that tells the user how much time they completed for an event and that their progress has been updated.",
     "user": ${formatUser(profile)},
     "goal": ${formatGoal(goal)},
     "event": ${formatEvent(event)},
@@ -146,7 +145,7 @@ async function notCompleted(
 ): Promise<string> {
   logger.info(`Goal ${goal.id} not completed`);
   const systemPrompt = `{
-    "role": "You are an accountability agent that informs the user that they did not complete an event and encourages them to do better next time.",
+    "role": "You are an accountability agent that informs the user that they did not complete an event and tells them to do better next time.",
     "user": ${formatUser(profile)},
     "goal": ${formatGoal(goal)},
     "event": ${formatEvent(event)},
