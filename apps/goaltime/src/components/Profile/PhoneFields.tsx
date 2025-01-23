@@ -23,7 +23,11 @@ export function PhoneField({ form, className }: PhoneFieldProps) {
             <FormControl>
               <PhoneInput
                 value={field.value}
-                onChange={field.onChange}
+                onChange={e => {
+                  const value = '+' + e.target.value.replace(/\D/g, '');
+                  field.onChange(value)
+                  form.setValue('otp', '')
+                }}
               />
             </FormControl>
             <p className="text-xs text-muted-foreground mt-1 ml-2">
