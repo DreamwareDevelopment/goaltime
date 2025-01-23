@@ -68,6 +68,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const routineEvents = routineToExternalEvents(routine, dayjsDate);
   const routineEventsByDay = routineEvents[dayName];
   const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
+  const sleepHour = dayjs(routine.sleep[dayName].start).hour();
   const { toast } = useToast();
   const isToday = now.toDateString() === date.toDateString();
   const [isLoading, setIsLoading] = useState(true)
@@ -138,7 +139,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     const [hours, minutes] = time.split(':');
     if (is24Hour) return `${hours}:${minutes}`;
     const hour = parseInt(hours);
-    const period = hour >= 12 ? 'PM' : 'AM';
+    const period = hour >= 12 && hour < 24 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${period}`;
   };
@@ -148,6 +149,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   // Calculate marker heights
   const markerHeights: number[] = [];
   let currentHeight = 0;
+  const maxHour = sleepHour < wakeUpHour && sleepHour > 0 ? 24 + sleepHour : 25;
   // Helper function to check if there are events between two hours
   const hasEventsInHourRange = (startHour: number) => {
     const markerStartHour = dayjs.tz(date, timezone).hour(startHour).minute(1);
@@ -174,7 +176,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       return false;
     });
   };
-  for (let i = 0; i < 24; i++) {
+
+  for (let i = 0; i <= maxHour; i++) {
     if (hasEventsInHourRange(i)) {
       markerHeights.push(currentHeight);
       currentHeight += HOUR_HEIGHT;
@@ -190,8 +193,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
 
   const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
     const startInMinutes = (startTime.hour() * 60) + startTime.minute();
+    const startsAfterMidnight = startTime.hour() < wakeUpHour;
     const endsAfterMidnight = endTime.hour() < wakeUpHour;
-    const endInMinutes = (endsAfterMidnight ? (24 + wakeUpHour) * 60 : endTime.hour() * 60) + endTime.minute();
+    const endInMinutes = (endsAfterMidnight && !startsAfterMidnight ? (24 + endTime.hour()) * 60 : endTime.hour() * 60) + endTime.minute();
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
 
@@ -320,7 +324,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         <ScrollArea className="h-[500px] pr-4" scrollRef={scrollRef}>
           <div className="relative" style={{ height: `${currentHeight}px` }}>
             {/* Hour markers and separators */}
-            {Array.from({ length: 24 }, (_, i) => (
+            {Array.from({ length: markerHeights.length }, (_, i) => (
               <div
                 key={i}
                 className="absolute w-full"
