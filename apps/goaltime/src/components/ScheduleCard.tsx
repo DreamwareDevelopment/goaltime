@@ -67,6 +67,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const routine = getProfileRoutine(profile);
   const routineEvents = routineToExternalEvents(routine, dayjsDate);
   const routineEventsByDay = routineEvents[dayName];
+  const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
   const { toast } = useToast();
   const isToday = now.toDateString() === date.toDateString();
   const [isLoading, setIsLoading] = useState(true)
@@ -189,7 +190,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
 
   const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
     const startInMinutes = (startTime.hour() * 60) + startTime.minute();
-    const endInMinutes = (endTime.hour() === 0 ? 24 * 60 : endTime.hour() * 60) + endTime.minute();
+    const endsAfterMidnight = endTime.hour() < wakeUpHour;
+    const endInMinutes = (endsAfterMidnight ? (24 + wakeUpHour) * 60 : endTime.hour() * 60) + endTime.minute();
     return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
   };
 
