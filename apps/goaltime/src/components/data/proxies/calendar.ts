@@ -9,6 +9,7 @@ import { goalStore } from './goals'
 
 export const calendarStore = proxy<{
   events: Record<string, CalendarEvent[]>,
+  init(events: CalendarEvent[]): void,
   ensureCalendarEvents(date: Date): void,
   loadCalendarEvents(date: Date, timezone: string): Promise<void>,
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
@@ -17,6 +18,10 @@ export const calendarStore = proxy<{
   setCalendarEvents(events: CalendarEvent[], eventsToDelete: string[]): void,
 }>({
   events: {},
+  init(events: CalendarEvent[]) {
+    const today = dayjs().toDate().toDateString();
+    calendarStore.events[today] = events;
+  },
   ensureCalendarEvents(date: Date) {
     if (!calendarStore.events[dayjs(date).toDate().toDateString()]) {
       calendarStore.events[dayjs(date).toDate().toDateString()] = []
@@ -24,6 +29,9 @@ export const calendarStore = proxy<{
   },
   async loadCalendarEvents(date: Date, timezone: string) {
     const day = date.toDateString()
+    if (calendarStore.events[day] && calendarStore.events[day].length > 0) {
+      return;
+    }
     const client = getTsRestClient();
     const response = await client.calendar.getSchedule({
       query: {
@@ -33,8 +41,7 @@ export const calendarStore = proxy<{
     });
     const { body, status } = response;
     if (status === 200) {
-      const currentEvents = calendarStore.events[day];
-      currentEvents.splice(0, currentEvents.length, ...body);
+      calendarStore.events[day] = body;
     } else if (status === 404) {
       const errorMessage = response.body.error;
       throw new Error(errorMessage);

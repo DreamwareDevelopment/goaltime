@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef } from 'react'
 
-import { Goal, NotificationSettings, UserProfile } from '@prisma/client'
+import { CalendarEvent, Goal, NotificationSettings, UserProfile } from '@prisma/client'
 import { SyncEvent } from '@/shared/zod'
 import { SanitizedUser } from '@/shared/utils'
 import { useToast } from '@/ui-components/hooks/use-toast'
@@ -17,6 +17,7 @@ interface DashboardData {
   profile: UserProfile
   user: SanitizedUser
   notifications: NotificationSettings[]
+  initialSchedule: CalendarEvent[]
 }
 
 export const ValtioContext = createContext<{ calendarStore: typeof calendarStore, userStore: typeof userStore, goalStore: typeof goalStore, milestoneDynamicStore: typeof milestoneDynamicStore, dashboardData: DashboardData | null }>({ calendarStore, userStore, goalStore, milestoneDynamicStore, dashboardData: null })
@@ -32,7 +33,8 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
   const stores = useRef({ calendarStore, goalStore, userStore, milestoneDynamicStore }).current
   userStore.init(dashboardData.user, dashboardData.profile);
   goalStore.init(dashboardData.goals, dashboardData.notifications, dashboardData.goalAggregates);
-  
+  calendarStore.init(dashboardData.initialSchedule);
+
   useEffect(() => {
     const client = WebSocketClient.getInstance()
 

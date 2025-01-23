@@ -16,7 +16,7 @@ import { WelcomeCard } from '../../components/WelcomeCard'
 import { LogoButton } from '../../components/ActionButtons/LogoButton'
 import { getNextFullSync } from '@/server-utils/inngest'
 import { dayjs } from '@/shared/utils'
-import { getAggregateTimeByGoal } from '@/libs/server-utils/src/queries/calendar'
+import { getAggregateTimeByGoal, getSchedule } from '@/libs/server-utils/src/queries/calendar'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,15 +37,16 @@ export default async function Dashboard() {
     const nextFullSync = getNextFullSync(lastFullSync, profile.timezone)
     return await getAggregateTimeByGoal(user.id, lastFullSync, nextFullSync.endOf('day'))
   }
-  const [goals, goalAggregates, notifications] = await Promise.all([
+  const [goals, goalAggregates, notifications, schedule] = await Promise.all([
     getGoals(profile),
     getAggregates(),
     getNotifications(profile),
+    getSchedule(profile.userId, dayjs()),
   ])
   const hasGoals = goals.length > 0;
   return (
     <ValtioProvider
-      dashboardData={{ goals, profile, user, notifications, goalAggregates }}
+      dashboardData={{ goals, profile, user, notifications, goalAggregates, initialSchedule: schedule }}
     >
       <div className="w-full 2xl:w-[67%] mx-auto p-1 pt-4 sm:p-4">
         <header className="flex justify-between items-center mb-5 px-4 sm:px-0">
