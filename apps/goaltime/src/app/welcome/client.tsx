@@ -22,6 +22,7 @@ import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { sendOTPAction, verifyPhoneNumberAction } from '../actions/user'
 import { useToast } from '@/ui-components/hooks/use-toast'
 import { SanitizedUser } from '@/shared/utils'
+import { WelcomeSkeleton } from './skeleton'
 
 const steps = [
   { title: "Profile Setup", fields: ['name', 'avatarUrl', 'birthday', 'timezone', 'phone', 'preferredLanguage', 'preferredCurrency'] },
@@ -75,7 +76,9 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
     }
     setValue('startsWorkAt', getTime('08:30', clientTimezone).toDate())
     setValue('endsWorkAt', getTime('17:30', clientTimezone).toDate())
-  }, [setValue])
+    document.getElementById('skeleton')?.remove()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (Object.keys(formState.errors).length > 0) {
     console.log('WelcomeFlowClient form errors', formState.errors)
@@ -210,10 +213,14 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
         { !currentStepFields.includes('routine') && (
           <CardTitle className="flex justify-center gap-2 w-full text-center text-xl">{steps[currentStep].title}</CardTitle>
         )}
+        { currentStep === 0 && (
+          <p className="text-center text-sm text-muted-foreground">Estimated time to complete: 7 minutes</p>
+        )}
       </CardHeader>
+      <WelcomeSkeleton />
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent>
+          <CardContent className="pl-1 sm:pl-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
