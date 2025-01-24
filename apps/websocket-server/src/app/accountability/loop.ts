@@ -286,13 +286,11 @@ export const startAccountabilityLoop = inngest.createFunction({
       }
       logger.info(`Next event time: ${nextEventTime.format(DATE_TIME_FORMAT)}`);
       state.lastEventTime = nextEventTime.format(DATE_TIME_FORMAT);
-      const sleepPromise = step.sleepUntil(`sleep-until-${i}-${j}`, nextEventTime.toDate());
-      const updatePromise = step.waitForEvent(`wait-for-update-${i}-${j}`, {
+      const command = await step.waitForEvent(`wait-for-update-${i}-${j}`, {
         event: InngestEvent.ScheduleUpdated,
-        timeout: '1d',
+        timeout: nextEventTime.valueOf() - new Date().valueOf(),
       });
 
-      const command = await Promise.race([updatePromise, sleepPromise]);
       j++;
       if (!command) {
         logger.info(`Accountability loop ${i}-${j} sleep finished`, nextEvents.data);
