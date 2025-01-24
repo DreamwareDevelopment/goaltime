@@ -188,7 +188,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   }
   
   const getEventPosition = (startTime: dayjs.Dayjs) => {
-    return markerHeights[startTime.hour()] + ((startTime.minute() / 60) * HOUR_HEIGHT);
+    const hour = startTime.hour() < wakeUpHour ? startTime.hour() + 24 : startTime.hour();
+    return markerHeights[hour] + ((startTime.minute() / 60) * HOUR_HEIGHT);
   };
 
   const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {

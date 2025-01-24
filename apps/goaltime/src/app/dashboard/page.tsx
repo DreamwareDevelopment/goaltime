@@ -41,7 +41,7 @@ export default async function Dashboard() {
     getGoals(profile),
     getAggregates(),
     getNotifications(profile),
-    getSchedule(profile.userId, dayjs()),
+    getSchedule(profile, dayjs()),
   ])
   const hasGoals = goals.length > 0;
   return (

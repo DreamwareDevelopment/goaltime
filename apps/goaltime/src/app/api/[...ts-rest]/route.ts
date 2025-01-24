@@ -21,7 +21,7 @@ const handler = createNextHandler(baseContract, {
       // Use the timezone sent from the client so that events are filtered by the correct timezone's day
       const timezone = args.query.timezone;
       const day = dayjs.tz(args.query.date, timezone);
-      const schedule = await getSchedule(user.id, day);
+      const schedule = await getSchedule(profile, day);
       return {
         status: 200,
         body: schedule,

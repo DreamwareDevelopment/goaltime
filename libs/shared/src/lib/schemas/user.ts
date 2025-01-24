@@ -3,7 +3,7 @@ import { FieldErrors } from 'react-hook-form'
 import { getDefaults, ZodSchemaResolver } from '.'
 import { dayjs } from '../utils'
 import { UserProfile } from '@prisma/client'
-import { ExternalEvent } from '../types/scheduling'
+import { ExternalEvent, Interval } from '../types/scheduling'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 export type DaysOfTheWeekType = z.infer<typeof daysOfTheWeek>
@@ -196,6 +196,23 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
     }
   }
   return routine
+}
+
+export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Dayjs): Interval<dayjs.Dayjs> {
+  const dayName = date.format('dddd') as DaysOfTheWeekType;
+  const sleep = routine.sleep[dayName];
+  const start = dayjs(sleep.start);
+  const end = dayjs(sleep.end);
+  if (start.hour() > end.hour()) {
+    return {
+      start: start.year(date.year()).month(date.month()).date(date.date()),
+      end: end.year(date.year()).month(date.month()).date(date.date()),
+    }
+  }
+  return {
+    start: start.year(date.year()).month(date.month()).date(date.date() + 1),
+    end: end.year(date.year()).month(date.month()).date(date.date()),
+  }
 }
 
 // TODO: For some reason, zod defaults are being applied when they're not supposed to be, so this skipping nulls on read is a workaround
