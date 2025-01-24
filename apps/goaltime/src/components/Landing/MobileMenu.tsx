@@ -1,84 +1,66 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from "react"
+import Link from "next/link"
+import { ArrowRight, Clock, Menu } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
-import { Menu, X, Clock, ArrowRight } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { Separator } from '@/ui-components/separator'
-import Link from 'next/link'
+import { Sheet, SheetContent, SheetTrigger } from "@/ui-components/sheet"
+import { Separator } from "@/ui-components/separator"
+
 export interface MobileMenuProps {
   isLoggedIn: boolean
 }
 
-export function MobileMenu({ isLoggedIn }: MobileMenuProps) {
+const MobileMenu: React.FC<MobileMenuProps> = ({ isLoggedIn }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const router = useRouter()
 
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [mobileMenuOpen])
+  const handleLinkClick = () => {
+    setMobileMenuOpen(false)
+  }
 
   return (
-    <>
-      <ShinyButton variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
-        <Menu />
-        <span className="sr-only">Open menu</span>
-      </ShinyButton>
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
-          <div className="fixed inset-y-0 right-0 w-full max-w-xs bg-background shadow-lg">
-            <div className="flex items-center justify-between p-4 pb-0">
-              <Link href="/" className="flex items-center justify-center">
-                <Clock className="h-6 w-6" />
-                <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground">
-                  <span className="font-bold">GoalTime</span>
-                </ShinyButton>
-              </Link>
-              <ShinyButton variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                <X />
-                <span className="sr-only">Close menu</span>
-              </ShinyButton>
-            </div>
-            <nav className="flex flex-col p-4 pt-2">
-              <ShinyButton variant="linkHover2" className="py-[40px]" onClick={() => {
-                setMobileMenuOpen(false)
-                router.push('/#features')
-              }}>
-                Features
-              </ShinyButton>
-              <Separator />
-              <ShinyButton variant="linkHover2" className="py-[40px]" onClick={() => {
-                setMobileMenuOpen(false)
-                router.push('/#testimonials')
-              }}>
+    <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+      <SheetTrigger asChild>
+        <ShinyButton variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-4 w-4" />
+        </ShinyButton>
+      </SheetTrigger>
+      <SheetContent>
+        <div className="flex flex-col space-y-4">
+          <Link href="/" className="flex items-center justify-center">
+            <Clock className="h-6 w-6" />
+            <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground" onClick={handleLinkClick}>
+              <span className="font-bold">GoalTime</span>
+            </ShinyButton>
+          </Link>
+          <Separator />
+          <Link href="#features" className="text-lg font-medium">
+            <ShinyButton variant="linkHover2" onClick={handleLinkClick}>
+              Features
+            </ShinyButton>
+          </Link>
+          <Separator />
+          <Link href="#testimonials" className="text-lg font-medium">
+            <ShinyButton variant="linkHover2" onClick={handleLinkClick}>
                 Testimonials
-              </ShinyButton>
-              <Separator />
-              <ShinyButton variant="linkHover2" className="py-[40px]" onClick={() => {
-                setMobileMenuOpen(false)
-                router.push('/#pricing')
-              }}>
-                Pricing
-              </ShinyButton>
-              <Separator/>
-              <ShinyButton className="mt-[32px]" variant="expandIcon" Icon={ArrowRight} iconPlacement="right" onClick={() => {
-                setMobileMenuOpen(false)
-                router.push(isLoggedIn ? '/dashboard' : '/login?type=signup')
-              }}>
-                Set Goals
-              </ShinyButton>
-            </nav>
-          </div>
+            </ShinyButton>
+          </Link>
+          <Separator />
+          <Link href="#pricing" className="text-lg font-medium">
+            <ShinyButton variant="linkHover2" onClick={handleLinkClick}>
+              Pricing
+            </ShinyButton>
+          </Link>
+          <Separator />
+          <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'} className="text-lg font-medium w-full">
+            <ShinyButton className="mt-[32px] w-full" variant="expandIcon" Icon={ArrowRight} iconPlacement="right" onClick={handleLinkClick}>
+              Set Goals
+            </ShinyButton>
+          </Link>
         </div>
-      )}
-    </>
+      </SheetContent>
+    </Sheet>
   )
 }
+
+export default MobileMenu

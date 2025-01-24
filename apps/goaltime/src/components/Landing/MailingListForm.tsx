@@ -18,7 +18,7 @@ const EmailSubscriptionSchema = z.object({
 
 type EmailSubscriptionInput = z.infer<typeof EmailSubscriptionSchema>
 
-export function MailingListForm() {
+export default function MailingListForm() {
   const { toast } = useToast()
   const form = useForm<EmailSubscriptionInput>({
     resolver: zodResolver(EmailSubscriptionSchema),
