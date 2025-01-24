@@ -86,10 +86,13 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
 
   const onSubmit: SubmitHandler<UserProfileInput> = async (profile, event) => {
     event?.preventDefault()
+    console.log('onSubmit called')
     setIsSubmitting(true)
     if (image) {
       try {
+        console.log('Uploading profile image...')
         const imageUrl = await userStore.uploadProfileImage(profile.userId, image)
+        console.log('Profile image uploaded successfully')
         if (userStore.profile) {
           userStore.profile.avatarUrl = imageUrl
         }
@@ -102,6 +105,7 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
       }
     }
     try {
+      console.log('Creating user profile...')
       await userStore.createUserProfile(user, profile)
       console.log('Finished creating user profile')
       router.push('/dashboard')

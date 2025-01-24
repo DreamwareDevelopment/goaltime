@@ -21,6 +21,7 @@ export const userStore = proxy<{
     this.profile = profile
   },
   async createUserProfile(user, profile) {
+    console.log('createUserProfile called')
     const userProfile = await createUserProfileAction(user, profile)
     this.profile = userProfile
   },

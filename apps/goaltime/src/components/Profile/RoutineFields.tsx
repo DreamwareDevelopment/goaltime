@@ -387,7 +387,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
         <p className="text-xs text-muted-foreground text-center">Add non-scheduleable time blocks: e.g. &quot;Rest after work&quot; or &quot;Video games on Saturday&quot;</p>
         <div className="flex items-center justify-between gap-4 w-full">
           <FloatingInput placeholder="Custom Routine" value={customActivity} onChange={(e) => setCustomActivity(e.target.value)} />
-          <ShinyButton variant="gooeyLeft" onClick={addCustomActivity}>Add</ShinyButton>
+          <ShinyButton type="button" variant="gooeyLeft" onClick={addCustomActivity}>Add</ShinyButton>
         </div>
       </div>
     </div>

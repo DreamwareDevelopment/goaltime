@@ -48,6 +48,7 @@ function getRoutineForUpsert(routine: RoutineActivities) {
 }
 
 export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
+  console.log('createUserProfileAction called')
   delete profile.otp
   const prisma = await getPrismaClient()
   const routine = getRoutineForUpsert(profile.routine)
@@ -59,13 +60,17 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
     },
   })
   const [firstName, ...lastName] = profile.name.split(' ')
-  await zep.user.add({
-    userId: userProfile.userId,
-    firstName,
-    lastName: lastName.join(' '),
-    email: user.email,
-    metadata: getZepUserMetadata(userProfile),
-  })
+  try {
+    await zep.user.add({
+      userId: userProfile.userId,
+      firstName,
+      lastName: lastName.join(' '),
+      email: user.email,
+      metadata: getZepUserMetadata(userProfile),
+    })
+  } catch (error) {
+    console.error('Error adding user to Zep', error)
+  }
   await syncCalendarAction(userProfile.userId)
   await inngest.send({
     name: InngestEvent.NewUser,
