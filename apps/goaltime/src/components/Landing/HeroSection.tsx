@@ -9,7 +9,7 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
   return (
-    <section className="w-full py-16 md:py-24 lg:py-32 xl:py-48 bg-black/30 backdrop-blur-xs sm:backdrop-blur-sm relative">
+    <section className="w-full py-16 md:py-24 lg:py-32 xl:py-48 relative">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col justify-center items-center gap-6 text-center">
           <div className="flex flex-col justify-center gap-4">
@@ -17,7 +17,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               Achieve Your Goals with GoalTime
             </h1>
             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-              Manage your time effectively, set meaningful goals, and track your progress with our intuitive AI-powered platform.
+              AI Accountability Coach
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6">

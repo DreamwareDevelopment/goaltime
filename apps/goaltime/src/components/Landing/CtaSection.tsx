@@ -3,7 +3,7 @@ import MailingListForm from "./MailingListForm"
 
 const CtaSection: React.FC = () => {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-black/30 backdrop-blur-xs sm:backdrop-blur-sm text-white">
+    <section className="w-full py-12 md:py-24 lg:py-32 text-white">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center space-y-4 text-center">
           <div className="space-y-6 mb-1">

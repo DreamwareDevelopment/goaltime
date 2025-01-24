@@ -1,29 +1,30 @@
 import type React from "react"
 import { CheckCircle, Plus } from "lucide-react"
-import { Button } from "@/ui-components/button-shiny"
+import { Button as ButtonShiny } from "@/ui-components/button-shiny"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/ui-components/card"
 
 const pricingPlans = [
   {
-    name: "Basic",
-    price: "$9.99/month",
-    features: ["Unlimited goal setting", "Basic time blocking", "Weekly progress reports"],
+    name: "Committed",
+    price: "$15.99/month",
+    features: ["Unlimited goal setting", "Automatic time blocking", "AI progress tracking"],
   },
   {
-    name: "Pro",
-    price: "$19.99/month",
-    features: ["All Basic features", "AI-powered insights", "Advanced analytics", "Priority support"],
+    name: "Ambitious",
+    price: "$35.99/month",
+    features: [`All Committed features`, "AI Accountability Coach", "AI Rescheduling", "Priority support"],
   },
   {
-    name: "Team",
-    price: "$49.99/month",
-    features: ["All Pro features", "Team collaboration tools", "Custom integrations", "Dedicated account manager"],
+    name: "Superhuman",
+    price: "$69.99/month",
+    features: [`All Ambitious Features`, "Shared Goals", "Custom Analytics", "External AI Agents"],
+    comingSoon: true,
   },
 ]
 
 const PricingSection: React.FC = () => {
   return (
-    <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 bg-black/30 backdrop-blur-xs sm:backdrop-blur-sm">
+    <section id="pricing" className="w-full py-12 md:py-24 lg:py-32">
       <div className="container px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Pricing</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -44,9 +45,18 @@ const PricingSection: React.FC = () => {
                 </ul>
               </CardContent>
               <CardContent>
-                <Button className="w-full">
-                  Choose Plan <Plus className="ml-2 h-4 w-4" />
-                </Button>
+                <ButtonShiny variant="shine" className="w-full" disabled={plan.comingSoon}>
+                  {plan.comingSoon ? (
+                    <>
+                      <span>Coming Soon</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Choose Plan</span>
+                      <Plus className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </ButtonShiny>
               </CardContent>
             </Card>
           ))}

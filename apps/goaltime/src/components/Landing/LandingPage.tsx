@@ -8,6 +8,7 @@ import PricingSection from "./PricingSection"
 import CtaSection from "./CtaSection"
 import Footer from "./Footer"
 import { createClient } from "@/server-utils/supabase"
+import AIFeaturesSection from "./AIFeaturesSection"
 
 const LandingPage: React.FC = async () => {
   const supabase = await createClient()
@@ -18,9 +19,10 @@ const LandingPage: React.FC = async () => {
     <div className="min-h-screen flex flex-col relative">
       <MountainBackground />
       <Header isLoggedIn={isLoggedIn} />
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 bg-black/30 backdrop-blur-2xs sm:backdrop-blur-xs">
         <HeroSection isLoggedIn={isLoggedIn} />
         <FeaturesSection />
+        <AIFeaturesSection />
         <TestimonialsSection />
         <PricingSection />
         <CtaSection />
