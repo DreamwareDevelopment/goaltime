@@ -1,6 +1,6 @@
 'use server'
 
-import { RoutineActivities, RoutineActivity, UserProfileInput } from '@/shared/zod'
+import { OptionalRoutine, RoutineActivities, RoutineActivity, RoutineDay, UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
@@ -33,6 +33,13 @@ function getRoutineForUpsert(routine: RoutineActivities) {
         delete (routine[activity][customActivity] as any).Weekdays
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (routine[activity][customActivity] as any).Weekends
+        for (const day in routine[activity][customActivity]) {
+          const dayKey = day as RoutineDay
+          if (routine[activity][customActivity][dayKey].skip) {
+            routine[activity][customActivity][dayKey].start = null
+            routine[activity][customActivity][dayKey].end = null
+          }
+        }
       }
       continue
     }
@@ -43,6 +50,14 @@ function getRoutineForUpsert(routine: RoutineActivities) {
     delete (routine[key] as any).Weekdays
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (routine[key] as any).Weekends
+    for (const day in routine[key]) {
+      const dayKey = day as RoutineDay
+      const dayRoutine = routine[key][dayKey] as OptionalRoutine
+      if (dayRoutine.skip) {
+        dayRoutine.start = null
+        dayRoutine.end = null
+      }
+    }
   }
   return routine
 }

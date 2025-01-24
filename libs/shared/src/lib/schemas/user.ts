@@ -133,7 +133,6 @@ export type SerializedRoutineActivities = z.infer<typeof SerializedRoutineActivi
 
 export type RoutineActivity = keyof RoutineActivities;
 
-// TODO: For some reason, zod defaults are being applied when they're not supposed to be, so this skipping nulls on read is a workaround
 export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): RoutineActivities {
   const parsed = SerializedRoutineActivitiesSchema.parse(profile.routine)
   if (!parsed.sleep || !parsed.breakfast || !parsed.lunch || !parsed.dinner) {
@@ -150,10 +149,7 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
         if (!entry) {
           throw new Error(`No entry found for ${key}`)
         }
-        entry.Everyday = { ...entry.Monday }
-        entry.Weekdays = { ...entry.Monday }
-        entry.Weekends = { ...entry.Saturday }
-
+        // Set up individual days first
         for (const day in entry) {
           const dayKey = day as RoutineDay
           const dayEntry = entry[dayKey]
@@ -166,6 +162,10 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
             end: dayEntry.end ? dayjs(dayEntry.end).toDate() : null,
           }
         }
+        // Then set up aggregate days
+        entry.Everyday = { ...entry.Monday }
+        entry.Weekdays = { ...entry.Monday }
+        entry.Weekends = { ...entry.Saturday }
       }
       continue
     }
@@ -175,13 +175,7 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
     if (!entry) {
       throw new Error(`No entry found for ${key}`)
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    entry.Everyday = { ...entry.Monday! }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    entry.Weekdays = { ...entry.Monday! }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    entry.Weekends = { ...entry.Saturday! }
-  
+    // Set up individual days first
     for (const day in entry) {
       const dayKey = day as RoutineDay
       const dayEntry = entry[dayKey] as Routine
@@ -194,6 +188,10 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
         end: dayEntry.end ? dayjs(dayEntry.end).toDate() : null,
       }
     }
+    // Then set up aggregate days
+    routine[key].Everyday = { ...routine[key].Monday }
+    routine[key].Weekdays = { ...routine[key].Monday }
+    routine[key].Weekends = { ...routine[key].Saturday }
   }
   return routine
 }
@@ -215,7 +213,6 @@ export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Da
   }
 }
 
-// TODO: For some reason, zod defaults are being applied when they're not supposed to be, so this skipping nulls on read is a workaround
 export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
   const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
     Monday: [],

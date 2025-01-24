@@ -33,12 +33,13 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
   const profile = useSnapshot(userStore.profile)
   const [image, setImage] = useState<File | null>(null)
 
+  const routine = getProfileRoutine(profile, false)
   const form = useForm<UserProfileInput>({
     resolver: getZodResolver(UserProfileSchema, refineUserProfileSchema),
     values: {
       ...profile,
       workDays: profile.workDays as DaysOfTheWeekType[],
-      routine: getProfileRoutine(profile, false),
+      routine,
       preferredLanguage: profile.preferredLanguage as SupportedLanguagesType,
       preferredCurrency: profile.preferredCurrency as SupportedCurrenciesType,
     },
