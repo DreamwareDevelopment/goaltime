@@ -144,6 +144,9 @@ export function getFreeIntervals(
     const sleepTime = currentTime
       .hour(sleepHour < wakeUpTime.hour() ? sleepHour + 24 : sleepHour)
       .minute(preferredSleepTime.minute())
+    if (sleepHour < wakeUpTime.hour()) {
+      nextDay = sleepTime
+    }
     wakeUpOrSleepEvents.push({
       type: 'wakeUp',
       start: wakeUpTime.format(DATE_TIME_FORMAT),
