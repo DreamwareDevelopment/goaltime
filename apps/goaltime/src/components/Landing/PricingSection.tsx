@@ -26,7 +26,8 @@ const PricingSection: React.FC = () => {
   return (
     <section id="pricing" className="w-full py-12 md:py-24 lg:py-32">
       <div className="container px-4 md:px-6">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Pricing</h2>
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-2">Pricing</h2>
+        <p className="text-lg text-center mb-12">(7 day free trial)</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {pricingPlans.map((plan, index) => (
             <Card key={index} className="flex flex-col bg-white/10 backdrop-blur-xs sm:backdrop-blur-sm text-white">
