@@ -1,11 +1,7 @@
-FROM node:20-alpine as builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
-COPY package*.json ./
-COPY nx.json ./
-COPY tsconfig*.json ./
-COPY apps/websocket-server ./apps/websocket-server
-COPY libs ./libs
+COPY . ./
 
 RUN npm ci
 RUN npx nx run goaltime-websocket-server:build:production
