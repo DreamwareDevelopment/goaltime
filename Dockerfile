@@ -6,7 +6,7 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 COPY . ./
 
-RUN npm ci --production
+RUN npm ci
 RUN npx nx run goaltime-websocket-server:build:production
 
 FROM node:20-alpine
