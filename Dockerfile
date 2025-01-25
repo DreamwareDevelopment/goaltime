@@ -17,4 +17,4 @@ RUN npm ci --production
 ENV NODE_ENV=production
 EXPOSE 8888
 
-CMD ["npx", "nx", "run", "goaltime-websocket-server:start"]
+CMD ["node", "dist/apps/websocket-server/main.js"]
