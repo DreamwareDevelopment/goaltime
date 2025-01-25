@@ -1,5 +1,8 @@
 FROM node:20-alpine AS builder
 
+# Install OpenSSL and other required packages
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 COPY . ./
 
@@ -17,4 +20,4 @@ RUN npm ci --production
 ENV NODE_ENV=production
 EXPOSE 8888
 
-CMD ["node", "dist/apps/websocket-server/main.js"]
+CMD ["node", "main.js"]
