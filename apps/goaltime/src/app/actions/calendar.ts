@@ -1,6 +1,6 @@
 'use server'
 
-import { inngest, InngestEvent } from "@/libs/server-utils/src/lib/inngest";
+import { inngestProducer, InngestEvent } from "@/libs/server-utils/src/lib/inngest";
 import { DATE_TIME_FORMAT } from "@/libs/shared/src";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { CalendarEventInput } from "@/shared/zod";
@@ -13,7 +13,7 @@ export async function updateCalendarEventAction(original: CalendarEvent, updated
     where: { id: original.id, userId: original.userId },
     data: updated,
   })
-  await inngest.send({
+  await inngestProducer.send({
     name: InngestEvent.ScheduleUpdated,
     data: {
       userId: original.userId,
@@ -46,7 +46,7 @@ export async function syncCalendarAction(userId: string): Promise<void> {
     throw new Error('Google auth or profile not found')
   }
   console.log('Sending sync event');
-  await inngest.send({
+  await inngestProducer.send({
     name: InngestEvent.GoogleCalendarSync,
     data: {
       googleAuth,
@@ -59,7 +59,7 @@ export async function fullSyncCalendarAction(profile: UserProfile, googleAuth: G
   googleAuth.lastFullSyncAt = null;
   googleAuth.calendarSyncToken = null;
   console.log('Sending full sync event');
-  await inngest.send({
+  await inngestProducer.send({
     name: InngestEvent.GoogleCalendarSync,
     data: {
       profile,

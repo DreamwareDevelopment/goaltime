@@ -19,9 +19,8 @@ export enum InngestEvent {
   NewUser = "marketing/new-user",
 }
 
-// Create a client to send and receive events
-export const inngest = new Inngest({
-  id: "goaltime",
+export const inngestConsumer = new Inngest({
+  id: "goaltime-websocket-server",
   schemas: new EventSchemas().fromRecord<{
     [InngestEvent.GoogleCalendarSync]: {
       data: {
@@ -83,4 +82,34 @@ export const inngest = new Inngest({
   }>()
 });
 
-export type InngestEventData = GetEvents<typeof inngest>
+export const inngestProducer = new Inngest({
+  id: "goaltime-next",
+  schemas: new EventSchemas().fromRecord<{
+    [InngestEvent.GoogleCalendarSync]: {
+      data: {
+        profile: UserProfile;
+        googleAuth: GoogleAuth;
+        forceFullSync?: true;
+      }
+    };
+    [InngestEvent.ScheduleUpdated]: {
+      data: {
+        userId: string;
+        schedule: Jsonify<CalendarEvent[]>;
+      };
+    };
+    [InngestEvent.ScheduleGoalEvents]: {
+      data: {
+        userId: string;
+      };
+    };
+    [InngestEvent.NewUser]: {
+      data: {
+        user: SanitizedUser;
+        profile: UserProfile;
+      };
+    };
+  }>()
+});
+
+export type InngestEventData = GetEvents<typeof inngestConsumer>

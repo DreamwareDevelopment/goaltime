@@ -5,7 +5,7 @@ import { FastifyInstance } from 'fastify';
 import inngestFastify from 'inngest/fastify';
 import * as path from 'path';
 
-import { inngest, InngestEvent } from '@/server-utils/inngest';
+import { inngestConsumer, InngestEvent, syncGoogleCalendar, syncCalendars, scheduleGoalEvents } from '@/server-utils/inngest';
 
 import { syncToClient } from './lib/sync';
 import { checkIn } from './accountability/check-in';
@@ -30,9 +30,18 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
   });
 
   fastify.register(inngestFastify, {
-    client: inngest,
-    functions: [startAccountabilityLoop, syncToClient, checkIn, chat, incomingSMS],
-    options: {}
+    client: inngestConsumer,
+    functions: [
+      checkIn,
+      chat,
+      incomingSMS,
+      scheduleGoalEvents,
+      startAccountabilityLoop,
+      syncCalendars,
+      syncGoogleCalendar,
+      syncToClient,
+    ],
+    options: {},
   });
 
   // This loads all plugins defined in hooks
@@ -52,13 +61,13 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
   fastify.addHook('onReady', async function () {
     console.log('Restarting accountability loop...');
     setTimeout(async () => {
-      await inngest.send({
+      await inngestConsumer.send({
         name: InngestEvent.StopAccountabilityLoop,
         data: {} as never,
       });
       console.log('Sent stop accountability loop event.');
       setTimeout(async () => {
-        await inngest.send({
+        await inngestConsumer.send({
           name: InngestEvent.StartAccountabilityLoop,
           data: {} as never,
         });
@@ -68,7 +77,7 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
   });
   fastify.addHook('preClose', async function () {
     console.log('Sending stop accountability loop event');
-    await inngest.send({
+    await inngestConsumer.send({
       name: InngestEvent.StopAccountabilityLoop,
       data: {} as never,
     });

@@ -7,7 +7,7 @@ import { dayjs, DATE_TIME_FORMAT, truncateText } from "@/shared/utils";
 import { SerializableCalendarEvent } from "@/shared/zod";
 
 import { getPrismaClient } from "../../../prisma/client";
-import { inngest, InngestEvent, InngestEventData } from "../../client";
+import { inngestConsumer, InngestEvent, InngestEventData } from "../../client";
 import { Jsonify } from "inngest/helpers/jsonify";
 
 // Relevant docs:
@@ -326,7 +326,7 @@ async function deleteCalendarEvents(logger: Logger, tx: PrismaClient, googleAuth
   }
 }
 
-export const syncGoogleCalendar = inngest.createFunction(
+export const syncGoogleCalendar = inngestConsumer.createFunction(
   {
     id: 'google-calendar-sync',
     concurrency: [{
@@ -485,7 +485,7 @@ export const syncGoogleCalendar = inngest.createFunction(
   },
 );
 
-export const syncCalendars = inngest.createFunction(
+export const syncCalendars = inngestConsumer.createFunction(
   {
     id: "sync-all-calendars",
     concurrency: [{

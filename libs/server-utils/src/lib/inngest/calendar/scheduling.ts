@@ -6,7 +6,7 @@ import { DaysOfTheWeekType, MinimalScheduleableGoal, ScheduleableGoal, ScheduleI
 
 import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
 import { getFreeIntervals, getGoalScoringInstructions, getPreferredTimes, getRemainingCommitmentForPeriod, parsePreferredTimes, scoreIntervals } from "../../ai/scheduling";
-import { inngest, InngestEvent } from "../client";
+import { inngestConsumer, InngestEvent } from "../client";
 
 interface PreparedSchedulingData {
   interval: Interval<string>;
@@ -16,7 +16,7 @@ interface PreparedSchedulingData {
   timezone: string;
 }
 
-export const scheduleGoalEvents = inngest.createFunction(
+export const scheduleGoalEvents = inngestConsumer.createFunction(
   {
     id: "schedule-goal-events",
     concurrency: [{

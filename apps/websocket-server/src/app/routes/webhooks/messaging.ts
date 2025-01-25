@@ -1,4 +1,4 @@
-import { inngest, InngestEvent } from '@/server-utils/inngest';
+import { inngestConsumer, InngestEvent } from '@/server-utils/inngest';
 import { getPrismaClient } from '@/server-utils/prisma';
 import { FastifyInstance } from 'fastify';
 import { twiml } from 'twilio';
@@ -35,7 +35,7 @@ export default async function (fastify: FastifyInstance) {
         response.message(`User not found, sign up at https://goaltime.ai/login?type=signup`);
         return reply.type('text/xml').send(response.toString());
       } else {
-        await inngest.send({
+        await inngestConsumer.send({
           name: InngestEvent.IncomingSMS,
           data: {
             from: From,
@@ -59,7 +59,7 @@ async function getUserIdByPhoneNumber(phoneNumber: string) {
   return profile?.userId ?? null;
 }
 
-export const incomingSMS = inngest.createFunction(
+export const incomingSMS = inngestConsumer.createFunction(
   {
     id: 'incoming-sms',
     concurrency: {

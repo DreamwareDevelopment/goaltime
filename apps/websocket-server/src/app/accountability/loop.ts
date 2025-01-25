@@ -1,4 +1,4 @@
-import { inngest, InngestEvent, InngestEventData } from "@/server-utils/inngest";
+import { inngestConsumer, InngestEvent, InngestEventData } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { getUserIds } from "@/server-utils/queries/user";
 import { MAX_NOTIFICATION_EVENT_OFFSET } from "@/shared/zod";
@@ -206,7 +206,7 @@ function getNextEventTimes(
   };
 }
 
-export const startAccountabilityLoop = inngest.createFunction({
+export const startAccountabilityLoop = inngestConsumer.createFunction({
   id: 'start-accountability-loop',
   concurrency: [{
     // One loop per environment

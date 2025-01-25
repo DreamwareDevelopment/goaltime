@@ -4,7 +4,7 @@ import { GoalInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import { Goal } from '@prisma/client'
 import { isDeepStrictEqual } from 'util'
-import { inngest, InngestEvent } from '@/server-utils/inngest'
+import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
 import { GoalWithNotifications } from '@/shared/utils'
 import { zep } from '@/server-utils/ai'
 
@@ -37,7 +37,7 @@ export async function createGoalAction(goal: GoalInput): Promise<GoalWithNotific
     },
   })
   await upsertGoalToGraph(newGoal)
-  await inngest.send({
+  await inngestProducer.send({
     id: `schedule-new-goal-events-${newGoal.id}`,
     name: InngestEvent.ScheduleGoalEvents,
     data: {
@@ -94,7 +94,7 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
     },
   })
   if (shouldScheduleGoals(original, updated)) {
-    await inngest.send({
+    await inngestProducer.send({
       name: InngestEvent.ScheduleGoalEvents,
       data: {
         userId: updated.userId,
@@ -124,7 +124,7 @@ export async function updateGoalAction(original: Goal, updated: GoalInput): Prom
 export async function deleteGoalAction(goalId: string, userId: string): Promise<void> {
   const prisma = await getPrismaClient(userId)
   await prisma.goal.delete({ where: { id: goalId, userId } })
-  await inngest.send({
+  await inngestProducer.send({
     name: InngestEvent.ScheduleUpdated,
     data: {} as never,
   })

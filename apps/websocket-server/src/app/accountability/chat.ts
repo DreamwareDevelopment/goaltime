@@ -6,7 +6,7 @@ import { Logger } from "inngest/middleware/logger";
 
 import { UserProfile } from "@prisma/client";
 import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
-import { inngest, InngestEvent } from "@/server-utils/inngest";
+import { inngestConsumer, InngestEvent } from "@/server-utils/inngest";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
 
@@ -210,7 +210,7 @@ async function getUpdatedSession(logger: Logger, profile: UserProfile, message: 
   return { session };
 }
 
-export const chat = inngest.createFunction({
+export const chat = inngestConsumer.createFunction({
   id: 'chat',
   concurrency: [{
     // One loop per user

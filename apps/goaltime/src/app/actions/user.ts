@@ -4,7 +4,7 @@ import { OptionalRoutine, RoutineActivities, RoutineActivity, RoutineDay, UserPr
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
 import { UserProfile } from '@prisma/client'
-import { inngest, InngestEvent } from '@/server-utils/inngest'
+import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
 import { zep } from '@/server-utils/ai'
 
 import { fullSyncCalendarAction, syncCalendarAction } from './calendar'
@@ -87,7 +87,7 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
     console.error('Error adding user to Zep', error)
   }
   await syncCalendarAction(userProfile.userId)
-  await inngest.send({
+  await inngestProducer.send({
     name: InngestEvent.NewUser,
     data: {
       user: user,

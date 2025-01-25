@@ -1,13 +1,13 @@
 // import { Logger } from "inngest/middleware/logger";
 
 import { getPrismaClient } from "@/server-utils/prisma";
-import { inngest, InngestEvent } from "@/server-utils/inngest";
+import { inngestConsumer, InngestEvent } from "@/server-utils/inngest";
 import { sendSMS } from "@/server-utils/ai";
 import { NotificationDestination, NotificationPayload } from "@/shared/utils";
 import { chat } from "./chat";
 
 // TODO: Remove this function, I think we can just use the chat function inside the accountability loop
-export const checkIn = inngest.createFunction(
+export const checkIn = inngestConsumer.createFunction(
   {
     id: 'check-in',
     retries: 1,

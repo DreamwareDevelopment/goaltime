@@ -1,7 +1,7 @@
-import { inngest, InngestEvent } from "@/server-utils/inngest";
+import { inngestConsumer, InngestEvent } from "@/server-utils/inngest";
 import { ConnectionManager } from "./manager";
 
-export const syncToClient = inngest.createFunction({
+export const syncToClient = inngestConsumer.createFunction({
   id: 'sync-to-client',
   concurrency: [{
     // virtual concurrency queue for this function,
