@@ -9,6 +9,7 @@
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
+      "dependsOn": ["shared:type-gen"],
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/websocket-server",
