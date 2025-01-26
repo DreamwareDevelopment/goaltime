@@ -48,7 +48,6 @@
       "configurations": {
         "development": {
           "watch": true,
-          "dependsOn": ["build"],
           "buildTarget": "goaltime-websocket-server:build:development"
         },
         "production": {

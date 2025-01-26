@@ -3,3 +3,4 @@ export * from './lib/constants';
 export * from './lib/utils';
 export * from './lib/colors';
 export * from './lib/types';
+export * from './lib/stripe';

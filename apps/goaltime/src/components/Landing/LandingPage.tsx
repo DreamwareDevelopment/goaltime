@@ -24,7 +24,7 @@ const LandingPage: React.FC = async () => {
         <FeaturesSection />
         <AIFeaturesSection />
         <TestimonialsSection />
-        <PricingSection />
+        <PricingSection userEmail={session.data.session?.user.email} />
         <CtaSection />
       </main>
       <Footer />

@@ -64,6 +64,9 @@ function getRoutineForUpsert(routine: RoutineActivities) {
 
 export async function createUserProfileAction(user: SanitizedUser, profile: UserProfileInput) {
   console.log('createUserProfileAction called')
+  if (!user.email) {
+    throw new Error('User email is required')
+  }
   delete profile.otp
   const prisma = await getPrismaClient()
   const routine = getRoutineForUpsert(profile.routine)

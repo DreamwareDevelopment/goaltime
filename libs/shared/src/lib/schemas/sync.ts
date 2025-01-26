@@ -1,5 +1,5 @@
 import { Jsonify } from "inngest/helpers/jsonify";
-import { CalendarEvent, Goal } from "@prisma/client";
+import { CalendarEvent, Goal, UserProfile } from "@prisma/client";
 import { dayjs } from "../utils";
 
 export type SerializableCalendarEvent = Jsonify<CalendarEvent>;
@@ -9,6 +9,7 @@ export interface SyncEvent {
   goals?: Jsonify<Goal>[];
   calendarEvents?: SerializableCalendarEvent[];
   calendarEventsToDelete?: string[];
+  profile?: Jsonify<Partial<UserProfile>>;
 }
 
 export function deserializeCalendarEvents(events: SerializableCalendarEvent[]): CalendarEvent[] {

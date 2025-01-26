@@ -273,6 +273,9 @@ export const UserProfileSchema = z.object({
     message: 'Please provide a valid phone number',
   }),
   otp: z.string().optional(),
+  email: z.string().email({
+    message: 'Please provide a valid email address',
+  }),
   birthday: z.date({
     message: 'Please provide a valid birthday',
   }).min(new Date('1900-01-01'), {

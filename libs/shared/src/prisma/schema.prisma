@@ -392,14 +392,28 @@ model GoogleAuth {
   @@map("google_auth")
 }
 
+enum Plan {
+  Committed
+  Ambitious
+  Superhuman
+  None
+
+  @@schema("public")
+}
+
 model UserProfile {
   id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId              String    @unique @db.Uuid @map("user_id")
   lastChatSessionId   String?   @db.Uuid @map("last_chat_session_id")
   avatarUrl           String    @db.VarChar(255) @map("avatar_url")
+  email               String    @unique @db.VarChar(255) @map("email")
   name                String    @default("GT User") @db.VarChar(100)
   phone               String    @unique
   birthday            DateTime?
+  plan                Plan      @default(None)
+  stripeCustomerId    String?   @unique @db.VarChar(255) @map("stripe_customer_id")
+  stripeProductId     String?   @db.VarChar(255) @map("stripe_product_id")
+  stripePriceId       String?   @db.VarChar(255) @map("stripe_price_id")
   occupation          String?   @db.VarChar(100)
   unemployed          Boolean   @default(false) @map("unemployed")
   startsWorkAt        DateTime? @map("starts_work_at")

@@ -56,6 +56,7 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
     defaultValues: {
       ...getDefaults(UserProfileSchema),
       userId: user.id,
+      email: user.email,
     }
   })
   const { handleSubmit, formState, clearErrors, setError, setValue } = form
