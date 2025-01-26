@@ -1,7 +1,6 @@
 FROM node:20-alpine AS builder
 
-# Install OpenSSL and other required packages
-RUN apk add --no-cache openssl
+RUN apk add openssl
 
 WORKDIR /app
 COPY . ./
@@ -10,6 +9,8 @@ RUN npm ci
 RUN npx nx run goaltime-websocket-server:build:production
 
 FROM node:20-alpine
+
+RUN apk add openssl
 
 WORKDIR /app
 COPY --from=builder /app/dist/apps/websocket-server ./
