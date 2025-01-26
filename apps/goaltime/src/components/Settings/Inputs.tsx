@@ -50,7 +50,7 @@ export const DescriptionInput: React.FC<FormInputProps> = ({ form }) => {
               name="description"
               value={field.value || ''}
               onChange={field.onChange}
-              placeholder="Description (optional)"
+              placeholder="Why is this important? (optional)"
             />
           </FormControl>
           <FormMessage className="ml-2" />
