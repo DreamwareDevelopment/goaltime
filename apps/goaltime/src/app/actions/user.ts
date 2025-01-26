@@ -3,6 +3,7 @@
 import { OptionalRoutine, RoutineActivities, RoutineActivity, RoutineDay, UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
+import { isDeepStrictEqual } from 'util'
 import { UserProfile } from '@prisma/client'
 import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
 import { zep } from '@/server-utils/ai'
@@ -100,6 +101,19 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
   return userProfile
 }
 
+function shouldScheduleGoals(original: UserProfile, updated: Partial<UserProfileInput>): boolean {
+  if (updated.routine && !isDeepStrictEqual(original.routine, updated.routine)) {
+    return true;
+  }
+  if (updated.workDays && !isDeepStrictEqual(original.workDays, updated.workDays)) {
+    return true;
+  }
+  if (updated.timezone && updated.timezone !== original.timezone) {
+    return true;
+  }
+  return false;
+}
+
 export async function updateUserProfileAction(original: UserProfile, profile: Partial<UserProfileInput>) {
   const prisma = await getPrismaClient(profile.userId)
   const routine = profile.routine ? getRoutineForUpsert(profile.routine) : undefined
@@ -117,8 +131,14 @@ export async function updateUserProfileAction(original: UserProfile, profile: Pa
       await fullSyncCalendarAction(updated, googleAuth)
     }
   }
-  // TODO: Improve by using a diff of the original and updated profile to check if the metadata has changed,
-  // Should imply changes to the rest of this function.
+  if (shouldScheduleGoals(original, profile)) {
+    await inngestProducer.send({
+      name: InngestEvent.ScheduleGoalEvents,
+      data: {
+        userId: updated.userId,
+      },
+    })
+  }
   await zep.user.update(updated.userId, {
     metadata: getZepUserMetadata(updated),
   })
