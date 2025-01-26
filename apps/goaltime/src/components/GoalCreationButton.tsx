@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 
 import { GoalRecommendation, GoalRecommendationsCard } from "./GoalRecommendationsCard";
 import { useValtio } from "./data/valtio";
+import { cn } from "@/ui-components/utils";
 
 const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod => mod.GoalSettingsCard), {
   loading: () => <LoadingSpinner />
@@ -45,10 +46,14 @@ export function GoalCreationButton({
   return (
     <Credenza open={isOpen} onOpenChange={setIsOpen}>
       <CredenzaTrigger asChild>
-        <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={className}>
-          <span className="hidden sm:block">New Goal</span>
-          <span className="block sm:hidden"><PlusIcon className="w-6 h-6" /></span>
-        </ShinyButton>
+        <>
+          <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={cn(className, "hidden sm:flex")}>
+            New Goal
+          </ShinyButton>
+          <ShinyButton variant="gooeyLeft" className={cn(className, "flex sm:hidden")}>
+            <PlusIcon className="w-6 h-6" />
+          </ShinyButton>
+        </>
       </CredenzaTrigger>
       <CredenzaContent className="h-[calc(100vh-100px)] md:h-[85vh]">
         <ScrollArea className="h-full w-full">
