@@ -22,7 +22,9 @@ export const userStore = proxy<{
     this.profile = profile
   },
   setProfile(profile: UserProfile) {
-    Object.assign(this.profile, profile)
+    if (this.profile) {
+      Object.assign(this.profile, profile)
+    }
   },
   async createUserProfile(user, profile) {
     console.log('createUserProfile called')
