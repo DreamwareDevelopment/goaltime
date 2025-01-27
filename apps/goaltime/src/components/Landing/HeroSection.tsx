@@ -1,7 +1,6 @@
 'use client'
 
 import type React from "react"
-import Link from "next/link"
 import { ArrowRight, Play } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import { usePostHog } from 'posthog-js/react'
@@ -31,11 +30,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               Icon={ArrowRight}
               iconPlacement="right"
               asChild
-              onClick={() => posthog?.capture(isLoggedIn ? 'start free trial clicked' : 'start free trial clicked', {
-                isLoggedIn: isLoggedIn,
-              })}
+              onClick={() => {
+                posthog?.capture(isLoggedIn ? 'start free trial clicked' : 'start free trial clicked', {
+                  isLoggedIn: isLoggedIn,
+                })
+                if (isLoggedIn) {
+                  window.location.href = '/dashboard'
+                } else {
+                  window.location.href = '/login?type=signup'
+                }
+              }}
             >
-              <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Start Free Trial</Link>
+              Start Free Trial
             </ShinyButton>
             <ShinyButton
               variant="expandIcon"
@@ -43,9 +49,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               iconPlacement="right"
               asChild
               className="bg-accent hover:bg-accent/80 text-accent-foreground h-[36px] sm:h-[53px]"
-              onClick={() => posthog?.capture('watch demo clicked')}
+              onClick={() => {
+                posthog?.capture('watch demo clicked')
+                window.location.href = '/demo'
+              }}
             >
-              <Link href="/demo">Watch Demo</Link>
+              Watch Demo
             </ShinyButton>
           </div>
         </div>

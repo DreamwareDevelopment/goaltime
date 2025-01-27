@@ -17,6 +17,11 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
     posthog?.capture(isLoggedIn ? 'set goals clicked' : 'set goals clicked', {
       isLoggedIn: isLoggedIn,
     })
+    if (isLoggedIn) {
+      window.location.href = '/dashboard'
+    } else {
+      window.location.href = '/login?type=signup'
+    }
   }
 
   return (
@@ -45,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
             className="hidden md:flex md:min-w-[178px]"
             onClick={handleSetGoalsClick}
           >
-            <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
+            Set Goals
           </ShinyButton>
           <MobileMenu isLoggedIn={isLoggedIn} />
         </nav>

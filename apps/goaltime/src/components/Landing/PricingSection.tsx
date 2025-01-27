@@ -5,19 +5,19 @@ import { CheckCircle, Plus } from "lucide-react"
 import { Button as ButtonShiny } from "@/ui-components/button-shiny"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/ui-components/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/ui-components/tabs"
-import Link from "next/link"
 import { usePostHog } from 'posthog-js/react'
 import { monthlyPricingPlans, PricingPlan, yearlyPricingPlans } from "@/shared/utils"
-import { useRouter } from "next/navigation"
 
 const PricingCard: React.FC<{plan: PricingPlan, yearly: boolean, userEmail?: string}> = ({plan, yearly, userEmail}) => {
-  const router = useRouter()
   const posthog = usePostHog()
   const handleChoosePlanClick = () => {
     posthog?.capture('choose plan clicked', {
       plan: plan.name,
     })
-    router.push(userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login")
+    const url = userEmail
+      ? `${plan.link}?prefilled_email=${encodeURIComponent(userEmail)}`
+      : '/login'
+    window.open(url, '_blank')
   }
 
   return (
@@ -37,20 +37,18 @@ const PricingCard: React.FC<{plan: PricingPlan, yearly: boolean, userEmail?: str
         </ul>
       </CardContent>
       <CardContent>
-        <Link href={userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login"} target="_blank">
-          <ButtonShiny variant="shine" className="w-full" disabled={plan.comingSoon} onClick={handleChoosePlanClick}>
-            {plan.comingSoon ? (
-              <>
-                <span>Coming Soon</span>
-              </>
-            ) : (
-              <>
-                <span>Choose Plan</span>
-                <Plus className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </ButtonShiny>
-        </Link>
+        <ButtonShiny variant="shine" className="w-full" disabled={plan.comingSoon} onClick={handleChoosePlanClick}>
+          {plan.comingSoon ? (
+            <>
+              <span>Coming Soon</span>
+            </>
+          ) : (
+            <>
+              <span>Choose Plan</span>
+              <Plus className="ml-2 h-4 w-4" />
+            </>
+          )}
+        </ButtonShiny>
       </CardContent>
     </Card>
   )
