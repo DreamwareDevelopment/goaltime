@@ -7,6 +7,7 @@ import { DaysOfTheWeekType, MinimalScheduleableGoal, ScheduleableGoal, ScheduleI
 import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
 import { getFreeIntervals, getGoalScoringInstructions, getPreferredTimes, getRemainingCommitmentForPeriod, parsePreferredTimes, scoreIntervals } from "../../ai/scheduling";
 import { inngestConsumer, InngestEvent } from "../client";
+import { posthog } from "../../posthog";
 
 interface PreparedSchedulingData {
   interval: Interval<string>;
@@ -233,6 +234,15 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
     const { deletedEvents, newEvents } = await step.run('save-schedule', async () => {
       const deletedEvents = await deleteGoalEvents(userId, interval);
       const newEvents = await saveSchedule(userId, goalMap, timezone, schedule);
+      posthog.capture({
+        distinctId: userId,
+        event: "goal events scheduled",
+        properties: {
+          deletedEventsCount: deletedEvents.length,
+          newEventsCount: newEvents.length,
+          goalCount: data.goals.length,
+        },
+      })
       return { deletedEvents, newEvents };
     });
     logger.info(`Deleted ${deletedEvents.length} events and saved ${newEvents.length} events`);

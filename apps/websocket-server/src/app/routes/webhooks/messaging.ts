@@ -46,7 +46,7 @@ export default async function (fastify: FastifyInstance) {
         });
         posthog.capture({
           distinctId: userId,
-          event: "user chat",
+          event: "user chat message",
           properties: {
             message: Body,
           },

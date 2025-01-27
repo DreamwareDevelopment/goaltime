@@ -369,7 +369,7 @@ export const chat = inngestConsumer.createFunction({
     })
     posthog.capture({
       distinctId: userId,
-      event: "ai chat response",
+      event: "ai chat message",
       properties: {
         response,
       },
