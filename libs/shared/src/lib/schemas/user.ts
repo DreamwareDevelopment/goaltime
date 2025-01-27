@@ -4,6 +4,7 @@ import { getDefaults, ZodSchemaResolver } from '.'
 import { dayjs } from '../utils'
 import { UserProfile } from '@prisma/client'
 import { ExternalEvent, Interval } from '../types/scheduling'
+import { Jsonify } from 'inngest/helpers/jsonify'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 export type DaysOfTheWeekType = z.infer<typeof daysOfTheWeek>
@@ -340,4 +341,13 @@ export const refineUserProfileSchema: ZodSchemaResolver<UserProfileInput, any> =
     }
   }
   return errors
+}
+
+export function deserializeUserProfile(profile: Jsonify<UserProfile>): UserProfile {
+  return {
+    ...profile,
+    birthday: profile.birthday ? dayjs(profile.birthday).toDate() : null,
+    startsWorkAt: profile.startsWorkAt ? dayjs(profile.startsWorkAt).toDate() : null,
+    endsWorkAt: profile.endsWorkAt ? dayjs(profile.endsWorkAt).toDate() : null,
+  }
 }
