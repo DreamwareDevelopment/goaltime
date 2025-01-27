@@ -10,12 +10,16 @@ import { usePostHog } from 'posthog-js/react'
 import { monthlyPricingPlans, PricingPlan, yearlyPricingPlans } from "@/shared/utils"
 import { useRouter } from "next/navigation"
 
-const PricingCard: React.FC<{plan: PricingPlan, userEmail?: string}> = ({plan, userEmail}) => {
+const PricingCard: React.FC<{plan: PricingPlan, yearly: boolean, userEmail?: string}> = ({plan, yearly, userEmail}) => {
   const router = useRouter()
   const posthog = usePostHog()
   const handleChoosePlanClick = () => {
     posthog?.capture('choose plan clicked', {
       plan: plan.name,
+    })
+    posthog?.setPersonProperties({
+      plan: plan.name,
+      yearly: yearly,
     })
     router.push(userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login")
   }
@@ -69,12 +73,12 @@ const PricingSection: React.FC<{userEmail?: string}> = ({userEmail}) => {
           </TabsList>
           <TabsContent value="monthly" className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
             {monthlyPricingPlans.map((plan, index) => (
-              <PricingCard plan={plan} userEmail={userEmail} key={`monthly-${index}`} />
+              <PricingCard plan={plan} yearly={false} userEmail={userEmail} key={`monthly-${index}`} />
             ))}
           </TabsContent>
           <TabsContent value="annual" className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-0">
             {yearlyPricingPlans.map((plan, index) => (
-              <PricingCard plan={plan} userEmail={userEmail} key={`yearly-${index}`} />
+              <PricingCard plan={plan} yearly={true} userEmail={userEmail} key={`yearly-${index}`} />
             ))}
           </TabsContent>
         </Tabs>
