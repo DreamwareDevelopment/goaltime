@@ -50,7 +50,7 @@ function PostHogPageView() : null {
         url = url + `?${searchParams.toString()}`
       }
 
-      posthog.capture('$pageview', { '$current_url': url })
+      posthog?.capture('$pageview', { '$current_url': url })
     }
   }, [pathname, searchParams, posthog])
   

@@ -37,7 +37,7 @@ export default function MailingListForm() {
     event?.preventDefault()
     try {
       await subscribeToMailingListAction(data.email)
-      posthog.capture('email captured', {
+      posthog?.capture('email captured', {
         email: data.email,
       })
       toast({

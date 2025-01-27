@@ -14,7 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
   const posthog = usePostHog()
   const handleSetGoalsClick = () => {
-    posthog.capture(isLoggedIn ? 'set goals clicked' : 'set goals clicked', {
+    posthog?.capture(isLoggedIn ? 'set goals clicked' : 'set goals clicked', {
       isLoggedIn: isLoggedIn,
     })
   }

@@ -31,7 +31,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               Icon={ArrowRight}
               iconPlacement="right"
               asChild
-              onClick={() => posthog.capture(isLoggedIn ? 'start free trial clicked' : 'start free trial clicked', {
+              onClick={() => posthog?.capture(isLoggedIn ? 'start free trial clicked' : 'start free trial clicked', {
                 isLoggedIn: isLoggedIn,
               })}
             >
@@ -43,7 +43,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               iconPlacement="right"
               asChild
               className="bg-accent hover:bg-accent/80 text-accent-foreground h-[36px] sm:h-[53px]"
-              onClick={() => posthog.capture('watch demo clicked')}
+              onClick={() => posthog?.capture('watch demo clicked')}
             >
               <Link href="/demo">Watch Demo</Link>
             </ShinyButton>

@@ -37,7 +37,7 @@ function OAuthProviders() {
         variant="default"
         className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 border shadow-sm" 
         onClick={() => {
-          posthog.capture('login with google clicked')
+          posthog?.capture('login with google clicked')
           loginWithGoogleAction().catch((error) => {
             console.error('Error logging in with Google', error)
             toast({

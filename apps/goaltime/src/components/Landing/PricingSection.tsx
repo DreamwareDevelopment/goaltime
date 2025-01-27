@@ -6,14 +6,15 @@ import { Button as ButtonShiny } from "@/ui-components/button-shiny"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/ui-components/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/ui-components/tabs"
 import Link from "next/link"
-import posthog from "posthog-js"
+import { usePostHog } from 'posthog-js/react'
 import { monthlyPricingPlans, PricingPlan, yearlyPricingPlans } from "@/shared/utils"
 import { useRouter } from "next/navigation"
 
 const PricingCard: React.FC<{plan: PricingPlan, userEmail?: string}> = ({plan, userEmail}) => {
   const router = useRouter()
+  const posthog = usePostHog()
   const handleChoosePlanClick = () => {
-    posthog.capture('choose plan clicked', {
+    posthog?.capture('choose plan clicked', {
       plan: plan.name,
     })
     router.push(userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login")

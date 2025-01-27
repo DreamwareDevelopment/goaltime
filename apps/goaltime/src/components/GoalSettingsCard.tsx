@@ -156,11 +156,11 @@ export function GoalSettingsCard({
   const onSubmit: SubmitHandler<GoalInput> = async (data, event) => {
     event?.preventDefault()
     if (goal) {
-      posthog.capture('goal updated', {
+      posthog?.capture('goal updated', {
         goal: data,
       })
     } else {
-      posthog.capture('goal created', {
+      posthog?.capture('goal created', {
         goal: data,
       })
     }
