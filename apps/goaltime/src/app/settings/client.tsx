@@ -91,16 +91,30 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
 
   return (
     <Card className="w-full max-w-lg mx-auto overflow-hidden">
-      <CardHeader>
-        <CardTitle className="flex justify-center gap-2 w-full">Welcome! Let&apos;s set up your profile</CardTitle>
+      <CardHeader className="flex flex-col">
+        <div className="flex w-full">
+          <ShinyButton
+            variant="expandIcon"
+            Icon={ArrowLeft}
+            iconPlacement="left"
+            type="button"
+            onClick={() => router.push('/dashboard')}
+            className="min-w-[178px] bg-background hover:bg-background text-accent-foreground"
+          >
+            Dashboard
+          </ShinyButton>
+        </div>
+        <CardTitle className="text-2xl font-bold text-center">Edit Profile</CardTitle>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="flex flex-col gap-4">
             <AvatarUrlField form={form} setImage={setImage} />
             <Separator />
-            <p className="text-xl text-foreground text-center">Personal</p>
-            <PersonalFields form={form} />
+            <div className="flex flex-col">
+              <p className="text-xl text-foreground text-center">Personal</p>
+              <PersonalFields form={form} />
+            </div>
             <Separator />
             <p className="text-xl text-foreground text-center">Work</p>
             <WorkFields form={form} />
@@ -114,7 +128,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
               iconPlacement="left"
               type="button"
               onClick={() => router.push('/dashboard')}
-              className="min-w-[178px] bg-accent hover:bg-accent/80 text-accent-foreground"
+              className="min-w-[178px] bg-background hover:bg-background text-accent-foreground"
             >
               Back
             </ShinyButton>
