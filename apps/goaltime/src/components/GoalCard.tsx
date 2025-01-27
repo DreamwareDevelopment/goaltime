@@ -4,30 +4,30 @@ import dynamic from 'next/dynamic'
 import { useSnapshot } from "valtio";
 
 import { Goal, NotificationSettings } from "@prisma/client";
-import { getGoalPreferredTimes, GoalInput, MilestoneViewEnum } from "@/shared/zod";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
+import { getGoalPreferredTimes, GoalInput } from "@/shared/zod";
+// import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
 import { useToast } from "@/ui-components/hooks/use-toast";
 import { ScrollArea } from "@/ui-components/scroll-area";
-import { Separator } from "@/ui-components/separator";
+// import { Separator } from "@/ui-components/separator";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
 import { cn } from "@/ui-components/utils"
 import { useValtio } from "./data/valtio";
 
-const PlateEditor = dynamic(() => import('./plate-ui/plate-editor.tsx').then(mod => mod.PlateEditor), {
-  loading: () => (
-    <div className="w-full h-full flex justify-center items-center pt-2">
-      <LoadingSpinner />
-    </div>
-  )
-})
-const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.MilestonesCard), {
-  loading: () => (
-    <div className="w-full h-full flex justify-center items-center pt-2">
-      <LoadingSpinner />
-    </div>
-  )
-})
+// const PlateEditor = dynamic(() => import('./plate-ui/plate-editor.tsx').then(mod => mod.PlateEditor), {
+//   loading: () => (
+//     <div className="w-full h-full flex justify-center items-center pt-2">
+//       <LoadingSpinner />
+//     </div>
+//   )
+// })
+// const MilestonesCard = dynamic(() => import('./MilestonesCard.tsx').then(mod => mod.MilestonesCard), {
+//   loading: () => (
+//     <div className="w-full h-full flex justify-center items-center pt-2">
+//       <LoadingSpinner />
+//     </div>
+//   )
+// })
 const GoalSettingsCard = dynamic(() => import('./GoalSettingsCard.tsx').then(mod => mod.GoalSettingsCard), {
   loading: () => (
     <div className="w-full h-full flex justify-center items-center pt-2">
@@ -66,8 +66,8 @@ export function GoalCard({ goal, className }: GoalCardProps) {
   }
 
   return (
-    <ScrollArea className={cn(className)} key={goal.id}>
-      <Accordion type="single" collapsible defaultValue="milestones" className="w-full h-full">
+    <ScrollArea className={cn(className, 'w-full h-full flex flex-col justify-center items-center gap-4')} key={goal.id}>
+      {/*<Accordion type="single" collapsible defaultValue="milestones" className="w-full h-full">
         <AccordionItem value="milestones" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Milestones</AccordionTrigger>
           <AccordionContent className="w-full h-full">
@@ -107,13 +107,17 @@ export function GoalCard({ goal, className }: GoalCardProps) {
         <AccordionItem value="settings" className="border-none">
           <AccordionTrigger className="text-xl font-bold px-8">Goal Settings</AccordionTrigger>
           <AccordionContent className="p-2 sm:px-6 pb-2 pt-0">
+          */}
+            <h2 className="text-2xl font-bold text-center py-4">Goal Settings</h2>
             <GoalSettingsCard
               goal={getMutableGoal(goal, notifications)}
               handleSubmit={handleSubmit}
             />
+            {/*
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      */}
     </ScrollArea>
   );
 }
