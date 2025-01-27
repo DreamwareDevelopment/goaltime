@@ -5,6 +5,7 @@ import { twiml } from 'twilio';
 import { z } from 'zod';
 import { chat, WELCOME_MESSAGE } from '../../accountability/chat';
 import { sendSMS } from '@/server-utils/ai';
+import { posthog } from '@/server-utils/posthog';
 
 // Define the schema for the request body
 const twilioRequestBodySchema = z.object({
@@ -41,6 +42,13 @@ export default async function (fastify: FastifyInstance) {
             from: From,
             message: Body,
             userId,
+          },
+        });
+        posthog.capture({
+          distinctId: userId,
+          event: "user chat",
+          properties: {
+            message: Body,
           },
         });
       }

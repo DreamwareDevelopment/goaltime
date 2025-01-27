@@ -7,6 +7,7 @@ import { Logger } from "inngest/middleware/logger";
 import { UserProfile } from "@prisma/client";
 import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngestConsumer, InngestEvent } from "@/server-utils/inngest";
+import { posthog } from "@/server-utils/posthog";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { dayjs, NotificationPayload, NotificationType } from "@/shared/utils";
 
@@ -365,6 +366,13 @@ export const chat = inngestConsumer.createFunction({
         content: response,
         roleType: "assistant",
       }],
+    })
+    posthog.capture({
+      distinctId: userId,
+      event: "ai chat response",
+      properties: {
+        response,
+      },
     })
   })
   logger.info(`Response: ${response}`);

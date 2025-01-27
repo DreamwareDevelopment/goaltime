@@ -8,6 +8,7 @@
       "@/server-utils/inngest": ["libs/server-utils/src/lib/inngest/index.ts"],
       "@/server-utils/ai": ["libs/server-utils/src/lib/ai/index.ts"],
       "@/server-utils/stripe": ["libs/server-utils/src/lib/stripe/index.ts"],
+      "@/server-utils/posthog": ["libs/server-utils/src/lib/posthog/index.ts"],
       "@/server-utils/queries/*": ["libs/server-utils/src/queries/*"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
       "@/shared/zod": ["libs/shared/src/lib/schemas/index.ts"],
