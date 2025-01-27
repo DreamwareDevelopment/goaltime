@@ -53,6 +53,7 @@ export function UserAvatar() {
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
+    posthog?.reset()
     if (error) {
       router.push('/error')
     }
