@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
+import Link from 'next/link'
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui-components/card"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
@@ -19,7 +20,7 @@ import { UserProfile } from '@prisma/client'
 import { useSnapshot } from 'valtio'
 import { useToast } from '@/ui-components/hooks/use-toast'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLinkIcon } from 'lucide-react'
 
 export interface SettingsClientProps {
   profile: UserProfile
@@ -92,7 +93,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
   return (
     <Card className="w-full max-w-lg mx-auto overflow-hidden">
       <CardHeader className="flex flex-col">
-        <div className="flex w-full">
+        <div className="flex justify-between items-center w-full">
           <ShinyButton
             variant="expandIcon"
             Icon={ArrowLeft}
@@ -103,6 +104,11 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
           >
             Dashboard
           </ShinyButton>
+          <Link href={process.env.NODE_ENV === 'development' ? 'https://billing.stripe.com/p/login/test_4gweWFcuU1MZbraaEE' : ''}>
+            <ShinyButton variant="expandIcon" Icon={ExternalLinkIcon} iconPlacement="right" className="bg-background hover:bg-background text-accent-foreground">
+              <span className="">Manage Subscription</span>
+            </ShinyButton>
+          </Link>
         </div>
         <CardTitle className="text-2xl font-bold text-center">Edit Profile</CardTitle>
       </CardHeader>
