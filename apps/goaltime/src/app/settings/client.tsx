@@ -104,7 +104,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
           >
             Dashboard
           </ShinyButton>
-          <Link href={process.env.NODE_ENV === 'development' ? 'https://billing.stripe.com/p/login/test_4gweWFcuU1MZbraaEE' : ''}>
+          <Link target="_blank" href={process.env.NODE_ENV === 'development' ? 'https://billing.stripe.com/p/login/test_4gweWFcuU1MZbraaEE' : 'https://billing.stripe.com/p/login/14kaER7QUfR961G000'}>
             <ShinyButton variant="expandIcon" Icon={ExternalLinkIcon} iconPlacement="right" className="bg-background hover:bg-background text-accent-foreground">
               <span className="">Manage Subscription</span>
             </ShinyButton>

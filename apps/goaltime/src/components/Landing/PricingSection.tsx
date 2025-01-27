@@ -48,7 +48,7 @@ const PricingSection: React.FC<{userEmail?: string}> = ({userEmail}) => {
     <section id="pricing" className="w-full py-12">
       <div className="container px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-2">Pricing</h2>
-        <p className="text-lg text-center mb-12">(7 day free trial)</p>
+        <p className="text-lg text-center mb-12">(14 day free trial)</p>
         <Tabs defaultValue="monthly" className="w-full flex flex-col items-center">
           <TabsList className="bg-white/10 backdrop-blur-xs sm:backdrop-blur-sm">
             <TabsTrigger value="monthly">Monthly</TabsTrigger>
