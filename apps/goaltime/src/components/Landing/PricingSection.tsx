@@ -17,10 +17,6 @@ const PricingCard: React.FC<{plan: PricingPlan, yearly: boolean, userEmail?: str
     posthog?.capture('choose plan clicked', {
       plan: plan.name,
     })
-    posthog?.setPersonProperties({
-      plan: plan.name,
-      yearly: yearly,
-    })
     router.push(userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login")
   }
 

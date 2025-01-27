@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { Button } from "@/ui-components/button-shiny"
@@ -26,6 +26,7 @@ import { LoadingSpinner } from "@/ui-components/svgs/spinner"
 import { useAvatarUrl } from "@/ui-components/hooks/avatar-url"
 import { useValtio } from "./data/valtio"
 import { useSnapshot } from "valtio"
+import { usePostHog } from "posthog-js/react"
 
 export function UserAvatar() {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
@@ -36,6 +37,18 @@ export function UserAvatar() {
     throw new Error('Invariant: User profile not initialized before using UserAvatar')
   }
   const profile = useSnapshot(userStore.profile);
+  const posthog = usePostHog()
+  useEffect(() => {
+    if (posthog) {
+      posthog.identify(profile.userId, {
+        email: profile.email,
+        name: profile.name,
+        phone: profile.phone,
+        plan: profile.plan,
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const user = useSnapshot(userStore.user);
 
   const handleLogout = async () => {

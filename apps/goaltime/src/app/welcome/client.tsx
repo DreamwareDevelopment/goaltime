@@ -23,7 +23,6 @@ import { sendOTPAction, verifyPhoneNumberAction } from '../actions/user'
 import { useToast } from '@/ui-components/hooks/use-toast'
 import { SanitizedUser } from '@/shared/utils'
 import { WelcomeSkeleton } from './skeleton'
-import { usePostHog } from 'posthog-js/react'
 
 const steps = [
   { title: "Profile Setup", fields: ['name', 'avatarUrl', 'birthday', 'timezone', 'phone', 'preferredLanguage', 'preferredCurrency'] },
@@ -38,7 +37,6 @@ export interface WelcomeFlowClientProps {
 
 export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
   const router = useRouter()
-  const posthog = usePostHog()
   const { toast } = useToast()
   const { userStore } = useValtio()
   const [currentStep, setCurrentStep] = useState(0)
@@ -90,11 +88,6 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
   const onSubmit: SubmitHandler<UserProfileInput> = async (profile, event) => {
     event?.preventDefault()
     console.log('onSubmit called')
-    posthog?.identify(user.id, {
-      email: profile.email,
-      name: profile.name,
-      phone: profile.phone,
-    })
     setIsSubmitting(true)
     if (image) {
       try {
