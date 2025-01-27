@@ -1,7 +1,10 @@
+'use client'
+
 import type React from "react"
 import Link from "next/link"
 import { ArrowRight, Play } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
+import posthog from "posthog-js"
 
 interface HeroSectionProps {
   isLoggedIn: boolean
@@ -21,10 +24,26 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <ShinyButton className="h-[34px] sm:h-[51px]" variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild>
+            <ShinyButton
+              className="h-[34px] sm:h-[51px]"
+              variant="expandIcon"
+              Icon={ArrowRight}
+              iconPlacement="right"
+              asChild
+              onClick={() => posthog.capture(isLoggedIn ? 'start free trial clicked' : 'start free trial clicked', {
+                isLoggedIn: isLoggedIn,
+              })}
+            >
               <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Start Free Trial</Link>
             </ShinyButton>
-            <ShinyButton variant="expandIcon" Icon={Play} iconPlacement="right" asChild className="bg-accent hover:bg-accent/80 text-accent-foreground h-[36px] sm:h-[53px]">
+            <ShinyButton
+              variant="expandIcon"
+              Icon={Play}
+              iconPlacement="right"
+              asChild
+              className="bg-accent hover:bg-accent/80 text-accent-foreground h-[36px] sm:h-[53px]"
+              onClick={() => posthog.capture('watch demo clicked')}
+            >
               <Link href="/demo">Watch Demo</Link>
             </ShinyButton>
           </div>

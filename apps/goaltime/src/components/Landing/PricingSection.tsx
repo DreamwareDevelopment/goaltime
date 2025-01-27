@@ -1,12 +1,24 @@
+'use client'
+
 import type React from "react"
 import { CheckCircle, Plus } from "lucide-react"
 import { Button as ButtonShiny } from "@/ui-components/button-shiny"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/ui-components/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/ui-components/tabs"
 import Link from "next/link"
+import posthog from "posthog-js"
 import { monthlyPricingPlans, PricingPlan, yearlyPricingPlans } from "@/shared/utils"
+import { useRouter } from "next/navigation"
 
 const PricingCard: React.FC<{plan: PricingPlan, userEmail?: string}> = ({plan, userEmail}) => {
+  const router = useRouter()
+  const handleChoosePlanClick = () => {
+    posthog.capture('choose plan clicked', {
+      plan: plan.name,
+    })
+    router.push(userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login")
+  }
+
   return (
     <Card className="flex flex-col bg-white/10 backdrop-blur-xs sm:backdrop-blur-sm text-white h-full min-w-[300px]">
       <CardHeader>
@@ -25,7 +37,7 @@ const PricingCard: React.FC<{plan: PricingPlan, userEmail?: string}> = ({plan, u
       </CardContent>
       <CardContent>
         <Link href={userEmail ? plan.link + "?prefilled_email=" + encodeURIComponent(userEmail) : "/login"} target="_blank">
-          <ButtonShiny variant="shine" className="w-full" disabled={plan.comingSoon}>
+          <ButtonShiny variant="shine" className="w-full" disabled={plan.comingSoon} onClick={handleChoosePlanClick}>
             {plan.comingSoon ? (
               <>
                 <span>Coming Soon</span>

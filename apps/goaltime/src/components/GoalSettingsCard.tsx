@@ -31,6 +31,7 @@ import { GoalTypeInput } from './Settings/GoalTypeInput'
 import { Separator } from '@/ui-components/separator'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
 import { PreferredTimesSelector } from './Settings/PreferredTimes.tsx'
+import posthog from 'posthog-js'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -153,6 +154,15 @@ export function GoalSettingsCard({
   
   const onSubmit: SubmitHandler<GoalInput> = async (data, event) => {
     event?.preventDefault()
+    if (goal) {
+      posthog.capture('goal updated', {
+        goal: data,
+      })
+    } else {
+      posthog.capture('goal created', {
+        goal: data,
+      })
+    }
     await handleSubmit(data)
     close?.()
   }

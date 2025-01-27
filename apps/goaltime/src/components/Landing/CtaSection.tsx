@@ -16,7 +16,7 @@ const CtaSection: React.FC = () => {
             <MailingListForm />
             <p className="text-xs text-gray-500 dark:text-gray-400">
               By signing up, you agree to our{" "}
-              <a href="#" className="underline underline-offset-2">
+              <a href="/terms" className="underline underline-offset-2">
                 Terms & Conditions
               </a>
             </p>

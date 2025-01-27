@@ -1,14 +1,23 @@
+'use client'
+
 import type React from "react"
 import Link from "next/link"
 import { ArrowRight, Clock } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import MobileMenu from "./MobileMenu"
+import posthog from "posthog-js"
 
 interface HeaderProps {
   isLoggedIn: boolean
 }
 
 const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
+  const handleSetGoalsClick = () => {
+    posthog.capture(isLoggedIn ? 'set goals clicked' : 'set goals clicked', {
+      isLoggedIn: isLoggedIn,
+    })
+  }
+
   return (
     <header className="px-4 lg:px-6 h-14 flex items-center bg-black/30 backdrop-blur-lg fixed w-full z-50">
         <Link href="/" className="flex items-center justify-center">
@@ -27,7 +36,14 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
           <ShinyButton variant="linkHover2" className="hidden md:flex text-background-foreground" asChild>
             <a href="#pricing">Pricing</a>
           </ShinyButton>
-          <ShinyButton variant="expandIcon" Icon={ArrowRight} iconPlacement="right" asChild className="hidden md:flex md:min-w-[178px]">
+          <ShinyButton
+            variant="expandIcon"
+            Icon={ArrowRight}
+            iconPlacement="right"
+            asChild
+            className="hidden md:flex md:min-w-[178px]"
+            onClick={handleSetGoalsClick}
+          >
             <Link href={isLoggedIn ? '/dashboard' : '/login?type=signup'}>Set Goals</Link>
           </ShinyButton>
           <MobileMenu isLoggedIn={isLoggedIn} />

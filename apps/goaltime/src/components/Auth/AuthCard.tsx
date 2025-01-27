@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import z from 'zod'
 
-import HCaptcha from '@hcaptcha/react-hcaptcha'
+// import HCaptcha from '@hcaptcha/react-hcaptcha'
 
-import { LoginForm } from './LoginForm'
+// import { LoginForm } from './LoginForm'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
@@ -14,9 +14,10 @@ import { LoginSchema, SignUpSchema } from '@/shared/zod'
 // import { SignUpForm } from './SignUpForm'
 import { loginWithGoogleAction } from '../../app/actions/auth'
 import { GoogleLogo } from '@/ui-components/svgs/logos/google'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
-import { Separator } from '@/libs/ui-components/src/components/ui/separator'
+// import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
+// import { Separator } from '@/libs/ui-components/src/components/ui/separator'
 import { useToast } from '@/libs/ui-components/src/hooks/use-toast'
+import posthog from 'posthog-js'
 
 export type AuthTab = 'login' | 'signup'
 
@@ -34,13 +35,16 @@ function OAuthProviders() {
       <ShinyButton 
         variant="default"
         className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 border shadow-sm" 
-        onClick={() => loginWithGoogleAction().catch((error) => {
-          console.error('Error logging in with Google', error)
-          toast({
-            title: 'Login with Google failed',
-            description: error.message,
+        onClick={() => {
+          posthog.capture('login with google clicked')
+          loginWithGoogleAction().catch((error) => {
+            console.error('Error logging in with Google', error)
+            toast({
+              title: 'Login with Google failed',
+              description: error.message,
+            })
           })
-        })}
+        }}
       >
         <GoogleLogo className="w-5 h-5" />
         Continue with Google
@@ -64,14 +68,14 @@ function OAuthProviders() {
 
 export function AuthCard({ loginAction, signupAction, type, email }: AuthCardProps) {
   const [currentTab, setCurrentTab] = useState<string>(type || 'login')
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const [isEmailOpen, setIsEmailOpen] = useState(false)
-  const captcha = useRef<HCaptcha | null>(null)
+  // const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  // const [isEmailOpen, setIsEmailOpen] = useState(false)
+  // const captcha = useRef<HCaptcha | null>(null)
 
-  const hCaptchaSiteKey = process.env.NEXT_PUBLIC_H_CAPTCHA_SITE_KEY
-  if (!hCaptchaSiteKey) {
-    throw new Error('NEXT_PUBLIC_H_CAPTCHA_SITE_KEY is not set')
-  }
+  // const hCaptchaSiteKey = process.env.NEXT_PUBLIC_H_CAPTCHA_SITE_KEY
+  // if (!hCaptchaSiteKey) {
+  //   throw new Error('NEXT_PUBLIC_H_CAPTCHA_SITE_KEY is not set')
+  // }
 
   // const handleSignup = async (formData: z.infer<typeof SignUpSchema>) => {
   //   if (!captchaToken) {
@@ -83,23 +87,23 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
   //   }
   //   captcha.current?.resetCaptcha()
   // }
-  const handleLogin = async (formData: z.infer<typeof LoginSchema>) => {
-    if (!captchaToken) {
-      throw new Error('Captcha token is required')
-    }
-    try {
-      await loginAction(formData, captchaToken)
-    } catch (error) {
-      console.error('Login card error', error)
-      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
-        throw error
-      }
-    }
-    if (!captcha.current) {
-      console.warn('Captcha ref is not initialized')
-    }
-    captcha.current?.resetCaptcha()
-  }
+  // const handleLogin = async (formData: z.infer<typeof LoginSchema>) => {
+  //   if (!captchaToken) {
+  //     throw new Error('Captcha token is required')
+  //   }
+  //   try {
+  //     await loginAction(formData, captchaToken)
+  //   } catch (error) {
+  //     console.error('Login card error', error)
+  //     if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+  //       throw error
+  //     }
+  //   }
+  //   if (!captcha.current) {
+  //     console.warn('Captcha ref is not initialized')
+  //   }
+  //   captcha.current?.resetCaptcha()
+  // }
   return (
     <Tabs value={currentTab} onValueChange={setCurrentTab} className='flex flex-col w-full h-full gap-3 items-center justify-start'>
       <TabsList>
@@ -115,7 +119,7 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
           </CardHeader>
           <CardContent className="pb-0">
             <OAuthProviders />
-            <Accordion 
+            {/* <Accordion 
               type="single" 
               collapsible 
               className="w-full mt-4"
@@ -144,7 +148,7 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
+            </Accordion> */}
           </CardContent>
         </Card>
       </TabsContent>

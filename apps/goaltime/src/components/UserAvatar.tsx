@@ -1,6 +1,6 @@
 'use client'
 
-import { redirect, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
@@ -41,9 +41,9 @@ export function UserAvatar() {
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) {
-      redirect('/error')
+      router.push('/error')
     }
-    redirect('/')
+    router.push('/')
   }
 
   const [avatarUrl] = useAvatarUrl(profile?.avatarUrl ?? '', supabase)

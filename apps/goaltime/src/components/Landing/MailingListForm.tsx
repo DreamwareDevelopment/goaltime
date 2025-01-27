@@ -11,6 +11,7 @@ import { ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { subscribeToMailingListAction } from '../../app/actions/user'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
+import posthog from 'posthog-js'
 
 const EmailSubscriptionSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -35,6 +36,9 @@ export default function MailingListForm() {
     event?.preventDefault()
     try {
       await subscribeToMailingListAction(data.email)
+      posthog.capture('email captured', {
+        email: data.email,
+      })
       toast({
         variant: 'default',
         title: 'Thanks for subscribing!',
