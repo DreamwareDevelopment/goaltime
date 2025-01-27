@@ -23,7 +23,10 @@ export const userStore = proxy<{
   },
   setProfile(profile: UserProfile) {
     if (this.profile) {
-      Object.assign(this.profile, profile)
+      this.profile = {
+        ...this.profile,
+        ...profile,
+      }
     }
   },
   async createUserProfile(user, profile) {

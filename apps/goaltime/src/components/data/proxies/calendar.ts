@@ -137,7 +137,11 @@ export const calendarStore = proxy<{
       }
     }
     if (goalStore.goalAggregates) {
-      Object.assign(goalStore.goalAggregates, goalAggregates);
+      goalStore.goalAggregates = {
+        ...goalStore.goalAggregates,
+        ...goalAggregates,
+      }
     }
   },
 })
+
