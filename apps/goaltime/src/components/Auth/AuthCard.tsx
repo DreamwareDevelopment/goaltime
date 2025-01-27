@@ -11,7 +11,7 @@ import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/ui-components/tabs'
 import { LoginSchema, SignUpSchema } from '@/shared/zod'
-import { SignUpForm } from './SignUpForm'
+// import { SignUpForm } from './SignUpForm'
 import { loginWithGoogleAction } from '../../app/actions/auth'
 import { GoogleLogo } from '@/ui-components/svgs/logos/google'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
@@ -73,16 +73,16 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
     throw new Error('NEXT_PUBLIC_H_CAPTCHA_SITE_KEY is not set')
   }
 
-  const handleSignup = async (formData: z.infer<typeof SignUpSchema>) => {
-    if (!captchaToken) {
-      throw new Error('Captcha token is required')
-    }
-    await signupAction(formData, captchaToken)
-    if (!captcha.current) {
-      console.warn('Captcha ref is not initialized')
-    }
-    captcha.current?.resetCaptcha()
-  }
+  // const handleSignup = async (formData: z.infer<typeof SignUpSchema>) => {
+  //   if (!captchaToken) {
+  //     throw new Error('Captcha token is required')
+  //   }
+  //   await signupAction(formData, captchaToken)
+  //   if (!captcha.current) {
+  //     console.warn('Captcha ref is not initialized')
+  //   }
+  //   captcha.current?.resetCaptcha()
+  // }
   const handleLogin = async (formData: z.infer<typeof LoginSchema>) => {
     if (!captchaToken) {
       throw new Error('Captcha token is required')
@@ -157,7 +157,7 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
           </CardHeader>
           <CardContent className="pb-0">
             <OAuthProviders />
-            <Accordion type="single" collapsible className="w-full mt-4">
+            {/* <Accordion type="single" collapsible className="w-full mt-4">
               <AccordionItem value="email">
                 <Separator />
                 <AccordionTrigger>Use email instead</AccordionTrigger>
@@ -177,7 +177,7 @@ export function AuthCard({ loginAction, signupAction, type, email }: AuthCardPro
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
+            </Accordion> */}
           </CardContent>
         </Card>
       </TabsContent>
