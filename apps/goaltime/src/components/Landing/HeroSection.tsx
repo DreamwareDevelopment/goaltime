@@ -4,13 +4,14 @@ import type React from "react"
 import Link from "next/link"
 import { ArrowRight, Play } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
-import posthog from "posthog-js"
+import { usePostHog } from 'posthog-js/react'
 
 interface HeroSectionProps {
   isLoggedIn: boolean
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
+  const posthog = usePostHog()
   return (
     <section className="w-full py-16 md:py-24 lg:py-32 xl:py-48 relative">
       <div className="container px-4 md:px-6">

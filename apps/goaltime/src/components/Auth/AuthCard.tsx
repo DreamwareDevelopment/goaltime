@@ -17,7 +17,7 @@ import { GoogleLogo } from '@/ui-components/svgs/logos/google'
 // import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
 // import { Separator } from '@/libs/ui-components/src/components/ui/separator'
 import { useToast } from '@/libs/ui-components/src/hooks/use-toast'
-import posthog from 'posthog-js'
+import { usePostHog } from 'posthog-js/react'
 
 export type AuthTab = 'login' | 'signup'
 
@@ -30,6 +30,7 @@ export interface AuthCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 function OAuthProviders() {
   const { toast } = useToast()
+  const posthog = usePostHog()
   return (
     <div className="flex flex-col pt-0 gap-4">
       <ShinyButton 

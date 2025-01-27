@@ -5,13 +5,14 @@ import Link from "next/link"
 import { ArrowRight, Clock } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import MobileMenu from "./MobileMenu"
-import posthog from "posthog-js"
+import { usePostHog } from 'posthog-js/react'
 
 interface HeaderProps {
   isLoggedIn: boolean
 }
 
 const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
+  const posthog = usePostHog()
   const handleSetGoalsClick = () => {
     posthog.capture(isLoggedIn ? 'set goals clicked' : 'set goals clicked', {
       isLoggedIn: isLoggedIn,

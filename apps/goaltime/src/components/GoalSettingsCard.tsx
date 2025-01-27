@@ -31,7 +31,7 @@ import { GoalTypeInput } from './Settings/GoalTypeInput'
 import { Separator } from '@/ui-components/separator'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/ui-components/accordion'
 import { PreferredTimesSelector } from './Settings/PreferredTimes.tsx'
-import posthog from 'posthog-js'
+import { usePostHog } from 'posthog-js/react'
 
 export interface GoalSettingsCardProps extends React.HTMLAttributes<HTMLDivElement> {
   goal?: GoalInput;
@@ -52,6 +52,7 @@ export function GoalSettingsCard({
   setRecommendation,
 }: GoalSettingsCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const posthog = usePostHog()
   
   const { goalStore, userStore } = useValtio()
   const { deleteGoal } = goalStore

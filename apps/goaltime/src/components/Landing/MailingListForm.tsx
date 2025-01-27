@@ -11,7 +11,7 @@ import { ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { subscribeToMailingListAction } from '../../app/actions/user'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
-import posthog from 'posthog-js'
+import { usePostHog } from 'posthog-js/react'
 
 const EmailSubscriptionSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -20,6 +20,7 @@ const EmailSubscriptionSchema = z.object({
 type EmailSubscriptionInput = z.infer<typeof EmailSubscriptionSchema>
 
 export default function MailingListForm() {
+  const posthog = usePostHog()
   const { toast } = useToast()
   const form = useForm<EmailSubscriptionInput>({
     resolver: zodResolver(EmailSubscriptionSchema),
