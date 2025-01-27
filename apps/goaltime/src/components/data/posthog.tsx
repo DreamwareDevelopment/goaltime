@@ -21,6 +21,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     posthog.init(posthogApiKey, {
       api_host: posthogHost,
       capture_pageview: false,
+      capture_pageleave: true,
     })
   }, [])
 
