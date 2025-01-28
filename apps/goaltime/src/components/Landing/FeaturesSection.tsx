@@ -15,7 +15,7 @@ const FeaturesSection: React.FC = () => {
         <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="bg-white/10 backdrop-blur-xs sm:backdrop-blur-sm text-white">
+            <Card key={index} className="bg-white/10 text-white">
               <CardHeader>
                 <feature.icon className="w-8 h-8 mb-2" />
                 <CardTitle>{feature.title}</CardTitle>

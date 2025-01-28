@@ -22,7 +22,7 @@ const PricingCard: React.FC<{plan: PricingPlan, yearly: boolean, userEmail?: str
   }
 
   return (
-    <Card className="flex flex-col bg-white/10 backdrop-blur-xs sm:backdrop-blur-sm text-white h-full min-w-[300px]">
+    <Card className="flex flex-col bg-white/10 text-white h-full min-w-[300px]">
       <CardHeader>
         <CardTitle>{plan.name}</CardTitle>
         <CardDescription className="text-2xl font-bold">{plan.price}</CardDescription>
@@ -62,7 +62,7 @@ const PricingSection: React.FC<{userEmail?: string}> = ({userEmail}) => {
         <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-2">Pricing</h2>
         <p className="text-lg text-center mb-12">(14 day free trial)</p>
         <Tabs defaultValue="monthly" className="w-full flex flex-col items-center">
-          <TabsList className="bg-white/10 backdrop-blur-xs sm:backdrop-blur-sm">
+          <TabsList className="bg-white/10">
             <TabsTrigger value="monthly">Monthly</TabsTrigger>
             <TabsTrigger value="annual">Annual</TabsTrigger>
           </TabsList>
