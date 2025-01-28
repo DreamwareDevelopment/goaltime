@@ -49,6 +49,7 @@ const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumT
 function getTimeblocks(logger: Logger, start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: ExternalEvent<dayjs.Dayjs>[]): Interval[] {
   const timeblocks: Interval[] = [];
   let currentTime = start;
+  logger.info(`Getting timeblocks from ${currentTime.format(DATE_TIME_FORMAT)} to ${end.format(DATE_TIME_FORMAT)}`);
   while (currentTime.isBefore(end)) {
     logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
     // eslint-disable-next-line no-loop-func
@@ -130,7 +131,7 @@ export function getFreeIntervals(
 
     const dayName = currentTime.format('dddd');
     const routineEvents = routineEventsByDay[dayName as DaysOfTheWeekType].map(event => addDayOffset(event, currentTime));
-    logger.info(`Routine events for ${dayName}:\n${routineEvents.map(event => `${event.title}: ${event.start.format(DATE_TIME_FORMAT)} - ${event.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    // logger.info(`Routine events for ${dayName}:\n${routineEvents.map(event => `${event.title}: ${event.start.format(DATE_TIME_FORMAT)} - ${event.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     const isLastDay = daysBetween + 1 === i;
     const upcomingEvents = [...routineEvents, ...events.filter(event => !event.allDay && event.start.isAfter(currentTime) && event.start.isBefore(nextDay))].sort((a, b) => a.start.diff(b.start, 'minutes'));
     eventsAndRoutines.push(...upcomingEvents);
@@ -179,11 +180,11 @@ export function getFreeIntervals(
     logger.info(`Work end: ${workEnd?.format(DATE_TIME_FORMAT)}`);
 
     while (currentTime.isBefore(nextDay)) {
-      // logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
-      // logger.info(`Wake up time: ${wakeUpTime.format(DATE_TIME_FORMAT)}`);
-      // logger.info(`Sleep time: ${sleepTime.format(DATE_TIME_FORMAT)}`);
-      // logger.info(`Work start: ${workStart?.format(DATE_TIME_FORMAT)}`);
-      // logger.info(`Work end: ${workEnd?.format(DATE_TIME_FORMAT)}`);
+      logger.info(`Current loop time: ${currentTime.format(DATE_TIME_FORMAT)}`);
+      logger.info(`Wake up time: ${wakeUpTime.format(DATE_TIME_FORMAT)}`);
+      logger.info(`Sleep time: ${sleepTime.format(DATE_TIME_FORMAT)}`);
+      logger.info(`Work start: ${workStart?.format(DATE_TIME_FORMAT)}`);
+      logger.info(`Work end: ${workEnd?.format(DATE_TIME_FORMAT)}`);
       if (currentTime.isBefore(wakeUpTime)) {
         currentTime = wakeUpTime;
         continue;
@@ -196,7 +197,7 @@ export function getFreeIntervals(
       if (workStart && currentTime.isBefore(workStart)) {
         const intervals = getTimeblocks(logger, currentTime, workStart, upcomingEvents);
         freeIntervals.push(...intervals);
-        // logger.info(`Found ${intervals.length} free intervals before work on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        logger.info(`Found ${intervals.length} free intervals before work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = workStart.add(1, 'minute').second(0).subtract(1, 'second');
         continue;
       }
@@ -204,7 +205,7 @@ export function getFreeIntervals(
       if (workStart && workEnd && currentTime.isAfter(workStart.subtract(1, 'minute')) && currentTime.isBefore(workEnd)) {
         const intervals = getTimeblocks(logger, currentTime, workEnd, upcomingEvents);
         freeWorkIntervals.push(...intervals);
-        // logger.info(`Found ${intervals.length} free work intervals during work on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        logger.info(`Found ${intervals.length} free work intervals during work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = workEnd.add(1, 'minute').second(0).subtract(1, 'second');
         continue;
       }
@@ -212,14 +213,14 @@ export function getFreeIntervals(
       if (workEnd && currentTime.isAfter(workEnd.subtract(1, 'minute'))) {
         const intervals = getTimeblocks(logger, currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
-        // logger.info(`Found ${intervals.length} free intervals after work on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        logger.info(`Found ${intervals.length} free intervals after work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = nextDay;
         continue;
       }
       if (!workStart && !workEnd) {
         const intervals = getTimeblocks(logger, currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
-        // logger.info(`Found ${intervals.length} free intervals on day off on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        logger.info(`Found ${intervals.length} free intervals on day off on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = nextDay;
         continue;
       }
