@@ -41,10 +41,7 @@ const handler = createNextHandler(baseContract, {
   jsonQuery: true,
   responseValidation: true,
   handlerType: 'app-router',
-  cors: {
-    origin: '*',
-  }
-},);
+});
 
 export {
   handler as GET,
