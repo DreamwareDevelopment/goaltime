@@ -159,8 +159,8 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
           }
           routine.custom[key][dayKey] = {
             ...dayEntry,
-            start: dayEntry.start ? dayjs(dayEntry.start).toDate() : null,
-            end: dayEntry.end ? dayjs(dayEntry.end).toDate() : null,
+            start: dayEntry.start ? dayjs(dayEntry.start).tz(profile.timezone).toDate() : null,
+            end: dayEntry.end ? dayjs(dayEntry.end).tz(profile.timezone).toDate() : null,
           }
         }
         // Then set up aggregate days
@@ -185,8 +185,8 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
       }
       routine[key][dayKey] = {
         ...dayEntry,
-        start: dayEntry.start ? dayjs(dayEntry.start).toDate() : null,
-        end: dayEntry.end ? dayjs(dayEntry.end).toDate() : null,
+        start: dayEntry.start ? dayjs(dayEntry.start).tz(profile.timezone).toDate() : null,
+        end: dayEntry.end ? dayjs(dayEntry.end).tz(profile.timezone).toDate() : null,
       }
     }
     // Then set up aggregate days
