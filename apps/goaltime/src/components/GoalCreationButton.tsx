@@ -47,10 +47,10 @@ export function GoalCreationButton({
     <Credenza open={isOpen} onOpenChange={setIsOpen}>
       <CredenzaTrigger asChild>
         <>
-          <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={cn(className, "hidden sm:flex")}>
+          <ShinyButton variant="expandIcon" Icon={PlusIcon} iconPlacement="right" className={cn(className, "hidden sm:flex")} onClick={() => setIsOpen(true)}>
             New Goal
           </ShinyButton>
-          <ShinyButton variant="gooeyLeft" className={cn(className, "flex sm:hidden")}>
+          <ShinyButton variant="gooeyLeft" className={cn(className, "flex sm:hidden")} onClick={() => setIsOpen(true)}>
             <PlusIcon className="w-6 h-6" />
           </ShinyButton>
         </>
