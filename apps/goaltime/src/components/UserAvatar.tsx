@@ -40,7 +40,7 @@ export function UserAvatar() {
   const posthog = usePostHog()
   useEffect(() => {
     if (posthog) {
-      posthog.identify(profile.userId, {
+      posthog?.identify(profile.userId, {
         email: profile.email,
         name: profile.name,
         phone: profile.phone,

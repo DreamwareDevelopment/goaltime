@@ -367,7 +367,7 @@ export const chat = inngestConsumer.createFunction({
         roleType: "assistant",
       }],
     })
-    posthog.capture({
+    posthog?.capture({
       distinctId: userId,
       event: "ai chat message",
       properties: {

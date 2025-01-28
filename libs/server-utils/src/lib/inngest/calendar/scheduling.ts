@@ -234,7 +234,7 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
     const { deletedEvents, newEvents } = await step.run('save-schedule', async () => {
       const deletedEvents = await deleteGoalEvents(userId, interval);
       const newEvents = await saveSchedule(userId, goalMap, timezone, schedule);
-      posthog.capture({
+      posthog?.capture({
         distinctId: userId,
         event: "goal events scheduled",
         properties: {
