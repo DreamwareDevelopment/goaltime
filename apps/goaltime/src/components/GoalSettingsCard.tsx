@@ -9,13 +9,12 @@ import { getDefaults, getZodResolver, GoalInput, GoalSchema, NotificationSetting
 
 import { NotificationSettings } from './Settings/Notifications'
 import { MaximumTimeInput, MinimumTimeInput } from './Settings/TimeInputs.tsx'
-import { ColorPicker } from './Settings/ColorPicker'
+import { COLOR_PRESETS, ColorPicker } from './Settings/ColorPicker'
 import { PrioritySelector } from './Settings/PrioritySelector'
 import { AllowMultiplePerDayCheckbox, CanDoDuringWorkCheckbox, DescriptionInput, TitleInput } from './Settings/Inputs'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { useValtio } from './data/valtio'
 import { GoalRecommendation } from './GoalRecommendationsCard'
-import { getDistinctColor } from '@/libs/shared/src'
 import { useSnapshot } from 'valtio'
 import {
   Dialog,
@@ -61,9 +60,7 @@ export function GoalSettingsCard({
   const profile = useSnapshot(userStore.profile!)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const goals = useSnapshot(goalStore.goals!)
-  // TODO: Calculate a globally unused color
-  const memoizedGetDistinctColor = React.useCallback(() => getDistinctColor(goals.map(g => g.color)), [goals]);
-  const color = goal?.color ?? memoizedGetDistinctColor();
+  const color = goal?.color ?? (COLOR_PRESETS.find((color) => !goals.some((g) => g.color === color)) || COLOR_PRESETS[3]);
   const form = useForm<GoalInput>({
     resolver: getZodResolver(GoalSchema, async (data) => {
       const errors: FieldErrors<GoalInput> = {}
