@@ -144,7 +144,7 @@ export function getFreeIntervals(
       .hour(preferredWakeUpTime.hour())
       .minute(preferredWakeUpTime.minute())
     // This makes sure we don't schedule past the next full sync
-    const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(sleepRoutine.start).tz(profile.timezone);
+    const preferredSleepTime = isLastDay ? dayjs(timeframe.end).tz(profile.timezone) : dayjs(sleepRoutine.start).tz(profile.timezone);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
       .hour(sleepHour < wakeUpTime.hour() ? sleepHour + 24 : sleepHour)
@@ -176,8 +176,6 @@ export function getFreeIntervals(
         .hour(endsWorkAt.hour())
         .minute(endsWorkAt.minute());
     }
-    logger.info(`Work start: ${workStart?.format(DATE_TIME_FORMAT)}`);
-    logger.info(`Work end: ${workEnd?.format(DATE_TIME_FORMAT)}`);
 
     while (currentTime.isBefore(nextDay)) {
       logger.info(`Current loop time: ${currentTime.format(DATE_TIME_FORMAT)}`);
@@ -304,14 +302,14 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, timefr
 }
 
 function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Interval<dayjs.Dayjs>, b: T): T | null {
-  // logger.info(`Getting intersection of ${a.start.format(DATE_TIME_FORMAT)} - ${a.end.format(DATE_TIME_FORMAT)} and ${b.start.format(DATE_TIME_FORMAT)} - ${b.end.format(DATE_TIME_FORMAT)}`);
+  logger.info(`Getting intersection of ${a.start.format(DATE_TIME_FORMAT)} - ${a.end.format(DATE_TIME_FORMAT)} and ${b.start.format(DATE_TIME_FORMAT)} - ${b.end.format(DATE_TIME_FORMAT)}`);
   const start = a.start.isAfter(b.start) ? a.start : b.start;
   const end = a.end.isBefore(b.end) ? a.end : b.end;
   if (start.isBefore(end) && !start.isSame(end, 'minute')) {
-    // logger.info(`Found intersection of ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
+    logger.info(`Found intersection of ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
     return { ...b, start, end };
   }
-  // logger.info(`No intersection found`);
+  logger.info(`No intersection found`);
   return null;
 }
 
@@ -365,12 +363,15 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   }
   // logger.info(`Free intervals:\n${freeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
   for (const interval of freeIntervals) {
+    logger.info(`Current free interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`);
     if (interval.start.date() !== currentDay) {
       preferredTimesToday = getPreferredTimesForDay(interval.start);
       currentDay = interval.start.date();
     }
+    logger.info(`Preferred times today:\n${preferredTimesToday.map(time => `${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     const preferredTimesIntersections = preferredTimesToday.map(preferredTime => getIntersection(logger, preferredTime, interval)).filter(Boolean) as T[];
     if (preferredTimesIntersections.length > 0) {
+      logger.info(`Found ${preferredTimesIntersections.length} preferred times intersections`);
       preferredTimesIntersections.forEach(intersection => callback(intersection, false));
     }
   }
