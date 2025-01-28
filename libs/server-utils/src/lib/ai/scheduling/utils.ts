@@ -107,8 +107,8 @@ export function getFreeIntervals(
   const wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[] = [];
   const freeIntervals: Interval[] = [];
   const freeWorkIntervals: Interval[] = [];
-  const start = dayjs(timeframe.start);
-  const end = dayjs(timeframe.end);
+  const start = dayjs(timeframe.start).tz(profile.timezone);
+  const end = dayjs(timeframe.end).tz(profile.timezone);
   const daysBetween = end.diff(start, 'days');
   const routine = getProfileRoutine(profile);
   const routineEventsByDay = routineToExternalEvents(routine, profile.timezone);
