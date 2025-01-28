@@ -248,6 +248,12 @@ export function GoalSettingsCard({
                     <NotificationSettings form={form} />
                   </AccordionContent>
                 </AccordionItem>
+                <AccordionItem value="color">
+                  <AccordionTrigger className="text-lg font-bold">Color</AccordionTrigger>
+                  <AccordionContent className="py-4">
+                    <ColorPicker form={form} />
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
               <div className="flex flex-col justify-center items-center mt-4 gap-4 w-full">
                 <div className="flex flex-row gap-4 w-full">
@@ -263,7 +269,6 @@ export function GoalSettingsCard({
                     }
                   </ShinyButton>
                 </div>
-                <ColorPicker form={form} />
               </div>
             </CardContent>
           </form>

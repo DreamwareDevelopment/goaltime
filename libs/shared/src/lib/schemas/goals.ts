@@ -42,13 +42,13 @@ export const PreferredTimesDaysSchema = z.object({
   Everyday: PreferredTimesEnum.array().default([]).optional(),
   Weekdays: PreferredTimesEnum.array().default([]).optional(),
   Weekends: PreferredTimesEnum.array().default([]).optional(),
-  Monday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  Tuesday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  Wednesday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  Thursday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  Friday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  Saturday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
-  Sunday: PreferredTimesEnum.array().default([]).refine((times) => times.length > 0, { message: "Select at least one preferred time" }),
+  Monday: PreferredTimesEnum.array().default([]),
+  Tuesday: PreferredTimesEnum.array().default([]),
+  Wednesday: PreferredTimesEnum.array().default([]),
+  Thursday: PreferredTimesEnum.array().default([]),
+  Friday: PreferredTimesEnum.array().default([]),
+  Saturday: PreferredTimesEnum.array().default([]),
+  Sunday: PreferredTimesEnum.array().default([]),
 })
 
 export type PreferredTimesDays = z.infer<typeof PreferredTimesDaysSchema>
