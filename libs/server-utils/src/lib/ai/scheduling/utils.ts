@@ -162,11 +162,11 @@ export function getFreeIntervals(
     let workStart: dayjs.Dayjs | null = null;
     let workEnd: dayjs.Dayjs | null = null;
     if (workdays.includes(currentTime.format('dddd'))) {
-      const startsWorkAt = dayjs(profile.startsWorkAt);
+      const startsWorkAt = dayjs(profile.startsWorkAt).tz(profile.timezone);
       workStart = currentTime
         .hour(startsWorkAt.hour())
         .minute(startsWorkAt.minute());
-      const endsWorkAt = dayjs(profile.endsWorkAt);
+      const endsWorkAt = dayjs(profile.endsWorkAt).tz(profile.timezone);
       workEnd = currentTime
         .hour(endsWorkAt.hour())
         .minute(endsWorkAt.minute());
