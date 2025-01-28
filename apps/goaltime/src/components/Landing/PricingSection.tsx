@@ -13,6 +13,7 @@ const PricingCard: React.FC<{plan: PricingPlan, yearly: boolean, userEmail?: str
   const handleChoosePlanClick = () => {
     posthog?.capture('choose plan clicked', {
       plan: plan.name,
+      userEmail
     })
     const url = userEmail
       ? `${plan.link}?prefilled_email=${encodeURIComponent(userEmail)}`
