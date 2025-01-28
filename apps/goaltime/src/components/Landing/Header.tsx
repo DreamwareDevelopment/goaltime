@@ -46,7 +46,6 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
             variant="expandIcon"
             Icon={ArrowRight}
             iconPlacement="right"
-            asChild
             className="hidden md:flex md:min-w-[178px]"
             onClick={handleSetGoalsClick}
           >

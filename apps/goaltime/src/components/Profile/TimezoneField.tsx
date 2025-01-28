@@ -45,7 +45,7 @@ export function TimezoneField({ form, className }: TimezoneFieldProps) {
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}
-                  className="w-full justify-between h-[56px]"
+                  className="w-full justify-between"
                 >
                   {field.value || "Select a timezone..."}
                   <ChevronsUpDown className="opacity-50" />

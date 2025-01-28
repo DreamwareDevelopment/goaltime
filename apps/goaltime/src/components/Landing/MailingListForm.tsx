@@ -70,7 +70,6 @@ export default function MailingListForm() {
                     placeholder="Enter your email" 
                     type="email"
                     value={field.value}
-                    className="h-[63px]"
                     onChange={field.onChange}
                   />
                 </FormControl>
