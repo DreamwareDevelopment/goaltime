@@ -50,7 +50,7 @@ function OAuthProviders() {
         <GoogleLogo className="w-5 h-5" />
         Continue with Google
       </ShinyButton>
-      <div className="text-center text-sm text-muted-foreground">
+      <div className="text-center text-sm text-muted-foreground pb-4">
         <p>
           By continuing, you agree to our{' '}
           <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
