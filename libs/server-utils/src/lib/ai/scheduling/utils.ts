@@ -390,6 +390,7 @@ export function getPreferredTimes<T extends Interval<dayjs.Dayjs>>(
     freeWorkIntervals: [],
   };
   iterateOverPreferredTimes(logger, canDoDuringWork, preferredTimes, freeIntervals, freeWorkIntervals, timeframe, (intersection, duringWork) => {
+    logger.info(`Intersection: ${intersection.start.format(DATE_TIME_FORMAT)} - ${intersection.end.format(DATE_TIME_FORMAT)}`);
     if (duringWork) {
       result.freeWorkIntervals.push(intersection);
     } else {
