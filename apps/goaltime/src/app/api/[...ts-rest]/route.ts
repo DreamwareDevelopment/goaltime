@@ -42,7 +42,7 @@ const handler = createNextHandler(baseContract, {
   responseValidation: true,
   handlerType: 'app-router',
   cors: {
-    origin: ['https://goaltime.ai', 'https://www.goaltime.ai', 'https://goaltime.ngrok.dev', 'http://localhost:3000'],
+    origin: '*',
   }
 },);
 
