@@ -305,6 +305,8 @@ function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Int
   logger.info(`Getting intersection of ${a.start.format(DATE_TIME_FORMAT)} - ${a.end.format(DATE_TIME_FORMAT)} and ${b.start.format(DATE_TIME_FORMAT)} - ${b.end.format(DATE_TIME_FORMAT)}`);
   const start = a.start.isAfter(b.start) ? a.start : b.start;
   const end = a.end.isBefore(b.end) ? a.end : b.end;
+  logger.info(`Start: ${start.format(DATE_TIME_FORMAT)}`);
+  logger.info(`End: ${end.format(DATE_TIME_FORMAT)}`);
   if (start.isBefore(end) && !start.isSame(end, 'minute')) {
     logger.info(`Found intersection of ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
     return { ...b, start, end };
