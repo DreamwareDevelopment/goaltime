@@ -214,7 +214,7 @@ export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Da
   }
 }
 
-export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
+export function routineToExternalEvents(routine: RoutineActivities, timezone: string, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
   const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
     Monday: [],
     Tuesday: [],
@@ -234,11 +234,13 @@ export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs
       if (routine.start === null && routine.end === null) {
         continue;
       }
+      const start = date ? dayjs(routine.start).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start).tz(timezone);
+      const end = date ? dayjs(routine.end).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end).tz(timezone);
       events[day].push({
         id: activity,
         title: activity.charAt(0).toUpperCase() + activity.slice(1),
-        start: date ? dayjs(routine.start).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start),
-        end: date ? dayjs(routine.end).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end),
+        start,
+        end,
       });
     }
   }
@@ -249,11 +251,13 @@ export function routineToExternalEvents(routine: RoutineActivities, date?: dayjs
       if (routine.start === null && routine.end === null) {
         continue;
       }
+      const start = date ? dayjs(routine.start).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start).tz(timezone);
+      const end = date ? dayjs(routine.end).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end).tz(timezone);
       events[day].push({
         id: activity,
         title: activity,
-        start: date ? dayjs(routine.start).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start),
-        end: date ? dayjs(routine.end).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end),
+        start,
+        end,
       });
     }
   }

@@ -64,8 +64,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const schedule = useSnapshot(calendarStore.events[day]);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!);
+  const [timezone, setTimezone] = useState<string>(profile.timezone);
   const routine = getProfileRoutine(profile);
-  const routineEvents = routineToExternalEvents(routine, dayjsDate);
+  const routineEvents = routineToExternalEvents(routine, timezone, dayjsDate);
   const routineEventsByDay = routineEvents[dayName];
   const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
   const sleepHour = dayjs(routine.sleep[dayName].start).hour();
@@ -77,7 +78,6 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState<Record<string, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [timezone, setTimezone] = useState<string>(profile.timezone);
   const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(false);
 
   useEffect(() => {
