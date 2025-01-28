@@ -51,8 +51,8 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
         start: dayjs(interval.start),
         end: dayjs(interval.end),
       }));
-      dayJsFreeIntervals.map(interval => logger.info(`Free interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
-      dayJsFreeWorkIntervals.map(interval => logger.info(`Free work interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
+      dayJsFreeIntervals.map(interval => logger.info(`Free interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
+      dayJsFreeWorkIntervals.map(interval => logger.info(`Free work interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
       const timeframe = {
         start: dayjs(interval.start),
         end: dayjs(interval.end),
@@ -136,8 +136,8 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
       type: 'work',
       score: 0,
     }));
-    logger.info(`Free intervals: ${freeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
-    logger.info(`Free work intervals: ${freeWorkIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    logger.info(`Free intervals after deserialization: ${freeIntervals.map(interval => `Free interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    logger.info(`Free work intervals after deserialization: ${freeWorkIntervals.map(interval => `Free work interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     const timeframe: Interval<dayjs.Dayjs> = {
       start: dayjs(interval.start).tz(timezone),
       end: dayjs(interval.end).tz(timezone),
