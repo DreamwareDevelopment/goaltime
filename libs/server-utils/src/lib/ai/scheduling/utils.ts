@@ -139,12 +139,12 @@ export function getFreeIntervals(
     if (!sleepRoutine || !sleepRoutine.start || !sleepRoutine.end) {
       throw new Error(`sleepRoutine for ${dayName} is not defined`);
     }
-    const preferredWakeUpTime = dayjs(sleepRoutine.end)
+    const preferredWakeUpTime = dayjs(sleepRoutine.end).tz(profile.timezone);
     const wakeUpTime = currentTime
       .hour(preferredWakeUpTime.hour())
       .minute(preferredWakeUpTime.minute())
     // This makes sure we don't schedule past the next full sync
-    const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(sleepRoutine.start);
+    const preferredSleepTime = isLastDay ? dayjs(timeframe.end) : dayjs(sleepRoutine.start).tz(profile.timezone);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
       .hour(sleepHour < wakeUpTime.hour() ? sleepHour + 24 : sleepHour)
