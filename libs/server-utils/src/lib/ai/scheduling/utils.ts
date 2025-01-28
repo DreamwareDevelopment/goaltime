@@ -46,10 +46,11 @@ const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumT
   };
 }
 
-function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: ExternalEvent<dayjs.Dayjs>[]): Interval[] {
+function getTimeblocks(logger: Logger, start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: ExternalEvent<dayjs.Dayjs>[]): Interval[] {
   const timeblocks: Interval[] = [];
   let currentTime = start;
   while (currentTime.isBefore(end)) {
+    logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
     // eslint-disable-next-line no-loop-func
     const nextEvent = upcomingEvents.find(event => {
       if (event.allDay) {
@@ -57,14 +58,17 @@ function getTimeblocks(start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: Ext
       }
       return (event.start.isAfter(currentTime) || event.end.isAfter(currentTime)) && event.start.isBefore(end);
     });
+    logger.info(`Next event: ${nextEvent?.title} - ${nextEvent?.start.format(DATE_TIME_FORMAT)} - ${nextEvent?.end.format(DATE_TIME_FORMAT)}`);
     if (nextEvent) {
       if (nextEvent.start.diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
+        logger.info(`Found interval: ${currentTime.format(DATE_TIME_FORMAT)} - ${nextEvent.start.format(DATE_TIME_FORMAT)}`);
         timeblocks.push({ start: currentTime.toDate(), end: nextEvent.start.toDate() });
       }
       currentTime = nextEvent.end;
       continue;
     }
     if (end.diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
+      logger.info(`Found interval: ${currentTime.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
       timeblocks.push({ start: currentTime.toDate(), end: end.toDate() });
     }
     currentTime = end;
@@ -190,7 +194,7 @@ export function getFreeIntervals(
       }
       // Find blocks before work
       if (workStart && currentTime.isBefore(workStart)) {
-        const intervals = getTimeblocks(currentTime, workStart, upcomingEvents);
+        const intervals = getTimeblocks(logger, currentTime, workStart, upcomingEvents);
         freeIntervals.push(...intervals);
         // logger.info(`Found ${intervals.length} free intervals before work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = workStart.add(1, 'minute').second(0).subtract(1, 'second');
@@ -198,7 +202,7 @@ export function getFreeIntervals(
       }
       // Find blocks during work
       if (workStart && workEnd && currentTime.isAfter(workStart.subtract(1, 'minute')) && currentTime.isBefore(workEnd)) {
-        const intervals = getTimeblocks(currentTime, workEnd, upcomingEvents);
+        const intervals = getTimeblocks(logger, currentTime, workEnd, upcomingEvents);
         freeWorkIntervals.push(...intervals);
         // logger.info(`Found ${intervals.length} free work intervals during work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = workEnd.add(1, 'minute').second(0).subtract(1, 'second');
@@ -206,14 +210,14 @@ export function getFreeIntervals(
       }
       // Find blocks after work
       if (workEnd && currentTime.isAfter(workEnd.subtract(1, 'minute'))) {
-        const intervals = getTimeblocks(currentTime, sleepTime, upcomingEvents);
+        const intervals = getTimeblocks(logger, currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
         // logger.info(`Found ${intervals.length} free intervals after work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = nextDay;
         continue;
       }
       if (!workStart && !workEnd) {
-        const intervals = getTimeblocks(currentTime, sleepTime, upcomingEvents);
+        const intervals = getTimeblocks(logger, currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
         // logger.info(`Found ${intervals.length} free intervals on day off on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = nextDay;
