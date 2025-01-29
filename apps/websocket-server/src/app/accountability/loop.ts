@@ -241,7 +241,7 @@ export const startAccountabilityLoop = inngestConsumer.createFunction({
           notifications: true,
         },
       });
-      const calendarEvents = await prisma.calendarEvent.findMany({
+      let calendarEvents = await prisma.calendarEvent.findMany({
         where: {
           userId: {
             in: userIds,
@@ -255,6 +255,13 @@ export const startAccountabilityLoop = inngestConsumer.createFunction({
           startTime: 'asc',
         },
       });
+      calendarEvents = calendarEvents.map(event => {
+        return {
+          ...event,
+          startTime: event.startTime ? dayjs(event.startTime).tz(event.timezone).format(DATE_TIME_FORMAT) : null,
+          endTime: event.endTime ? dayjs(event.endTime).tz(event.timezone).format(DATE_TIME_FORMAT) : null,
+        }
+      })
       const state = getAccountabilityState(now, goalsAndNotifications, calendarEvents);
       logger.info(`Got ${calendarEvents.length} calendar events`);
       return state;

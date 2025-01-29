@@ -193,18 +193,21 @@ export async function saveSchedule(
   const scheduleData = schedule.map(({ goalId, start, end }) => {
     const utcOffset = Math.abs(start.tz(timezone).utcOffset())
     console.log(`UTC Offset: ${utcOffset}`)
-    console.log(`Start: ${start.format(DATE_TIME_FORMAT)}`)
-    console.log(`Start UTC: ${start.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
-    console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)
-    console.log(`End UTC: ${end.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
+    // console.log(`Start: ${start.format(DATE_TIME_FORMAT)}`)
+    // console.log(`Start UTC: ${start.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
+    // console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)
+    // console.log(`End UTC: ${end.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
+    // I have no idea why, but the interval is in the timezone of the user in dev, but not in prod.
+    const startUTC = process.env.NODE_ENV !== 'development' ? start.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT) : start.utc().toDate()
+    const endUTC = process.env.NODE_ENV !== 'development' ? end.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT) : end.utc().toDate()
     return {
       id: crypto.randomUUID(),
       userId,
       goalId,
       provider: CalendarProvider.goaltime,
       duration: end.diff(start, 'minutes'),
-      startTime: start.utc().add(utcOffset, 'minutes').toDate(),
-      endTime: end.utc().add(utcOffset, 'minutes').toDate(),
+      startTime: startUTC,
+      endTime: endUTC,
       title: goalMap[goalId].title,
       description: goalMap[goalId].description,
       color: goalMap[goalId].color,
