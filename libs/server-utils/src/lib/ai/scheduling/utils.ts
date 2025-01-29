@@ -103,12 +103,12 @@ export function getFreeIntervals(
   wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[],
   eventsAndRoutines: ExternalEvent<dayjs.Dayjs>[],
 } {
-  logger.info(`Getting free intervals for ${dayjs(timeframe.start).format(DATE_TIME_FORMAT)} - ${dayjs(timeframe.end).format(DATE_TIME_FORMAT)}`);
+  const start = dayjs(timeframe.start).tz(profile.timezone);
+  const end = dayjs(timeframe.end).tz(profile.timezone);
+  logger.info(`Getting free intervals for ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
   const wakeUpOrSleepEvents: WakeUpOrSleepEvent<string>[] = [];
   const freeIntervals: Interval[] = [];
   const freeWorkIntervals: Interval[] = [];
-  const start = dayjs(timeframe.start).tz(profile.timezone);
-  const end = dayjs(timeframe.end).tz(profile.timezone);
   const daysBetween = end.diff(start, 'days');
   const routine = getProfileRoutine(profile);
   const routineEventsByDay = routineToExternalEvents(routine, profile.timezone);
@@ -144,7 +144,7 @@ export function getFreeIntervals(
       .hour(preferredWakeUpTime.hour())
       .minute(preferredWakeUpTime.minute())
     // This makes sure we don't schedule past the next full sync
-    const preferredSleepTime = isLastDay ? dayjs(timeframe.end).tz(profile.timezone) : dayjs(sleepRoutine.start).tz(profile.timezone);
+    const preferredSleepTime = isLastDay ? end : dayjs(sleepRoutine.start).tz(profile.timezone);
     const sleepHour = preferredSleepTime.hour();
     const sleepTime = currentTime
       .hour(sleepHour < wakeUpTime.hour() ? sleepHour + 24 : sleepHour)
