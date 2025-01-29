@@ -1,6 +1,6 @@
 import { CalendarEvent, CalendarProvider, Goal, User, UserProfile } from "@prisma/client";
 
-import { dayjs } from "@/shared/utils";
+import { DATE_TIME_FORMAT, dayjs } from "@/shared/utils";
 
 import { sortGoals } from './goal';
 import { getPrismaClient } from '../lib/prisma/client';
@@ -11,7 +11,7 @@ import { getProfileRoutine, getSleepRoutineForDay } from "@/shared/zod";
 export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const routine = getProfileRoutine(profile);
   const sleepRoutine = getSleepRoutineForDay(routine, date);
-  // console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).format(DATE_TIME_FORMAT)}`);
+  console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).format(DATE_TIME_FORMAT)}`);
   const prisma = await getPrismaClient(profile.userId);
   const schedule = await prisma.calendarEvent.findMany({
     where: {

@@ -3,7 +3,7 @@ import { proxy } from 'valtio'
 import { CalendarEventInput } from "@/shared/zod"
 import { CalendarEvent } from '@prisma/client'
 import { deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEventColorsAction } from '../../../app/actions/calendar'
-import { binarySearchInsert, dayjs } from '@/libs/shared/src'
+import { binarySearchInsert, DATE_TIME_FORMAT, dayjs } from '@/libs/shared/src'
 import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
 import { goalStore } from './goals'
 
@@ -30,7 +30,7 @@ export const calendarStore = proxy<{
   },
   async loadCalendarEvents(date: Date, timezone: string) {
     const day = date.toDateString()
-    console.log(`Loading calendar events for ${day}`)
+    console.log(`Loading calendar events for ${dayjs(date).format(DATE_TIME_FORMAT)}`)
     if (calendarStore.events[day] && calendarStore.events[day].length > 0) {
       console.log(`${calendarStore.events[day].length} Calendar events already loaded for ${day}`)
       return;
