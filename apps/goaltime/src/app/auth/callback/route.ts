@@ -52,8 +52,10 @@ export async function GET(request: Request) {
 
     if (!error) {
       if (forwardedHost) {
+        console.log('Forwarded host', forwardedHost)
         return NextResponse.redirect(`https://${forwardedHost}${next}`)
       } else {
+        console.log('Origin', origin)
         return NextResponse.redirect(`${origin}${next}`)
       }
     } else {

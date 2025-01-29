@@ -21,6 +21,7 @@ export const calendarStore = proxy<{
   init(events: CalendarEvent[]) {
     const today = dayjs().toDate().toDateString();
     calendarStore.events[today] = events;
+    console.log(`${events.length} Calendar events initialized for ${today}`)
   },
   ensureCalendarEvents(date: Date) {
     if (!calendarStore.events[dayjs(date).toDate().toDateString()]) {
@@ -30,6 +31,7 @@ export const calendarStore = proxy<{
   async loadCalendarEvents(date: Date, timezone: string) {
     const day = date.toDateString()
     if (calendarStore.events[day] && calendarStore.events[day].length > 0) {
+      console.log(`${calendarStore.events[day].length} Calendar events already loaded for ${day}`)
       return;
     }
     const client = getTsRestClient();
@@ -42,6 +44,7 @@ export const calendarStore = proxy<{
     const { body, status } = response;
     if (status === 200) {
       calendarStore.events[day] = body;
+      console.log(`${body.length} Calendar events loaded for ${day}`)
     } else if (status === 404) {
       const errorMessage = response.body.error;
       throw new Error(errorMessage);
@@ -50,11 +53,11 @@ export const calendarStore = proxy<{
   async updateCalendarEvent(original, updated) {
     const day = original.startTime ? dayjs(original.startTime).toDate().toDateString() : dayjs(original.allDay).toDate().toDateString()
     if (!calendarStore.events[day]) {
-      throw new Error('Invariant: day not initialized in calendarStore')
+      throw new Error(`Invariant: day: ${day} not initialized in calendarStore`)
     }
     const originalIndex = calendarStore.events[day].findIndex(e => e.id === original.id)
     if (originalIndex === -1) {
-      throw new Error('Invariant: event not found in calendarStore')
+      throw new Error(`Invariant: event not found in calendarStore`)
     }
     calendarStore.events[day].splice(originalIndex, 1)
     const newIndex = original.allDay ? originalIndex : binarySearchInsert(calendarStore.events[day], { ...original, ...updated }, (a, b) => {
@@ -69,11 +72,11 @@ export const calendarStore = proxy<{
   async deleteCalendarEvent(event) {
     const day = event.startTime ? dayjs(event.startTime).toDate().toDateString() : dayjs(event.allDay).toDate().toDateString()
     if (!calendarStore.events[day]) {
-      throw new Error('Invariant: day not initialized in calendarStore')
+      throw new Error(`Invariant: day: ${day} not initialized in calendarStore`)
     }
     const index = calendarStore.events[day].findIndex(e => e.id === event.id)
     if (index === -1) {
-      throw new Error('Invariant: event not found in calendarStore')
+      throw new Error(`Invariant: event not found in calendarStore`)
     }
     calendarStore.events[day].splice(index, 1)
     await deleteCalendarEventAction(event.id, event.userId)
