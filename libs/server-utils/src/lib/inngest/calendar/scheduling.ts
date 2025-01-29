@@ -51,13 +51,13 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
         start: dayjs(interval.start).tz(profile.timezone),
         end: dayjs(interval.end).tz(profile.timezone),
       }));
-      dayJsFreeIntervals.map(interval => logger.info(`Free interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
-      dayJsFreeWorkIntervals.map(interval => logger.info(`Free work interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
+      // dayJsFreeIntervals.map(interval => logger.info(`Free interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
+      // dayJsFreeWorkIntervals.map(interval => logger.info(`Free work interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
       const timeframe = {
         start: dayjs(interval.start).tz(profile.timezone),
         end: dayjs(interval.end).tz(profile.timezone),
       };
-      logger.info(`Timeframe: ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Timeframe: ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}`);
       return {
         interval: {
           start: timeframe.start.format(DATE_TIME_FORMAT),
@@ -142,7 +142,7 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
       start: dayjs(interval.start),
       end: dayjs(interval.end),
     };
-    logger.info(`Timeframe: ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}`);
+    // logger.info(`Timeframe: ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}`);
     const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];
     logger.info(`Scheduling ${data.goals.length} goals...`, data.goals.map(goal => goal.title));
     const goalsScheduledSoFar: string[] = [];

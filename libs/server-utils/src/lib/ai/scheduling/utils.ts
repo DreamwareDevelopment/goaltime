@@ -49,9 +49,9 @@ const getTimeToIntervalLookup = (start: dayjs.Dayjs): Record<PreferredTimesEnumT
 function getTimeblocks(logger: Logger, start: dayjs.Dayjs, end: dayjs.Dayjs, upcomingEvents: ExternalEvent<dayjs.Dayjs>[]): Interval[] {
   const timeblocks: Interval[] = [];
   let currentTime = start;
-  logger.info(`Getting timeblocks from ${currentTime.format(DATE_TIME_FORMAT)} to ${end.format(DATE_TIME_FORMAT)}`);
+  // logger.info(`Getting timeblocks from ${currentTime.format(DATE_TIME_FORMAT)} to ${end.format(DATE_TIME_FORMAT)}`);
   while (currentTime.isBefore(end)) {
-    logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
+    // logger.info(`Current time: ${currentTime.format(DATE_TIME_FORMAT)}`);
     // eslint-disable-next-line no-loop-func
     const nextEvent = upcomingEvents.find(event => {
       if (event.allDay) {
@@ -59,17 +59,17 @@ function getTimeblocks(logger: Logger, start: dayjs.Dayjs, end: dayjs.Dayjs, upc
       }
       return (event.start.isAfter(currentTime) || event.end.isAfter(currentTime)) && event.start.isBefore(end);
     });
-    logger.info(`Next event: ${nextEvent?.title} - ${nextEvent?.start.format(DATE_TIME_FORMAT)} - ${nextEvent?.end.format(DATE_TIME_FORMAT)}`);
+    // logger.info(`Next event: ${nextEvent?.title} - ${nextEvent?.start.format(DATE_TIME_FORMAT)} - ${nextEvent?.end.format(DATE_TIME_FORMAT)}`);
     if (nextEvent) {
       if (nextEvent.start.diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
-        logger.info(`Found interval: ${currentTime.format(DATE_TIME_FORMAT)} - ${nextEvent.start.format(DATE_TIME_FORMAT)}`);
+        // logger.info(`Found interval: ${currentTime.format(DATE_TIME_FORMAT)} - ${nextEvent.start.format(DATE_TIME_FORMAT)}`);
         timeblocks.push({ start: currentTime.toDate(), end: nextEvent.start.toDate() });
       }
       currentTime = nextEvent.end;
       continue;
     }
     if (end.diff(currentTime, 'minutes') > MIN_BLOCK_SIZE) {
-      logger.info(`Found interval: ${currentTime.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Found interval: ${currentTime.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
       timeblocks.push({ start: currentTime.toDate(), end: end.toDate() });
     }
     currentTime = end;
@@ -178,11 +178,11 @@ export function getFreeIntervals(
     }
 
     while (currentTime.isBefore(nextDay)) {
-      logger.info(`Current loop time: ${currentTime.format(DATE_TIME_FORMAT)}`);
-      logger.info(`Wake up time: ${wakeUpTime.format(DATE_TIME_FORMAT)}`);
-      logger.info(`Sleep time: ${sleepTime.format(DATE_TIME_FORMAT)}`);
-      logger.info(`Work start: ${workStart?.format(DATE_TIME_FORMAT)}`);
-      logger.info(`Work end: ${workEnd?.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Current loop time: ${currentTime.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Wake up time: ${wakeUpTime.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Sleep time: ${sleepTime.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Work start: ${workStart?.format(DATE_TIME_FORMAT)}`);
+      // logger.info(`Work end: ${workEnd?.format(DATE_TIME_FORMAT)}`);
       if (currentTime.isBefore(wakeUpTime)) {
         currentTime = wakeUpTime;
         continue;
@@ -195,7 +195,7 @@ export function getFreeIntervals(
       if (workStart && currentTime.isBefore(workStart)) {
         const intervals = getTimeblocks(logger, currentTime, workStart, upcomingEvents);
         freeIntervals.push(...intervals);
-        logger.info(`Found ${intervals.length} free intervals before work on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        // logger.info(`Found ${intervals.length} free intervals before work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = workStart.add(1, 'minute').second(0).subtract(1, 'second');
         continue;
       }
@@ -203,7 +203,7 @@ export function getFreeIntervals(
       if (workStart && workEnd && currentTime.isAfter(workStart.subtract(1, 'minute')) && currentTime.isBefore(workEnd)) {
         const intervals = getTimeblocks(logger, currentTime, workEnd, upcomingEvents);
         freeWorkIntervals.push(...intervals);
-        logger.info(`Found ${intervals.length} free work intervals during work on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        // logger.info(`Found ${intervals.length} free work intervals during work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = workEnd.add(1, 'minute').second(0).subtract(1, 'second');
         continue;
       }
@@ -211,14 +211,14 @@ export function getFreeIntervals(
       if (workEnd && currentTime.isAfter(workEnd.subtract(1, 'minute'))) {
         const intervals = getTimeblocks(logger, currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
-        logger.info(`Found ${intervals.length} free intervals after work on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        // logger.info(`Found ${intervals.length} free intervals after work on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = nextDay;
         continue;
       }
       if (!workStart && !workEnd) {
         const intervals = getTimeblocks(logger, currentTime, sleepTime, upcomingEvents);
         freeIntervals.push(...intervals);
-        logger.info(`Found ${intervals.length} free intervals on day off on ${currentTime.format(DATE_TIME_FORMAT)}`);
+        // logger.info(`Found ${intervals.length} free intervals on day off on ${currentTime.format(DATE_TIME_FORMAT)}`);
         currentTime = nextDay;
         continue;
       }
@@ -302,15 +302,15 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, timefr
 }
 
 function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Interval<dayjs.Dayjs>, b: T): T | null {
-  logger.info(`Getting intersection of ${a.start.format(DATE_TIME_FORMAT)} - ${a.end.format(DATE_TIME_FORMAT)} and ${b.start.format(DATE_TIME_FORMAT)} - ${b.end.format(DATE_TIME_FORMAT)}`);
-  logger.info(`A: ${a.start.toDate()} - ${a.end.toDate()}`);
-  logger.info(`B: ${b.start.toDate()} - ${b.end.toDate()}`);
+  // logger.info(`Getting intersection of ${a.start.format(DATE_TIME_FORMAT)} - ${a.end.format(DATE_TIME_FORMAT)} and ${b.start.format(DATE_TIME_FORMAT)} - ${b.end.format(DATE_TIME_FORMAT)}`);
+  // logger.info(`A: ${a.start.toDate()} - ${a.end.toDate()}`);
+  // logger.info(`B: ${b.start.toDate()} - ${b.end.toDate()}`);
   const start = a.start.isAfter(b.start) ? a.start : b.start;
   const end = a.end.isBefore(b.end) ? a.end : b.end;
-  logger.info(`Start: ${start.format(DATE_TIME_FORMAT)}`);
-  logger.info(`End: ${end.format(DATE_TIME_FORMAT)}`);
+  // logger.info(`Start: ${start.format(DATE_TIME_FORMAT)}`);
+  // logger.info(`End: ${end.format(DATE_TIME_FORMAT)}`);
   if (start.isBefore(end) && !start.isSame(end, 'minute')) {
-    logger.info(`Found intersection of ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
+    // logger.info(`Found intersection of ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
     return { ...b, start, end };
   }
   logger.info(`No intersection found`);
@@ -367,15 +367,15 @@ export function iterateOverPreferredTimes<T extends Interval<dayjs.Dayjs>>(
   }
   // logger.info(`Free intervals:\n${freeIntervals.map(interval => `${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
   for (const interval of freeIntervals) {
-    logger.info(`Current free interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`);
+    // logger.info(`Current free interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`);
     if (interval.start.date() !== currentDay) {
       preferredTimesToday = getPreferredTimesForDay(interval.start);
       currentDay = interval.start.date();
     }
-    logger.info(`Preferred times today:\n${preferredTimesToday.map(time => `${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
+    // logger.info(`Preferred times today:\n${preferredTimesToday.map(time => `${time.start.format(DATE_TIME_FORMAT)} - ${time.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     const preferredTimesIntersections = preferredTimesToday.map(preferredTime => getIntersection(logger, preferredTime, interval)).filter(Boolean) as T[];
     if (preferredTimesIntersections.length > 0) {
-      logger.info(`Found ${preferredTimesIntersections.length} preferred times intersections`);
+      // logger.info(`Found ${preferredTimesIntersections.length} preferred times intersections`);
       preferredTimesIntersections.forEach(intersection => callback(intersection, false));
     }
   }
