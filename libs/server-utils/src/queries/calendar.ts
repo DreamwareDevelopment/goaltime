@@ -193,18 +193,18 @@ export async function saveSchedule(
   const scheduleData = schedule.map(({ goalId, start, end }) => {
     console.log(`Start: ${start.format(DATE_TIME_FORMAT)}`)
     console.log(`Start TZ: ${start.tz(timezone).format(DATE_TIME_FORMAT)}`)
-    console.log(`Start UTC: ${start.utc().format(DATE_TIME_FORMAT)}`)
+    console.log(`Start UTC: ${start.utc().add(start.utcOffset(), 'minutes').format(DATE_TIME_FORMAT)}`)
     console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)
     console.log(`End TZ: ${end.tz(timezone).format(DATE_TIME_FORMAT)}`)
-    console.log(`End UTC: ${end.utc().format(DATE_TIME_FORMAT)}`)
+    console.log(`End UTC: ${end.utc().add(end.utcOffset(), 'minutes').format(DATE_TIME_FORMAT)}`)
     return {
       id: crypto.randomUUID(),
       userId,
       goalId,
       provider: CalendarProvider.goaltime,
       duration: end.diff(start, 'minutes'),
-      startTime: start.utc().toDate(),
-      endTime: end.utc().toDate(),
+      startTime: start.utc().add(start.utcOffset(), 'minutes').toDate(),
+      endTime: end.utc().add(end.utcOffset(), 'minutes').toDate(),
       title: goalMap[goalId].title,
       description: goalMap[goalId].description,
       color: goalMap[goalId].color,
