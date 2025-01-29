@@ -10,7 +10,7 @@ import { getProfileRoutine, getSleepRoutineForDay } from "@/shared/zod";
 
 export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const routine = getProfileRoutine(profile);
-  const sleepRoutine = getSleepRoutineForDay(routine, date);
+  const sleepRoutine = getSleepRoutineForDay(routine, date, profile.timezone);
   console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).format(DATE_TIME_FORMAT)}`);
   const prisma = await getPrismaClient(profile.userId);
   const schedule = await prisma.calendarEvent.findMany({

@@ -197,11 +197,11 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
   return routine
 }
 
-export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Dayjs): Interval<dayjs.Dayjs> {
+export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Dayjs, timezone: string): Interval<dayjs.Dayjs> {
   const dayName = date.format('dddd') as DaysOfTheWeekType;
   const sleep = routine.sleep[dayName];
-  const start = dayjs(sleep.start);
-  const end = dayjs(sleep.end);
+  const start = dayjs(sleep.start).tz(timezone);
+  const end = dayjs(sleep.end).tz(timezone);
   if (start.hour() > end.hour()) {
     return {
       start: start.year(date.year()).month(date.month()).date(date.date()),
