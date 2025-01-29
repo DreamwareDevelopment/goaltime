@@ -234,6 +234,7 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
       })));
       goalsScheduledSoFar.push(goal.title);
     }
+    logger.info(`Scheduling:\n${schedule.map(event => `${event.title} from ${event.start.format(DATE_TIME_FORMAT)} to ${event.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
 
     const { deletedEvents, newEvents } = await step.run('save-schedule', async () => {
       const deletedEvents = await deleteGoalEvents(userId, interval);
