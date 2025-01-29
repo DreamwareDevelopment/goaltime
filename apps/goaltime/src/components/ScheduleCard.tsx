@@ -62,6 +62,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const isDesktop = useMediaQuery('(min-width: 500px)');
   calendarStore.ensureCalendarEvents(date);
   const schedule = useSnapshot(calendarStore.events[day]);
+  console.log(`Schedule: ${JSON.stringify(schedule)}`)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
