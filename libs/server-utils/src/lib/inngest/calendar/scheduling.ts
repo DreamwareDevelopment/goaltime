@@ -54,8 +54,8 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
       dayJsFreeIntervals.map(interval => logger.info(`Free interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
       dayJsFreeWorkIntervals.map(interval => logger.info(`Free work interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
       const timeframe = {
-        start: dayjs(interval.start),
-        end: dayjs(interval.end),
+        start: dayjs(interval.start).tz(profile.timezone),
+        end: dayjs(interval.end).tz(profile.timezone),
       };
       logger.info(`Timeframe: ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}`);
       return {

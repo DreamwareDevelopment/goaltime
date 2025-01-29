@@ -303,6 +303,8 @@ export function parsePreferredTimes(logger: Logger, profile: UserProfile, timefr
 
 function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Interval<dayjs.Dayjs>, b: T): T | null {
   logger.info(`Getting intersection of ${a.start.format(DATE_TIME_FORMAT)} - ${a.end.format(DATE_TIME_FORMAT)} and ${b.start.format(DATE_TIME_FORMAT)} - ${b.end.format(DATE_TIME_FORMAT)}`);
+  logger.info(`A: ${a.start.toDate()} - ${a.end.toDate()}`);
+  logger.info(`B: ${b.start.toDate()} - ${b.end.toDate()}`);
   const start = a.start.isAfter(b.start) ? a.start : b.start;
   const end = a.end.isBefore(b.end) ? a.end : b.end;
   logger.info(`Start: ${start.format(DATE_TIME_FORMAT)}`);
