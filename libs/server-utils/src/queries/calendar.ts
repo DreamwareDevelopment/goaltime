@@ -191,15 +191,12 @@ export async function saveSchedule(
 ): Promise<CalendarEvent[]> {
   const prisma = await getPrismaClient(userId);
   const scheduleData = schedule.map(({ goalId, start, end }) => {
+    const utcOffset = Math.abs(start.tz(timezone).utcOffset())
+    console.log(`UTC Offset: ${utcOffset}`)
     console.log(`Start: ${start.format(DATE_TIME_FORMAT)}`)
-    console.log(`Start TZ: ${start.tz(timezone).format(DATE_TIME_FORMAT)}`)
-    console.log(`Start UTC: ${start.utc().add(start.utcOffset(), 'minutes').format(DATE_TIME_FORMAT)}`)
-    const utcOffset = start.tz(timezone).utcOffset()
-    console.log(`Start UTC Offset: ${utcOffset}`)
+    console.log(`Start UTC: ${start.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
     console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)
-    console.log(`End TZ: ${end.tz(timezone).format(DATE_TIME_FORMAT)}`)
-    console.log(`End UTC: ${end.utc().add(end.utcOffset(), 'minutes').format(DATE_TIME_FORMAT)}`)
-    console.log(`End UTC Offset: ${utcOffset}`)
+    console.log(`End UTC: ${end.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
     return {
       id: crypto.randomUUID(),
       userId,
