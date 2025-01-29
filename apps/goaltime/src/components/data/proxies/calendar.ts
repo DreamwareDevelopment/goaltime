@@ -30,6 +30,7 @@ export const calendarStore = proxy<{
   },
   async loadCalendarEvents(date: Date, timezone: string) {
     const day = date.toDateString()
+    console.log(`Loading calendar events for ${day}`)
     if (calendarStore.events[day] && calendarStore.events[day].length > 0) {
       console.log(`${calendarStore.events[day].length} Calendar events already loaded for ${day}`)
       return;
