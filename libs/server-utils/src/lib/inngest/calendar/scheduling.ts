@@ -125,22 +125,22 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
     });
 
     let freeIntervals: TypedIntervalWithScore<dayjs.Dayjs>[] = data.freeIntervals.map(interval => ({
-      start: dayjs(interval.start).tz(timezone),
-      end: dayjs(interval.end).tz(timezone),
+      start: dayjs(interval.start),
+      end: dayjs(interval.end),
       type: 'free',
       score: 0,
     }));
     let freeWorkIntervals: TypedIntervalWithScore<dayjs.Dayjs>[] = data.freeWorkIntervals.map(interval => ({
-      start: dayjs(interval.start).tz(timezone),
-      end: dayjs(interval.end).tz(timezone),
+      start: dayjs(interval.start),
+      end: dayjs(interval.end),
       type: 'work',
       score: 0,
     }));
     logger.info(`Free intervals after deserialization: ${freeIntervals.map(interval => `Free interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     logger.info(`Free work intervals after deserialization: ${freeWorkIntervals.map(interval => `Free work interval: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`).join('\n')}`);
     const timeframe: Interval<dayjs.Dayjs> = {
-      start: dayjs(interval.start).tz(timezone),
-      end: dayjs(interval.end).tz(timezone),
+      start: dayjs(interval.start),
+      end: dayjs(interval.end),
     };
     logger.info(`Timeframe: ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}`);
     const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];
