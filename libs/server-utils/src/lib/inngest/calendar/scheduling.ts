@@ -43,13 +43,13 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
       logger.info(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
       const dayJsFreeIntervals = freeIntervals.map(interval => ({
         ...interval,
-        start: dayjs(interval.start),
-        end: dayjs(interval.end),
+        start: dayjs(interval.start).tz(profile.timezone),
+        end: dayjs(interval.end).tz(profile.timezone),
       }));
       const dayJsFreeWorkIntervals = freeWorkIntervals.map(interval => ({
         ...interval,
-        start: dayjs(interval.start),
-        end: dayjs(interval.end),
+        start: dayjs(interval.start).tz(profile.timezone),
+        end: dayjs(interval.end).tz(profile.timezone),
       }));
       dayJsFreeIntervals.map(interval => logger.info(`Free interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
       dayJsFreeWorkIntervals.map(interval => logger.info(`Free work interval before serialization: ${interval.start.format(DATE_TIME_FORMAT)} - ${interval.end.format(DATE_TIME_FORMAT)}`));
