@@ -258,8 +258,8 @@ export const startAccountabilityLoop = inngestConsumer.createFunction({
       calendarEvents = calendarEvents.map(event => {
         return {
           ...event,
-          startTime: event.startTime ? dayjs(event.startTime).tz(event.timezone).format(DATE_TIME_FORMAT) : null,
-          endTime: event.endTime ? dayjs(event.endTime).tz(event.timezone).format(DATE_TIME_FORMAT) : null,
+          startTime: event.startTime ? dayjs(event.startTime).tz(event.timezone ?? undefined).toDate() : null,
+          endTime: event.endTime ? dayjs(event.endTime).tz(event.timezone ?? undefined).toDate() : null,
         }
       })
       const state = getAccountabilityState(now, goalsAndNotifications, calendarEvents);

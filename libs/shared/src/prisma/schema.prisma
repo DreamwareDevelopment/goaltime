@@ -564,7 +564,7 @@ model CalendarEvent {
   endTime     DateTime?        @map("end_time")
   duration    Int?             @map("duration")
   completed   Int              @default(0)
-  timeZone    String?          @map("time_zone") // Required if recurrence is set, otherwise it indicates a custom timezone
+  timezone    String?          @map("timezone") // Required if recurrence is set, otherwise it indicates a custom timezone
   eventType   EventType        @default(default)
   allDay      DateTime?        @map("all_day")
   color       String

@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_user_email",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name fix_timezone",
         "cwd": "libs/shared"
       }
     },

@@ -211,7 +211,7 @@ export async function saveSchedule(
       title: goalMap[goalId].title,
       description: goalMap[goalId].description,
       color: goalMap[goalId].color,
-      timeZone: timezone,
+      timezone,
     }
   });
   await prisma.calendarEvent.createMany({

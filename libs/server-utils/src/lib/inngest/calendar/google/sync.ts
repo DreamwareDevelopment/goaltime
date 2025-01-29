@@ -249,7 +249,7 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
     duration: end ? end.diff(start, 'minutes') : null,
     startTime: start?.toDate() ?? null,
     endTime: end?.toDate() ?? null,
-    timeZone: event.start?.timeZone ?? null,
+    timezone: event.start?.timeZone ?? null,
     eventType: event.eventType as EventType | undefined ?? EventType.default,
     locked: Boolean(event.locked),
     allDay: event.start?.date ? dayjs.utc(event.start.date).toDate() : event.end?.date ? dayjs.utc(event.end.date).toDate() : null,
