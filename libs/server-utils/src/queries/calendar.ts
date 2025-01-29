@@ -198,8 +198,8 @@ export async function saveSchedule(
     // console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)
     // console.log(`End UTC: ${end.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
     // I have no idea why, but the interval is in the timezone of the user in dev, but not in prod.
-    const startUTC = process.env.NODE_ENV !== 'development' ? start.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT) : start.utc().toDate()
-    const endUTC = process.env.NODE_ENV !== 'development' ? end.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT) : end.utc().toDate()
+    const startUTC = process.env.NODE_ENV !== 'development' ? start.utc().add(utcOffset, 'minutes').toDate() : start.utc().toDate()
+    const endUTC = process.env.NODE_ENV !== 'development' ? end.utc().add(utcOffset, 'minutes').toDate() : end.utc().toDate()
     return {
       id: crypto.randomUUID(),
       userId,

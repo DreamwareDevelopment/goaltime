@@ -313,7 +313,7 @@ function getIntersection<T extends Interval<dayjs.Dayjs>>(logger: Logger, a: Int
     // logger.info(`Found intersection of ${start.format(DATE_TIME_FORMAT)} - ${end.format(DATE_TIME_FORMAT)}`);
     return { ...b, start, end };
   }
-  logger.info(`No intersection found`);
+  // logger.info(`No intersection found`);
   return null;
 }
 
