@@ -190,19 +190,27 @@ export async function saveSchedule(
   schedule: Array<GoalEvent<dayjs.Dayjs>>
 ): Promise<CalendarEvent[]> {
   const prisma = await getPrismaClient(userId);
-  const scheduleData = schedule.map(({ goalId, start, end }) => ({
-    id: crypto.randomUUID(),
-    userId,
-    goalId,
-    provider: CalendarProvider.goaltime,
-    duration: end.diff(start, 'minutes'),
-    startTime: start.tz(timezone).toDate(),
-    endTime: end.tz(timezone).toDate(),
-    title: goalMap[goalId].title,
-    description: goalMap[goalId].description,
-    color: goalMap[goalId].color,
-    timeZone: timezone,
-  }));
+  const scheduleData = schedule.map(({ goalId, start, end }) => {
+    console.log(`Start: ${start.format(DATE_TIME_FORMAT)}`)
+    console.log(`Start TZ: ${start.tz(timezone).format(DATE_TIME_FORMAT)}`)
+    console.log(`Start UTC: ${start.utc().format(DATE_TIME_FORMAT)}`)
+    console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)
+    console.log(`End TZ: ${end.tz(timezone).format(DATE_TIME_FORMAT)}`)
+    console.log(`End UTC: ${end.utc().format(DATE_TIME_FORMAT)}`)
+    return {
+      id: crypto.randomUUID(),
+      userId,
+      goalId,
+      provider: CalendarProvider.goaltime,
+      duration: end.diff(start, 'minutes'),
+      startTime: start.utc().toDate(),
+      endTime: end.utc().toDate(),
+      title: goalMap[goalId].title,
+      description: goalMap[goalId].description,
+      color: goalMap[goalId].color,
+      timeZone: timezone,
+    }
+  });
   await prisma.calendarEvent.createMany({
     data: scheduleData,
   });
