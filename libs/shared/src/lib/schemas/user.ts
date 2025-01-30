@@ -5,6 +5,7 @@ import { dayjs } from '../utils'
 import { UserProfile } from '@prisma/client'
 import { ExternalEvent, Interval } from '../types/scheduling'
 import { Jsonify } from 'inngest/helpers/jsonify'
+import { DATE_TIME_FORMAT } from '../constants'
 
 export const daysOfTheWeek = z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
 export type DaysOfTheWeekType = z.infer<typeof daysOfTheWeek>
@@ -139,17 +140,27 @@ export function formatRoutine(profile: UserProfile | Jsonify<UserProfile>): Seri
   for (const activity in parsed) {
     if (activity === 'custom') {
       for (const key in parsed.custom) {
-        parsed.custom[key] = {
-          ...parsed.custom[key],
-          start: parsed.custom[key].start ? dayjs(parsed.custom[key].start).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
-          end: parsed.custom[key].end ? dayjs(parsed.custom[key].end).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
+        for (const day in parsed.custom[key]) {
+          const dayEntry = parsed.custom[key][day as RoutineDay]
+          const start = dayEntry.start ? dayjs(dayEntry.start).tz(profile.timezone).format(DATE_TIME_FORMAT) : null
+          const end = dayEntry.end ? dayjs(dayEntry.end).tz(profile.timezone).format(DATE_TIME_FORMAT) : null
+          parsed.custom[key][day as RoutineDay] = {
+            ...dayEntry,
+            start,
+            end,
+          }
         }
       }
     } else {
-      parsed[activity] = {
-        ...parsed[activity],
-        start: parsed[activity].start ? dayjs(parsed[activity].start).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
-        end: parsed[activity].end ? dayjs(parsed[activity].end).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
+      for (const day in parsed[activity as RoutineActivity]) {
+        const dayEntry = parsed[activity as RoutineActivity][day as RoutineDay] as Routine
+        const start = dayEntry.start ? dayjs(dayEntry.start).tz(profile.timezone).format(DATE_TIME_FORMAT) : null
+        const end = dayEntry.end ? dayjs(dayEntry.end).tz(profile.timezone).format(DATE_TIME_FORMAT) : null
+        parsed[activity as RoutineActivity][day as RoutineDay] = {
+          ...dayEntry,
+          start,
+          end,
+        }
       }
     }
   }
