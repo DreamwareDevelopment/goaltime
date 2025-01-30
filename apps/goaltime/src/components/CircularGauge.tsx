@@ -39,24 +39,42 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
     >
       {goals.map((goal, index) => {
         const startAngle = index === 0 ? 0 : goals.slice(0, index).reduce((sum, prevGoal) => sum + (prevGoal.commitment || prevGoal.estimate || 0), 0) / totalCommitment * circumference;
-        const endAngle = startAngle + ((goal.commitment || goal.estimate || 0) / totalCommitment * circumference);
+        const endAngle = startAngle + (((goal.commitment || goal.estimate || 0) / totalCommitment) * circumference);
+        const completedAngle = startAngle + (((goal.completed || 0) / totalCommitment) * circumference);
 
         return (
-          <circle
-            key={goal.id}
-            cx={size / 2}
-            cy={size / 2}
-            r={(size / 2) - 20}
-            fill="transparent"
-            stroke={goal.color}
-            strokeOpacity={hoveredGoal === goal ? 0.7 : 1}
-            strokeWidth="35"
-            strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
-            strokeDashoffset={-startAngle}
-            transform={`rotate(-90, ${size / 2}, ${size / 2})`} // Rotate each circle
-            onMouseEnter={() => handleMouseEnter(goal)}
-            onMouseLeave={handleMouseLeave}
-          />
+          <>
+            <circle
+              key={goal.id}
+              cx={size / 2}
+              cy={size / 2}
+              r={(size / 2) - 20}
+              fill="transparent"
+              stroke={goal.color}
+              strokeOpacity={hoveredGoal === goal ? 0.7 : 1}
+              strokeWidth="35"
+              strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
+              strokeDashoffset={-startAngle}
+              transform={`rotate(-90, ${size / 2}, ${size / 2})`} // Rotate each circle
+              onMouseEnter={() => handleMouseEnter(goal)}
+              onMouseLeave={handleMouseLeave}
+            />
+            <circle
+              key={goal.id}
+              cx={size / 2}
+              cy={size / 2}
+              r={(size / 2) - 20}
+              fill="transparent"
+              stroke="black"
+              strokeOpacity={0.3}
+              strokeWidth="35"
+              strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
+              strokeDashoffset={-completedAngle}
+              transform={`rotate(-90, ${size / 2}, ${size / 2})`} // Rotate each circle
+              onMouseEnter={() => handleMouseEnter(goal)}
+              onMouseLeave={handleMouseLeave}
+            />
+          </>
         );
       })}
       <circle
@@ -69,7 +87,8 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
       <foreignObject x={0} y={0} width={size} height={size} pointerEvents="none">
         <div className="w-full p-8 h-full flex flex-col items-center justify-center text-center font-bold gap-2">
           <p style={{ fontSize: hoveredGoal ? getFontSize(hoveredGoal.title) : 48 }}>{hoveredGoal ? hoveredGoal.title : `${goals.length} Goal${goals.length > 1 ? 's' : ''}`}</p>
-          <p className="text-lg sm:text-xs text-muted-foreground">{hoveredGoal ? hoveredGoal.commitment : goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0)} hours</p>
+          <p className="text-lg sm:text-xs text-muted-foreground">{hoveredGoal ? 'Goal' : 'Total'}: {hoveredGoal ? hoveredGoal.commitment : goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0)} hours</p>
+          <p className={hoveredGoal ? 'text-lg sm:text-xs text-muted-foreground' : 'hidden'}>Completed: {hoveredGoal ? hoveredGoal.completed : goals.reduce((sum, goal) => sum + (goal.completed || 0), 0)} hours</p>
         </div>
       </foreignObject>
     </svg>
