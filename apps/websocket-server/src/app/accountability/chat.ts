@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
 
 import { UserProfile } from "@prisma/client";
-import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
+import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, formatEvent, formatGoal, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngestConsumer, InngestEvent } from "@/server-utils/inngest";
 import { posthog } from "@/server-utils/posthog";
 import { getPrismaClient } from "@/server-utils/prisma";
@@ -147,16 +147,16 @@ async function handleNotification(logger: Logger, profile: UserProfile, notifica
       sessionId: randomUUID(),
       userId: profile.userId,
       metadata: {
-        goal: notification.goal,
-        event: notification.event,
+        goal: formatGoal(notification.goal),
+        event: formatEvent(notification.event, profile.timezone),
       },
     })
   } else {
     logger.info(`Continuing chat session for user ${profile.userId} for event ${notification.event}`);
     session = await zep.memory.updateSession(profile.lastChatSessionId, {
       metadata: {
-        goal: notification.goal,
-        event: notification.event,
+        goal: formatGoal(notification.goal),
+        event: formatEvent(notification.event, profile.timezone),
       },
     })
   }

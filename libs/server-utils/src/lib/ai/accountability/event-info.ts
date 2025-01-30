@@ -67,12 +67,12 @@ export async function eventInformationAgent(logger: Logger, profile: UserProfile
   const eventTimeframe = await getEventsTimeframe(sessionId);
   const events = await getEvents(profile.userId, eventTimeframe);
   logger.info(`Timeframe:\n\tStart: ${eventTimeframe.start}\n\tEnd: ${eventTimeframe.end}`);
-  logger.info(`Events: ${formatEvents(events)}`);
+  logger.info(`Events: ${formatEvents(events, profile.timezone)}`);
   // TODO: Figure out if they are asking for future or past events
   const systemPrompt = `{
     "role": "You are to answer questions about the user's events.",
     "now": "${now.format(DATE_TIME_FORMAT)}",
-    "events": ${formatEvents(events)},
+    "events": ${formatEvents(events, profile.timezone)},
     "timezone": "${profile.timezone}",
     "instructions": "You are given a list of events sorted by start time within the time frame the user is asking about. All events are in the same timezone as the user.
     Answer the user's question about the event(s) they are referencing.",

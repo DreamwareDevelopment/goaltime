@@ -6,23 +6,10 @@ import twilio from 'twilio'
 import { isDeepStrictEqual } from 'util'
 import { UserProfile } from '@prisma/client'
 import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
-import { zep } from '@/server-utils/ai'
+import { formatUser, zep } from '@/server-utils/ai'
 
 import { fullSyncCalendarAction, syncCalendarAction } from './calendar'
 import { SanitizedUser } from '@/shared/utils'
-
-const zepIgnoredUserFields = [
-  'userId',
-  'name',
-  'otp',
-  'avatarUrl',
-  'phone',
-  'hasOnboarded',
-]
-
-function getZepUserMetadata(userProfile: UserProfile) {
-  return Object.fromEntries(Object.entries(userProfile).filter(([key]) => !zepIgnoredUserFields.includes(key)))
-}
 
 function getRoutineForUpsert(routine: RoutineActivities) {
   for (const activity in routine) {
@@ -85,7 +72,7 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
       firstName,
       lastName: lastName.join(' '),
       email: user.email,
-      metadata: getZepUserMetadata(userProfile),
+      metadata: JSON.parse(formatUser(userProfile)),
     })
   } catch (error) {
     console.error('Error adding user to Zep', error)
@@ -140,7 +127,7 @@ export async function updateUserProfileAction(original: UserProfile, profile: Pa
     })
   }
   await zep.user.update(updated.userId, {
-    metadata: getZepUserMetadata(updated),
+    metadata: JSON.parse(formatUser(updated)),
   })
   return updated
 }

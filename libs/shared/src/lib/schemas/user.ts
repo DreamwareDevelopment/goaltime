@@ -134,6 +134,28 @@ export type SerializedRoutineActivities = z.infer<typeof SerializedRoutineActivi
 
 export type RoutineActivity = keyof RoutineActivities;
 
+export function formatRoutine(profile: UserProfile | Jsonify<UserProfile>): SerializedRoutineActivities {
+  const parsed = SerializedRoutineActivitiesSchema.parse(profile.routine)
+  for (const activity in parsed) {
+    if (activity === 'custom') {
+      for (const key in parsed.custom) {
+        parsed.custom[key] = {
+          ...parsed.custom[key],
+          start: parsed.custom[key].start ? dayjs(parsed.custom[key].start).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
+          end: parsed.custom[key].end ? dayjs(parsed.custom[key].end).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
+        }
+      }
+    } else {
+      parsed[activity] = {
+        ...parsed[activity],
+        start: parsed[activity].start ? dayjs(parsed[activity].start).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
+        end: parsed[activity].end ? dayjs(parsed[activity].end).tz(profile.timezone).format(DATE_TIME_FORMAT) : null,
+      }
+    }
+  }
+  return parsed
+}
+
 export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): RoutineActivities {
   const parsed = SerializedRoutineActivitiesSchema.parse(profile.routine)
   if (!parsed.sleep || !parsed.breakfast || !parsed.lunch || !parsed.dinner) {

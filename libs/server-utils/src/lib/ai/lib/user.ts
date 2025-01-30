@@ -1,4 +1,7 @@
+import { DATE_TIME_FORMAT } from "@/shared/utils";
+import { formatRoutine } from "@/shared/zod";
 import { UserProfile } from "@prisma/client";
+import dayjs from "dayjs";
 import { Jsonify } from "inngest/helpers/jsonify";
 
 export function formatUser(user: UserProfile | Jsonify<UserProfile>): string {
@@ -9,10 +12,10 @@ export function formatUser(user: UserProfile | Jsonify<UserProfile>): string {
     "birthday": "${user.birthday}",
     "occupation": "${user.occupation}",
     "unemployed": "${user.unemployed}",
-    "startsWorkAt": "${user.startsWorkAt}",
-    "endsWorkAt": "${user.endsWorkAt}",
+    "startsWorkAt": "${dayjs(user.startsWorkAt).tz(user.timezone).format(DATE_TIME_FORMAT)}",
+    "endsWorkAt": "${dayjs(user.endsWorkAt).tz(user.timezone).format(DATE_TIME_FORMAT)}",
     "workDays": "${user.workDays}",
-    "routine": "${user.routine}",
+    "routine": "${formatRoutine(user)}",
     "unemployed": "${user.unemployed}",
   }`
 }

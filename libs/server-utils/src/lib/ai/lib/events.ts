@@ -2,9 +2,9 @@ import { CalendarEvent } from "@prisma/client"
 import { DATE_TIME_FORMAT, dayjs } from "@/shared/utils"
 import { Jsonify } from "inngest/helpers/jsonify"
 
-export function formatEvent(event: CalendarEvent | Jsonify<CalendarEvent>): string {
-  const startTime = event.startTime ? dayjs(event.startTime) : null
-  const endTime = event.endTime ? dayjs(event.endTime) : null
+export function formatEvent(event: CalendarEvent | Jsonify<CalendarEvent>, timezone: string): string {
+  const startTime = event.startTime ? dayjs(event.startTime).tz(timezone) : null
+  const endTime = event.endTime ? dayjs(event.endTime).tz(timezone) : null
   const duration = endTime ? endTime.diff(startTime, "minutes") : null
   return `{
     "title": "${event.title}",
@@ -15,6 +15,6 @@ export function formatEvent(event: CalendarEvent | Jsonify<CalendarEvent>): stri
   }`
 }
 
-export function formatEvents(events: Array<CalendarEvent | Jsonify<CalendarEvent>>): string {
-  return JSON.stringify(events.map(formatEvent), null, 2)
+export function formatEvents(events: Array<CalendarEvent | Jsonify<CalendarEvent>>, timezone: string): string {
+  return JSON.stringify(events.map(event => formatEvent(event, timezone)), null, 2)
 }

@@ -6,16 +6,14 @@ import { Goal } from '@prisma/client'
 import { isDeepStrictEqual } from 'util'
 import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
 import { GoalWithNotifications } from '@/shared/utils'
-import { zep } from '@/server-utils/ai'
+import { formatGoal, zep } from '@/server-utils/ai'
 
 // TODO: Use a more minimal goal schema
 async function upsertGoalToGraph(goal: Goal): Promise<void> {
   await zep.graph.add({
     type: "json",
     userId: goal.userId,
-    data: JSON.stringify({
-      goal,
-    }),
+    data: formatGoal(goal),
   })
 }
 
