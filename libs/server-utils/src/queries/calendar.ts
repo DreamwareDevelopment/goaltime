@@ -19,15 +19,15 @@ export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Prom
       OR: [
         {
           startTime: {
-            gte: sleepRoutine.end.utc().toDate(),
-            lte: sleepRoutine.start.utc().toDate(),
+            gte: sleepRoutine.end.toDate(),
+            lte: sleepRoutine.start.toDate(),
             not: null,
           },
         },
         {
           allDay: {
-            gte: sleepRoutine.end.utc().toDate(),
-            lte: sleepRoutine.start.utc().toDate(),
+            gte: sleepRoutine.end.toDate(),
+            lte: sleepRoutine.start.toDate(),
             not: null,
           },
         }
