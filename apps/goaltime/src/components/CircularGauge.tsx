@@ -31,7 +31,12 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
 
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={className}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className={className}
+    >
       {goals.map((goal, index) => {
         const startAngle = index === 0 ? 0 : goals.slice(0, index).reduce((sum, prevGoal) => sum + (prevGoal.commitment || prevGoal.estimate || 0), 0) / totalCommitment * circumference;
         const endAngle = startAngle + ((goal.commitment || goal.estimate || 0) / totalCommitment * circumference);
@@ -48,6 +53,7 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
             strokeWidth="35"
             strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
             strokeDashoffset={-startAngle}
+            transform={`rotate(-90, ${size / 2}, ${size / 2})`} // Rotate each circle
             onMouseEnter={() => handleMouseEnter(goal)}
             onMouseLeave={handleMouseLeave}
           />
