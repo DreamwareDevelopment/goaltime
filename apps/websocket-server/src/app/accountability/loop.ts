@@ -227,8 +227,8 @@ export const startAccountabilityLoop = inngestConsumer.createFunction({
   let i = 0;
   do {
     const state = await step.run(`get-accountability-state-${i}`, async () => {
-      logger.info(`Getting accountability state ${i}`);
       const now = dayjs().second(0);
+      logger.info(`Getting accountability state ${i} at ${now.format(DATE_TIME_FORMAT)}`);
       const prisma = await getPrismaClient();
       const userIds = await getUserIds(prisma);
       const goalsAndNotifications = await prisma.goal.findMany({
@@ -258,7 +258,7 @@ export const startAccountabilityLoop = inngestConsumer.createFunction({
       calendarEvents = calendarEvents.map(event => {
         const start = event.startTime ? dayjs(event.startTime).tz(event.timezone ?? undefined).toDate() : null;
         const end = event.endTime ? dayjs(event.endTime).tz(event.timezone ?? undefined).toDate() : null;
-        logger.info(`Saving Event "${event.title}" - ${start ? dayjs(start).format(DATE_TIME_FORMAT) : 'null'} - ${end ? dayjs(end).format(DATE_TIME_FORMAT) : 'null'}`);
+        logger.info(`Got Accountability Event "${event.title}" - ${start ? dayjs(start).format(DATE_TIME_FORMAT) : 'null'} - ${end ? dayjs(end).format(DATE_TIME_FORMAT) : 'null'}`);
         return {
           ...event,
           startTime: start,
