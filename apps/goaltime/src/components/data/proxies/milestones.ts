@@ -6,6 +6,8 @@ import { Milestone } from '@prisma/client'
 import { z } from 'zod'
 import { getTsRestClient } from '@/ui-components/hooks/ts-rest'
 import { binarySearchInsert, dayjs } from '@/shared/utils'
+import { refreshTokenIfNeeded } from '@/libs/ui-components/src/hooks/supabase'
+import { getTokenInfo } from '@/libs/ui-components/src/hooks/supabase'
 
 interface LockHolder {
   lock: Promise<void> | null
@@ -175,15 +177,27 @@ export const milestoneDynamicStore = proxy<{
     })
   },
   async loadMilestones(goalId, userId, view) {
-    const client = getTsRestClient();
     milestoneDynamicStore.ensureMilestones(goalId, view)
-    const response = await client.milestones.getMilestones({
+    let tokenInfo = await getTokenInfo();
+    let client = await getTsRestClient(tokenInfo);
+    let response = await client.milestones.getMilestones({
       query: {
         goalId,
         userId,
         view,
       },
-    })
+    });
+    if (response.status === 401 || response.status === 403) {
+      tokenInfo = await refreshTokenIfNeeded(tokenInfo);
+      client = await getTsRestClient(tokenInfo);
+      response = await client.milestones.getMilestones({
+        query: {
+          goalId,
+          userId,
+          view,
+        },
+      });
+    }
     if (response.status !== 200) {
       console.error(`Error loading milestones for goal ${goalId} view ${view}`, response)
       throw new Error(`Error loading milestones for goal ${goalId} view ${view}`)

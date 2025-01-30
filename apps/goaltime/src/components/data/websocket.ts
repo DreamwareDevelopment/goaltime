@@ -1,47 +1,9 @@
-import { createClient } from '@/ui-components/hooks/supabase'
+import { getTokenInfo, refreshTokenIfNeeded, TokenInfo } from '@/ui-components/hooks/supabase'
 
 interface WebSocketClientOptions {
   onOpen: () => void
   onMessage: (event: MessageEvent) => void
   onError: (error: Event) => void
-}
-
-interface TokenInfo {
-  accessToken: string
-  expiresAt?: number
-  refreshToken: string
-}
-
-async function getTokenInfo(): Promise<TokenInfo> {
-  const supabase = await createClient()
-  const session = await supabase.auth.getSession()
-  if (!session.data.session) {
-    throw new Error('No session found')
-  }
-  return {
-    accessToken: session.data.session.access_token,
-    expiresAt: session.data.session.expires_at,
-    refreshToken: session.data.session.refresh_token,
-  }
-}
-
-async function refreshTokenIfNeeded(tokenInfo: TokenInfo): Promise<TokenInfo> {
-  if (tokenInfo.expiresAt && tokenInfo.expiresAt < Date.now() / 1000) {
-    console.log('Refreshing token...')
-    const supabase = await createClient()
-    const refreshedSession = await supabase.auth.refreshSession({
-      refresh_token: tokenInfo.refreshToken,
-    })
-    if (!refreshedSession.data.session) {
-      throw new Error('Failed to refresh')
-    }
-    return {
-      accessToken: refreshedSession.data.session.access_token,
-      expiresAt: refreshedSession.data.session.expires_at,
-      refreshToken: refreshedSession.data.session.refresh_token,
-    }
-  }
-  return tokenInfo
 }
 
 export class WebSocketClient {

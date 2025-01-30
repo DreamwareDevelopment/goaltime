@@ -12,7 +12,8 @@ export default fp(async function (fastify: FastifyInstance) {
     verify: {
       extractToken(request) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (request.query as any).access_token as string | undefined;
+        const token = request.headers.authorization?.split(' ')[1] as string | undefined ?? (request.query as any).access_token as string | undefined;
+        return token;
       },
     },
   });

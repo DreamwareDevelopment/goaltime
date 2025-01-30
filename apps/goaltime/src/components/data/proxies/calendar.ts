@@ -6,6 +6,7 @@ import { deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEve
 import { binarySearchInsert, DATE_FORMAT, DATE_TIME_FORMAT, dayjs } from '@/libs/shared/src'
 import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
 import { goalStore } from './goals'
+import { getTokenInfo, refreshTokenIfNeeded } from '@/libs/ui-components/src/hooks/supabase'
 
 export const calendarStore = proxy<{
   events: Record<string, CalendarEvent[]>,
@@ -35,13 +36,24 @@ export const calendarStore = proxy<{
       console.log(`${calendarStore.events[dayString].length} Calendar events already loaded for ${dayString}`)
       return;
     }
-    const client = getTsRestClient();
-    const response = await client.calendar.getSchedule({
+    let tokenInfo = await getTokenInfo();
+    let client = await getTsRestClient(tokenInfo);
+    let response = await client.calendar.getSchedule({
       query: {
         date: day.toDate(),
         timezone,
       }
     });
+    if (response.status === 401 || response.status === 403) {
+      tokenInfo = await refreshTokenIfNeeded(tokenInfo);
+      client = await getTsRestClient(tokenInfo);
+      response = await client.calendar.getSchedule({
+        query: {
+          date: day.toDate(),
+          timezone,
+        }
+      });
+    }
     const { body, status } = response;
     if (status === 200) {
       calendarStore.events[dayString] = body;

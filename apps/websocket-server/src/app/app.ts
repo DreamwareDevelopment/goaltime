@@ -1,5 +1,6 @@
 import AutoLoad from '@fastify/autoload';
 import formBody from '@fastify/formbody';
+import cors from '@fastify/cors';
 import qs from 'qs';
 import { FastifyInstance } from 'fastify';
 import inngestFastify from 'inngest/fastify';
@@ -50,6 +51,32 @@ export async function app(fastify: FastifyInstance, opts: AppOptions) {
     options: { ...opts },
   });
 
+  fastify.register(cors, {
+    origin: process.env.NEXT_PUBLIC_HOST,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Accept',
+      'Accept-Encoding',
+      'Accept-Language',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+      'Access-Control-Request-Private-Network',
+      'Authorization',
+      'Connection',
+      'Content-Type',
+      'Host',
+      'Origin',
+      'Referer',
+      'Sec-Ch-Ua',
+      'Sec-Ch-Ua-Mobile',
+      'Sec-Ch-Ua-Platform',
+      'Sec-Fetch-Dest',
+      'Sec-Fetch-Mode',
+      'Sec-Fetch-Site',
+      'User-Agent',
+    ],
+  });
+  
   // This loads all plugins defined in routes
   // define your routes in one of these
   fastify.register(AutoLoad, {

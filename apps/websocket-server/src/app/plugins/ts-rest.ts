@@ -2,16 +2,23 @@ import { initServer } from '@ts-rest/fastify';
 
 import { baseContract } from '@/shared/contracts';
 import { dayjs } from '@/shared/utils';
-import { getProfile, getSanitizedUser } from '@/server-utils/queries/user';
+import { getProfile } from '@/server-utils/queries/user';
 import { getSchedule } from '@/server-utils/queries/calendar';
 import { getMilestones } from '@/server-utils/queries/milestones';
+import { FastifyRequest } from 'fastify';
+import { User } from '@supabase/supabase-js';
 
 const server = initServer();
 
-export default server.router(baseContract, {
+function getUser(request: FastifyRequest): User {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (request as any).supabaseUser as User;
+}
+
+export default server.plugin(server.router(baseContract, {
   calendar: {
     getSchedule: async (args) => {
-      const user = await getSanitizedUser();
+      const user = getUser(args.request);
       const profile = await getProfile(user.id);
       if (!profile) {
         console.error('Profile not found during getSchedule');
@@ -39,4 +46,4 @@ export default server.router(baseContract, {
       };
     },
   },
-});
+}));
