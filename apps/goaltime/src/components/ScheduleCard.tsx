@@ -17,7 +17,7 @@ import { Separator } from "@/ui-components/separator";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui-components/card";
 import { Accordion, AccordionTrigger, AccordionItem, AccordionContent } from "@/ui-components/accordion";
-import { binarySearchInsert, dayjs, debounce, ExternalEvent, truncateText } from "@/shared/utils";
+import { binarySearchInsert, dayjs, DATE_FORMAT, DATE_TIME_FORMAT, debounce, ExternalEvent, truncateText } from "@/shared/utils";
 import { CalendarEvent, CalendarProvider } from "@prisma/client";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
@@ -54,25 +54,28 @@ function isRoutineEvent(event: ViewFieldsWithExternalEvent | ViewFieldsWithCalen
 
 export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const [date, setDate] = useState(new Date());
-  const day = date.toDateString();
-  const dayjsDate = dayjs(date);
-  const dayName = dayjsDate.format('dddd') as DaysOfTheWeekType;
-  const now = new Date();
+  const day = dayjs(date);
+  const dateString = day.format(DATE_FORMAT);
+  const dayName = day.format('dddd') as DaysOfTheWeekType;
+  const now = dayjs();
+  console.log(`Date: ${day.format(DATE_TIME_FORMAT)}`)
+  console.log(`Now: ${now.format(DATE_TIME_FORMAT)}`)
+  console.log(`Day: ${dayName}`)
   const { calendarStore, userStore } = useValtio();
   const isDesktop = useMediaQuery('(min-width: 500px)');
-  calendarStore.ensureCalendarEvents(date);
-  const schedule = useSnapshot(calendarStore.events[day]);
+  calendarStore.ensureCalendarEvents(dateString);
+  const schedule = useSnapshot(calendarStore.events[dateString]);
   console.log(`Schedule: ${JSON.stringify(schedule)}`)
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
   const routine = getProfileRoutine(profile);
-  const routineEvents = routineToExternalEvents(routine, timezone, dayjsDate);
+  const routineEvents = routineToExternalEvents(routine, timezone, day);
   const routineEventsByDay = routineEvents[dayName];
   const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
   const sleepHour = dayjs(routine.sleep[dayName].start).hour();
   const { toast } = useToast();
-  const isToday = now.toDateString() === date.toDateString();
+  const isToday = now.format(DATE_FORMAT) === dateString;
   const [isLoading, setIsLoading] = useState(true)
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
@@ -95,7 +98,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     setIsLoading(true);
     const clearDebounce = debounce(async () => {
       try {
-        await calendarStore.loadCalendarEvents(date, timezone)
+        await calendarStore.loadCalendarEvents(day, timezone)
       } catch (error) {
         console.error(error);
         toast({
@@ -243,7 +246,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   shiftOverlappingEvents(events);
 
   useEffect(() => {
-    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const currentTime = now.hour() * 60 + now.minute();
   
     let upcomingEvent = null;
     if (isToday) {
@@ -394,6 +397,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                           "absolute px-2 mt-2 rounded-sm w-[calc(100%-8px)] hover:z-50",
                           event.event.provider === CalendarProvider.goaltime ? "text-white hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
                         )}
+                        onClick={() => {
+                          console.log(`Event: ${JSON.stringify(event)}`)
+                        }}
                         style={{
                           backgroundColor: event.event.provider === CalendarProvider.goaltime ? event.event.color : "hsl(var(--accent-foreground))",
                           top: `${event.viewFields.top}px`,

@@ -11,7 +11,7 @@ import { getProfileRoutine, getSleepRoutineForDay } from "@/shared/zod";
 export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const routine = getProfileRoutine(profile);
   const sleepRoutine = getSleepRoutineForDay(routine, date);
-  console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).format(DATE_TIME_FORMAT)}`);
+  console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).utc().format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).utc().format(DATE_TIME_FORMAT)}`);
   const prisma = await getPrismaClient(profile.userId);
   const schedule = await prisma.calendarEvent.findMany({
     where: {
@@ -19,15 +19,15 @@ export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Prom
       OR: [
         {
           startTime: {
-            gte: sleepRoutine.end.toDate(),
-            lte: sleepRoutine.start.toDate(),
+            gte: sleepRoutine.end.utc().toDate(),
+            lte: sleepRoutine.start.utc().toDate(),
             not: null,
           },
         },
         {
           allDay: {
-            gte: sleepRoutine.end.toDate(),
-            lte: sleepRoutine.start.toDate(),
+            gte: sleepRoutine.end.utc().toDate(),
+            lte: sleepRoutine.start.utc().toDate(),
             not: null,
           },
         }
@@ -192,7 +192,7 @@ export async function saveSchedule(
   const prisma = await getPrismaClient(userId);
   const scheduleData = schedule.map(({ goalId, start, end }) => {
     const utcOffset = Math.abs(start.tz(timezone).utcOffset())
-    console.log(`UTC Offset: ${utcOffset}`)
+    // console.log(`UTC Offset: ${utcOffset}`)
     // console.log(`Start: ${start.format(DATE_TIME_FORMAT)}`)
     // console.log(`Start UTC: ${start.utc().add(utcOffset, 'minutes').format(DATE_TIME_FORMAT)}`)
     // console.log(`End: ${end.format(DATE_TIME_FORMAT)}`)

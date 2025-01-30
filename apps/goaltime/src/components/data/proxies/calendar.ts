@@ -3,15 +3,15 @@ import { proxy } from 'valtio'
 import { CalendarEventInput } from "@/shared/zod"
 import { CalendarEvent } from '@prisma/client'
 import { deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEventColorsAction } from '../../../app/actions/calendar'
-import { binarySearchInsert, DATE_TIME_FORMAT, dayjs } from '@/libs/shared/src'
+import { binarySearchInsert, DATE_FORMAT, DATE_TIME_FORMAT, dayjs } from '@/libs/shared/src'
 import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
 import { goalStore } from './goals'
 
 export const calendarStore = proxy<{
   events: Record<string, CalendarEvent[]>,
   init(events: CalendarEvent[]): void,
-  ensureCalendarEvents(date: Date): void,
-  loadCalendarEvents(date: Date, timezone: string): Promise<void>,
+  ensureCalendarEvents(date: string): void,
+  loadCalendarEvents(date: dayjs.Dayjs, timezone: string): Promise<void>,
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
   updateEventColors(goalId: string, color: string): Promise<void>,
   deleteCalendarEvent(event: CalendarEvent): Promise<void>,
@@ -19,67 +19,70 @@ export const calendarStore = proxy<{
 }>({
   events: {},
   init(events: CalendarEvent[]) {
-    const today = dayjs().toDate().toDateString();
+    const today = dayjs().format(DATE_FORMAT);
     calendarStore.events[today] = events;
     console.log(`${events.length} Calendar events initialized for ${today}`)
   },
-  ensureCalendarEvents(date: Date) {
-    if (!calendarStore.events[dayjs(date).toDate().toDateString()]) {
-      calendarStore.events[dayjs(date).toDate().toDateString()] = []
+  ensureCalendarEvents(date: string) {
+    if (!calendarStore.events[date]) {
+      calendarStore.events[date] = []
     }
   },
-  async loadCalendarEvents(date: Date, timezone: string) {
-    const day = date.toDateString()
-    console.log(`Loading calendar events for ${dayjs(date).format(DATE_TIME_FORMAT)}`)
-    if (calendarStore.events[day] && calendarStore.events[day].length > 0) {
-      console.log(`${calendarStore.events[day].length} Calendar events already loaded for ${day}`)
+  async loadCalendarEvents(day: dayjs.Dayjs, timezone: string) {
+    const dayString = day.format(DATE_FORMAT);
+    console.log(`Loading calendar events for ${day.format(DATE_TIME_FORMAT)}`)
+    if (calendarStore.events[dayString] && calendarStore.events[dayString].length > 0) {
+      console.log(`${calendarStore.events[dayString].length} Calendar events already loaded for ${dayString}`)
       return;
     }
     const client = getTsRestClient();
     const response = await client.calendar.getSchedule({
       query: {
-        date,
+        date: day.toDate(),
         timezone,
       }
     });
     const { body, status } = response;
     if (status === 200) {
-      calendarStore.events[day] = body;
+      calendarStore.events[dayString] = body;
       console.log(`${body.length} Calendar events loaded for ${day}`)
     } else if (status === 404) {
+      console.error(`Calendar events not found for ${dayString}`)
       const errorMessage = response.body.error;
       throw new Error(errorMessage);
+    } else {
+      throw new Error(`Unexpected status code: ${status}`)
     }
   },
   async updateCalendarEvent(original, updated) {
-    const day = original.startTime ? dayjs(original.startTime).toDate().toDateString() : dayjs(original.allDay).toDate().toDateString()
-    if (!calendarStore.events[day]) {
-      throw new Error(`Invariant: day: ${day} not initialized in calendarStore`)
+    const dayString = original.startTime ? dayjs(original.startTime).format(DATE_FORMAT) : dayjs(original.allDay).format(DATE_FORMAT)
+    if (!calendarStore.events[dayString]) {
+      throw new Error(`Invariant: day: ${dayString} not initialized in calendarStore`)
     }
-    const originalIndex = calendarStore.events[day].findIndex(e => e.id === original.id)
+    const originalIndex = calendarStore.events[dayString].findIndex(e => e.id === original.id)
     if (originalIndex === -1) {
       throw new Error(`Invariant: event not found in calendarStore`)
     }
-    calendarStore.events[day].splice(originalIndex, 1)
-    const newIndex = original.allDay ? originalIndex : binarySearchInsert(calendarStore.events[day], { ...original, ...updated }, (a, b) => {
+    calendarStore.events[dayString].splice(originalIndex, 1)
+    const newIndex = original.allDay ? originalIndex : binarySearchInsert(calendarStore.events[dayString], { ...original, ...updated }, (a, b) => {
       if (!a.startTime || !b.startTime) {
         return !a.startTime ? -1 : 1
       }
       return dayjs(a.startTime).diff(dayjs(b.startTime))
     })
     const updatedEvent = await updateCalendarEventAction(original, updated)
-    calendarStore.events[day].splice(newIndex, 1, updatedEvent)
+    calendarStore.events[dayString].splice(newIndex, 1, updatedEvent)
   },
   async deleteCalendarEvent(event) {
-    const day = event.startTime ? dayjs(event.startTime).toDate().toDateString() : dayjs(event.allDay).toDate().toDateString()
-    if (!calendarStore.events[day]) {
-      throw new Error(`Invariant: day: ${day} not initialized in calendarStore`)
+    const dayString = event.startTime ? dayjs(event.startTime).format(DATE_FORMAT) : dayjs(event.allDay).format(DATE_FORMAT)
+    if (!calendarStore.events[dayString]) {
+      throw new Error(`Invariant: day: ${dayString} not initialized in calendarStore`)
     }
-    const index = calendarStore.events[day].findIndex(e => e.id === event.id)
+    const index = calendarStore.events[dayString].findIndex(e => e.id === event.id)
     if (index === -1) {
       throw new Error(`Invariant: event not found in calendarStore`)
     }
-    calendarStore.events[day].splice(index, 1)
+    calendarStore.events[dayString].splice(index, 1)
     await deleteCalendarEventAction(event.id, event.userId)
   },
   async updateEventColors(goalId: string, color: string) {
@@ -119,7 +122,7 @@ export const calendarStore = proxy<{
       if (!event.allDay && event.goalId && event.duration) {
         goalAggregates[event.goalId] = (goalAggregates[event.goalId] ?? 0) + event.duration;
       }
-      const eventDateString = eventDate.toDateString();
+      const eventDateString = dayjs(eventDate).format(DATE_FORMAT);
       if (!(eventDateString in calendarStore.events)) {
         continue;
       }
