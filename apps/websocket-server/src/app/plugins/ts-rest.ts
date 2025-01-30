@@ -1,4 +1,4 @@
-import { createNextHandler } from '@ts-rest/serverless/next';
+import { initServer } from '@ts-rest/fastify';
 
 import { baseContract } from '@/shared/contracts';
 import { dayjs } from '@/shared/utils';
@@ -6,7 +6,9 @@ import { getProfile, getSanitizedUser } from '@/server-utils/queries/user';
 import { getSchedule } from '@/server-utils/queries/calendar';
 import { getMilestones } from '@/server-utils/queries/milestones';
 
-const handler = createNextHandler(baseContract, {
+const server = initServer();
+
+export default server.router(baseContract, {
   calendar: {
     getSchedule: async (args) => {
       const user = await getSanitizedUser();
@@ -37,17 +39,4 @@ const handler = createNextHandler(baseContract, {
       };
     },
   },
-}, {
-  jsonQuery: true,
-  responseValidation: true,
-  handlerType: 'app-router',
 });
-
-export {
-  handler as GET,
-  handler as POST,
-  handler as PUT,
-  handler as PATCH,
-  handler as DELETE,
-  handler as OPTIONS,
-};

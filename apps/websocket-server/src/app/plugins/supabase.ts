@@ -132,7 +132,6 @@ const fastifySupabase: FastifyPluginCallback<FastifySupabasePluginOpts> = (
 };
 
 export default fp(fastifySupabase, {
-  fastify: "5.x",
   name: "fastify-supabase",
   dependencies: ["@fastify/jwt"],
 });
