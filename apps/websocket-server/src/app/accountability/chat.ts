@@ -115,7 +115,7 @@ async function shouldStartNewSession(logger: Logger, sessionId: string, message:
     roleType: "user",
   }]);
   const response = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: openai('gpt-4o'),
     messages: messagesToSend,
   })
   logger.info(`Response: ${response.text}`);
