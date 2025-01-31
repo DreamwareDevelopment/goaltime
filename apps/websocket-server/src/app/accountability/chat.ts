@@ -147,16 +147,16 @@ async function handleNotification(logger: Logger, profile: UserProfile, notifica
       sessionId: randomUUID(),
       userId: profile.userId,
       metadata: {
-        goal: formatGoal(notification.goal),
-        event: formatEvent(notification.event, profile.timezone),
+        goal: notification.goal,
+        event: notification.event,
       },
     })
   } else {
     logger.info(`Continuing chat session for user ${profile.userId} for event ${notification.event}`);
     session = await zep.memory.updateSession(profile.lastChatSessionId, {
       metadata: {
-        goal: formatGoal(notification.goal),
-        event: formatEvent(notification.event, profile.timezone),
+        goal: notification.goal,
+        event: notification.event,
       },
     })
   }

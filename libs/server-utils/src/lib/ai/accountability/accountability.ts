@@ -45,8 +45,8 @@ async function updateAccountability(
   event.completed = event.completed + completed;
   await zep.memory.updateSession(sessionId, {
     metadata: {
-      goal: formatGoal(goal),
-      event: formatEvent(event, profile.timezone),
+      goal,
+      event,
     },
   });
   return { goal, event };
@@ -175,7 +175,7 @@ export async function accountabilityUpdateAgent(logger: Logger, profile: UserPro
   if (!session.metadata.event) {
     throw new Error("Session event not found");
   }
-  let event = JSON.parse(session.metadata.event as string) as Jsonify<CalendarEvent>;
+  let event = session.metadata.event as Jsonify<CalendarEvent>;
   if (!event.duration) {
     logger.info(`Event duration not found:\n${JSON.stringify(event)}`);
     throw new Error("Event duration not found");
