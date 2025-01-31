@@ -5,6 +5,18 @@ import { getPrismaClient } from "@/server-utils/prisma";
 import { CalendarEventInput } from "@/shared/zod";
 import { CalendarEvent, GoogleAuth, UserProfile } from "@prisma/client";
 
+export async function createCalendarEventAction(event: CalendarEventInput): Promise<CalendarEvent> {
+  const prisma = await getPrismaClient(event.userId)
+  const newEvent = await prisma.calendarEvent.create({ data: event })
+  await inngestProducer.send({
+    name: InngestEvent.ScheduleUpdated,
+    data: {
+      userId: event.userId,
+    },
+  })
+  return newEvent
+}
+
 export async function updateCalendarEventAction(original: CalendarEvent, updated: CalendarEventInput): Promise<CalendarEvent> {
   const prisma = await getPrismaClient(original.userId)
   const updatedEvent = await prisma.calendarEvent.update({

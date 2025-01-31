@@ -43,9 +43,8 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
         const completedAngle = startAngle + (((goal.completed || 0) / totalCommitment) * circumference);
 
         return (
-          <>
+          <g key={goal.id}>
             <circle
-              key={goal.id}
               cx={size / 2}
               cy={size / 2}
               r={(size / 2) - 20}
@@ -60,7 +59,6 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
               onMouseLeave={handleMouseLeave}
             />
             <circle
-              key={`${goal.id}-completed`}
               cx={size / 2}
               cy={size / 2}
               r={(size / 2) - 20}
@@ -74,7 +72,7 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
               onMouseEnter={() => handleMouseEnter(goal)}
               onMouseLeave={handleMouseLeave}
             />
-          </>
+          </g>
         );
       })}
       <circle

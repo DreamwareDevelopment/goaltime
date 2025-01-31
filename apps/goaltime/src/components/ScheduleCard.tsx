@@ -1,7 +1,7 @@
 "use client"
 
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -80,7 +80,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState<Record<string, boolean>>({});
+  const [modalOpen, setModalOpen] = useState<Record<string, boolean>>({
+    createEvent: false,
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTimezoneWarning, setShowTimezoneWarning] = useState<boolean>(false);
 
@@ -433,7 +435,13 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                         </div>
                       </div>
                     </CredenzaTrigger>
-                    <EventModal event={event.event} is24Hour={is24Hour} isEditable={event.event.provider === CalendarProvider.goaltime} setOpen={(open) => setModalOpen({ ...modalOpen, [event.event.id]: open })} />
+                    <EventModal
+                      userId={profile.userId}
+                      event={event.event}
+                      is24Hour={is24Hour}
+                      isEditable={event.event.provider === CalendarProvider.goaltime}
+                      setOpen={(open) => setModalOpen({ ...modalOpen, [event.event.id]: open })}
+                    />
                   </Credenza>
                 );
               })}
@@ -487,7 +495,13 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                   </div>
                 </div>
               </CredenzaTrigger>
-              <EventModal event={event} is24Hour={is24Hour} isEditable={event.provider === CalendarProvider.goaltime} setOpen={(open) => setModalOpen({ ...modalOpen, [event.id]: open })} />
+              <EventModal
+                userId={profile.userId}
+                event={event}
+                is24Hour={is24Hour}
+                isEditable={event.provider === CalendarProvider.goaltime}
+                setOpen={(open) => setModalOpen({ ...modalOpen, [event.id]: open })}
+              />
             </Credenza>
           )
         })}
@@ -609,6 +623,21 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      <Credenza open={modalOpen.createEvent} onOpenChange={(open) => setModalOpen({ ...modalOpen, createEvent: open })}>
+        <CredenzaTrigger asChild>
+          <Button variant="outline">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </CredenzaTrigger>
+        <EventModal
+          userId={profile.userId}
+          event={null}
+          date={day}
+          is24Hour={is24Hour}
+          isEditable={true}
+          setOpen={(open) => setModalOpen({ ...modalOpen, createEvent: open })}
+        />
+      </Credenza>
     </div>
   )
 

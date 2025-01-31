@@ -6,17 +6,23 @@ import { Label } from "@/ui-components/label";
 import { LoadingSpinner } from "@/libs/ui-components/src/svgs/spinner";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 import { FieldErrors, useForm, UseFormReturn } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select";
 import { CalendarEventInput, CalendarEventSchema, getDefaults, getZodResolver } from "@/shared/zod";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { AutosizeTextarea } from "@/ui-components/text-area";
 import { useValtio } from "../data/valtio";
-import { CalendarEvent } from "@prisma/client";
+import { CalendarEvent, Goal } from "@prisma/client";
 import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
+import { useSnapshot } from "valtio";
+import { useEffect } from "react";
+import { cn } from "@/libs/ui-components/src/utils";
 
 interface EventModalProps extends React.HTMLAttributes<HTMLDivElement> {
-  event: CalendarEvent;
+  event: CalendarEvent | null;
+  date?: dayjs.Dayjs;
   isEditable: boolean;
   is24Hour: boolean;
+  userId: string;
   setOpen: (open: boolean) => void;
 }
 
@@ -42,6 +48,30 @@ const TitleInput: React.FC<{ form: UseFormReturn<CalendarEventInput> }> = ({ for
           <FormMessage className="ml-2" />
         </FormItem>
       )}
+    />
+  )
+}
+
+const GoalSelect: React.FC<{ goals: ReadonlyArray<Goal>, form: UseFormReturn<CalendarEventInput> }> = ({ goals, form }) => {
+  return (
+    <FormField
+      control={form.control}
+      name="goalId"
+      render={({ field }) => {
+        const selectedGoal = goals.find(goal => goal.id === field.value)
+        return (
+          <Select value={field.value ?? undefined} onValueChange={field.onChange}>
+            <SelectTrigger style={{ backgroundColor: selectedGoal?.color }} className="w-full mt-2 text-white">
+              <SelectValue placeholder="Select a goal" />
+            </SelectTrigger>
+            <SelectContent>
+              {goals.map(goal => (
+                <SelectItem key={goal.id} value={goal.id} style={{ backgroundColor: goal.color }} className="text-white">{goal.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+      }}
     />
   )
 }
@@ -75,17 +105,21 @@ const DescriptionInput: React.FC<{ form: UseFormReturn<CalendarEventInput> }> = 
   )
 }
 
-export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: EventModalProps) {
-  const { calendarStore } = useValtio()
+export function EventModal({ event, date, isEditable, is24Hour, userId, setOpen, ...props }: EventModalProps) {
+  const { calendarStore, goalStore } = useValtio()
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const goals = useSnapshot(goalStore.goals!)
   const { toast } = useToast();
 
+  const defaultValues = event ? {
+    ...getDefaults(CalendarEventSchema),
+    ...event,
+    userId,
+    startTime: dayjs(event.startTime).toDate(),
+    endTime: dayjs(event.endTime).toDate(),
+  } : getDefaults(CalendarEventSchema, { goalId: goals[0].id, color: goals[0].color, userId });
   const form = useForm<CalendarEventInput>({
-    defaultValues: {
-      ...getDefaults(CalendarEventSchema),
-      ...event,
-      startTime: dayjs(event.startTime).toDate(),
-      endTime: dayjs(event.endTime).toDate(),
-    },
+    defaultValues,
     resolver: getZodResolver(CalendarEventSchema, async (data) => {
       const errors: FieldErrors<CalendarEventInput> = {}
       if (data.startTime && data.endTime && dayjs(data.endTime).isBefore(dayjs(data.startTime))) {
@@ -100,17 +134,32 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
 
   const { formState, handleSubmit } = form
   const { isSubmitting, isValidating } = formState
+  useEffect(() => {
+    if (!event) {
+      form.setValue('startTime', (date ?? dayjs()).toDate());
+      form.setValue('endTime', (date ?? dayjs()).add(1, 'hour').toDate());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onSubmit = async () => {
     // This is intentionally closing the modal before the update to avoid the update
     // rerendering the open animation. It's instant so it's fine.
     setOpen(false);
     try {
-      await calendarStore.updateCalendarEvent(event, form.getValues());
-      toast({
-        title: 'Event updated',
-        description: 'Your event has been updated.',
-      });
+      if (event) {
+        await calendarStore.updateCalendarEvent(event, form.getValues());
+        toast({
+          title: 'Event updated',
+          description: 'Your event has been updated.',
+        });
+      } else {
+        await calendarStore.createCalendarEvent(form.getValues());
+        toast({
+          title: 'Event created',
+          description: 'Your event has been created.',
+        });
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -123,6 +172,9 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
 
   const handleDelete = async () => {
     setOpen(false);
+    if (!event) {
+      throw new Error('Event not found to delete');
+    }
     try {
       await calendarStore.deleteCalendarEvent(event);
       toast({
@@ -139,7 +191,7 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
     }
   }
 
-  if (!isEditable) {
+  if (!isEditable && event) {
     return (
       <CredenzaContent {...props}>
         <CredenzaDescription className="text-right pr-4">
@@ -163,14 +215,15 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
   return (
     <CredenzaContent {...props}>
       <CredenzaDescription className="sr-only">
-        Edit single event
+        {event ? 'Edit single event' : 'Create event'}
       </CredenzaDescription>
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CredenzaHeader className="flex flex-col items-center gap-2 md:py-4 px-4">
-            <p className="text-sm text-muted-foreground text-center w-full">Edit single event</p>
+            <p className="text-md font-semibold text-foreground text-center w-full">{ event ? 'Edit single event' : 'Create event' }</p>
             <TitleInput form={form} />
-            { form.watch('description') && <DescriptionInput form={form} /> }
+            { (form.watch('description') || !event) && <DescriptionInput form={form} /> }
+            <GoalSelect goals={goals} form={form} />
           </CredenzaHeader>
           <CredenzaBody className="px-0">
             <div className="flex flex-col gap-4 px-4 pt-0 pb-4">
@@ -185,7 +238,7 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
                           <Label className="pl-2">Start</Label>
                           <DatetimePicker
                             format={[
-                              [],
+                              event ? [] : ["years", "months", "days"],
                               ["hours", "minutes", "am/pm"]
                             ]}
                             {...field}
@@ -206,7 +259,7 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
                           <Label className="pl-2">End</Label>
                           <DatetimePicker
                             format={[
-                              [],
+                              event ? [] : ["years", "months", "days"],
                               ["hours", "minutes", "am/pm"]
                             ]}
                             {...field}
@@ -218,10 +271,15 @@ export function EventModal({ event, isEditable, is24Hour, setOpen, ...props }: E
                   )}
                 />
               </div>
-              <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
-                <ShinyButton variant="outline" onClick={handleDelete} className="w-28 h-[34px] sm:h-[51px] text-destructive bg-destructive/10 hover:bg-destructive/60">
-                  Delete Event
-                </ShinyButton>
+              <div className={cn(
+                "flex flex-col-reverse sm:flex-row sm:flex-wrap items-center gap-4",
+                !event ? 'justify-end' : 'justify-between',
+              )}>
+                { event && (
+                  <ShinyButton variant="outline" onClick={handleDelete} className="w-28 h-[34px] sm:h-[51px] text-destructive bg-destructive/10 hover:bg-destructive/60">
+                    Delete Event
+                  </ShinyButton>
+                )}
                 <ShinyButton className="w-28 h-[34px] sm:h-[51px]" variant="gooeyLeft" type="submit">
                   {isValidating || isSubmitting ? <LoadingSpinner /> : "Save"}
                 </ShinyButton>

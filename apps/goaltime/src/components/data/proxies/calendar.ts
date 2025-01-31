@@ -2,7 +2,7 @@ import { proxy } from 'valtio'
 
 import { CalendarEventInput } from "@/shared/zod"
 import { CalendarEvent } from '@prisma/client'
-import { deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEventColorsAction } from '../../../app/actions/calendar'
+import { createCalendarEventAction, deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEventColorsAction } from '../../../app/actions/calendar'
 import { binarySearchInsert, DATE_FORMAT, DATE_TIME_FORMAT, dayjs } from '@/libs/shared/src'
 import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
 import { goalStore } from './goals'
@@ -13,6 +13,7 @@ export const calendarStore = proxy<{
   init(events: CalendarEvent[]): void,
   ensureCalendarEvents(date: string): void,
   loadCalendarEvents(date: dayjs.Dayjs, timezone: string): Promise<void>,
+  createCalendarEvent(event: CalendarEventInput): Promise<void>,
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
   updateEventColors(goalId: string, color: string): Promise<void>,
   deleteCalendarEvent(event: CalendarEvent): Promise<void>,
@@ -65,6 +66,16 @@ export const calendarStore = proxy<{
     } else {
       throw new Error(`Unexpected status code: ${status}`)
     }
+  },
+  async createCalendarEvent(event: CalendarEventInput) {
+    const dayString = dayjs(event.startTime).format(DATE_FORMAT);
+    const newEvent = await createCalendarEventAction(event);
+    binarySearchInsert(calendarStore.events[dayString], newEvent, (a, b) => {
+      if (!a.startTime || !b.startTime) {
+        return !a.startTime ? -1 : 1
+      }
+      return dayjs(a.startTime).diff(dayjs(b.startTime))
+    })
   },
   async updateCalendarEvent(original, updated) {
     const dayString = original.startTime ? dayjs(original.startTime).format(DATE_FORMAT) : dayjs(original.allDay).format(DATE_FORMAT)

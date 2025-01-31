@@ -9,7 +9,7 @@
     "db": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx supabase@latest stop && npx supabase@latest start",
+        "command": "npx supabase@latest stop && npx supabase@latest start --exclude realtime,imgproxy,inbucket,postgrest,edge-runtime,vector,logflare",
         "cwd": "apps/supabase"
       }
     },
