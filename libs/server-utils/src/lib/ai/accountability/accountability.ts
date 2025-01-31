@@ -177,6 +177,7 @@ export async function accountabilityUpdateAgent(logger: Logger, profile: UserPro
   }
   let event = session.metadata.event as Jsonify<CalendarEvent>;
   if (!event.duration) {
+    logger.info(`Event duration not found:\n${JSON.stringify(event)}`);
     throw new Error("Event duration not found");
   }
   if (!session.metadata.goal) {

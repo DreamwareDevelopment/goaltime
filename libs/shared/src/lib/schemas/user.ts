@@ -231,9 +231,15 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
 }
 
 export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Dayjs): Interval<dayjs.Dayjs> {
-  const dayName = date.format('dddd') as DaysOfTheWeekType;
-  const sleep = routine.sleep[dayName];
-  const start = dayjs(sleep.start);
+  let dayName = date.format('dddd') as DaysOfTheWeekType;
+  let sleep = routine.sleep[dayName];
+  let start = dayjs(sleep.start);
+  if (date.hour() >= 0 && date.hour() < start.hour()) {
+    // If we sleep the next day and it's already after midnight, we need to use the previous day's sleep schedule
+    dayName = date.subtract(1, 'day').format('dddd') as DaysOfTheWeekType;
+    sleep = routine.sleep[dayName];
+    start = dayjs(sleep.start);
+  }
   const end = dayjs(sleep.end);
   if (start.hour() > end.hour()) {
     return {

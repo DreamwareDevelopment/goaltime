@@ -8,10 +8,19 @@ import { getNextFullSync } from "../lib/inngest";
 import { ExternalEvent, GoalEvent, Interval } from "@/shared/utils";
 import { getProfileRoutine, getSleepRoutineForDay } from "@/shared/zod";
 
-export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Promise<CalendarEvent[]> {
+export async function getScheduleInterval(profile: UserProfile, date: dayjs.Dayjs): Promise<Interval<dayjs.Dayjs>> {
   const routine = getProfileRoutine(profile);
   const sleepRoutine = getSleepRoutineForDay(routine, date);
   console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).format(DATE_TIME_FORMAT)}`);
+  return {
+    start: sleepRoutine.end,
+    end: sleepRoutine.start,
+  };
+}
+
+export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Promise<CalendarEvent[]> {
+  const interval = await getScheduleInterval(profile, date);
+  console.log(`Getting schedule: ${dayjs(interval.start).format(DATE_TIME_FORMAT)} - ${dayjs(interval.end).format(DATE_TIME_FORMAT)}`);
   const prisma = await getPrismaClient(profile.userId);
   const schedule = await prisma.calendarEvent.findMany({
     where: {
@@ -19,15 +28,15 @@ export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Prom
       OR: [
         {
           startTime: {
-            gte: sleepRoutine.end.toDate(),
-            lte: sleepRoutine.start.toDate(),
+            gte: interval.start.toDate(),
+            lte: interval.end.toDate(),
             not: null,
           },
         },
         {
           allDay: {
-            gte: sleepRoutine.end.toDate(),
-            lte: sleepRoutine.start.toDate(),
+            gte: interval.start.toDate(),
+            lte: interval.end.toDate(),
             not: null,
           },
         }
