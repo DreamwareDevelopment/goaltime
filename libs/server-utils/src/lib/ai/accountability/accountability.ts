@@ -45,8 +45,8 @@ async function updateAccountability(
   event.completed = event.completed + completed;
   await zep.memory.updateSession(sessionId, {
     metadata: {
-      goal: JSON.parse(formatGoal(goal)),
-      event: JSON.parse(formatEvent(event, profile.timezone)),
+      goal: formatGoal(goal),
+      event: formatEvent(event, profile.timezone),
     },
   });
   return { goal, event };
@@ -59,11 +59,11 @@ async function completedGoal(
   goal: Jsonify<Goal>,
 ): Promise<string> {
   logger.info(`Goal "${goal.title}" completed`);
-  const systemPrompt = `{
-    "role": "You are an accountability agent that congratulates the user for completing a goal.",
-    "user": ${formatUser(profile)},
-    "goal": ${formatGoal(goal)},
-  }`
+  const systemPrompt = JSON.stringify({
+    role: "You are an accountability agent that congratulates the user for completing a goal.",
+    user: formatUser(profile),
+    goal: formatGoal(goal),
+  }, null, 2);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     messages: [
@@ -85,14 +85,14 @@ async function completedEvent(
   event: Jsonify<CalendarEvent>,
 ): Promise<string> {
   logger.info(`Goal ${goal.id} completed extra`);
-  const systemPrompt = `{
-    "role": "You are an accountability agent that briefly congratulates the user for completing an event.",
-    "user": ${formatUser(profile)},
-    "goal": ${formatGoal(goal)},
-    "event": ${formatEvent(event, profile.timezone)},
-    "completed": "${event.duration} mins",
-    "target": "${event.duration} mins",
-  }`
+  const systemPrompt = JSON.stringify({
+    role: "You are an accountability agent that briefly congratulates the user for completing an event.",
+    user: formatUser(profile),
+    goal: formatGoal(goal),
+    event: formatEvent(event, profile.timezone),
+    completed: `${event.duration} mins`,
+    target: `${event.duration} mins`,
+  }, null, 2);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     messages: [
@@ -115,14 +115,14 @@ async function completedSome(
   completed: number,
 ): Promise<string> {
   logger.info(`Goal ${goal.id} completed extra`);
-  const systemPrompt = `{
-    "role": "You are an accountability agent that tells the user how much time they completed for an event and that their progress has been updated.",
-    "user": ${formatUser(profile)},
-    "goal": ${formatGoal(goal)},
-    "event": ${formatEvent(event, profile.timezone)},
-    "completed": "${completed} mins",
-    "target": "${event.duration} mins",
-  }`
+  const systemPrompt = JSON.stringify({
+    role: "You are an accountability agent that tells the user how much time they completed for an event and that their progress has been updated.",
+    user: formatUser(profile),
+    goal: formatGoal(goal),
+    event: formatEvent(event, profile.timezone),
+    completed: `${completed} mins`,
+    target: `${event.duration} mins`,
+  }, null, 2);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     messages: [
@@ -144,13 +144,13 @@ async function notCompleted(
   event: Jsonify<CalendarEvent>,
 ): Promise<string> {
   logger.info(`Goal ${goal.id} not completed`);
-  const systemPrompt = `{
-    "role": "You are an accountability agent that informs the user that they did not complete an event and tells them to do better next time.",
-    "user": ${formatUser(profile)},
-    "goal": ${formatGoal(goal)},
-    "event": ${formatEvent(event, profile.timezone)},
-    "target": "${event.duration} mins",
-  }`
+  const systemPrompt = JSON.stringify({
+    role: "You are an accountability agent that informs the user that they did not complete an event and tells them to do better next time.",
+    user: formatUser(profile),
+    goal: formatGoal(goal),
+    event: formatEvent(event, profile.timezone),
+    target: `${event.duration} mins`,
+  }, null, 2);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
     messages: [
@@ -187,10 +187,10 @@ export async function accountabilityUpdateAgent(logger: Logger, profile: UserPro
   logger.info(`Session goal: ${goal.title}\n${dayjs(event.startTime).format(DATE_TIME_FORMAT)} - ${dayjs(event.endTime).format(DATE_TIME_FORMAT)}`);
 
 
-  const systemPrompt = `{
-    "role": "You are an accountability agent that determines how much time, if any, the user has completed given the latest message.",
-    "event": ${formatEvent(event, profile.timezone)},
-  }`
+  const systemPrompt = JSON.stringify({
+    role: "You are an accountability agent that determines how much time, if any, the user has completed given the latest message.",
+    event: formatEvent(event, profile.timezone),
+  }, null, 2);
   const memory = await zep.memory.get(sessionId);
   const messages = buildMessages(systemPrompt, memory.messages);
   const response = await generateText({

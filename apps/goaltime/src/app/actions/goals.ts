@@ -13,7 +13,7 @@ async function upsertGoalToGraph(goal: Goal): Promise<void> {
   await zep.graph.add({
     type: "json",
     userId: goal.userId,
-    data: formatGoal(goal),
+    data: JSON.stringify(formatGoal(goal)),
   })
 }
 

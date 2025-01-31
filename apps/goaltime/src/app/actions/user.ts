@@ -72,7 +72,7 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
       firstName,
       lastName: lastName.join(' '),
       email: user.email,
-      metadata: JSON.parse(formatUser(userProfile)),
+      metadata: formatUser(userProfile),
     })
   } catch (error) {
     console.error('Error adding user to Zep', error)
@@ -127,7 +127,7 @@ export async function updateUserProfileAction(original: UserProfile, profile: Pa
     })
   }
   await zep.user.update(updated.userId, {
-    metadata: JSON.parse(formatUser(updated)),
+    metadata: formatUser(updated),
   })
   return updated
 }

@@ -67,21 +67,21 @@ export async function eventInformationAgent(logger: Logger, profile: UserProfile
   const eventTimeframe = await getEventsTimeframe(sessionId);
   const events = await getEvents(profile.userId, eventTimeframe);
   logger.info(`Timeframe:\n\tStart: ${eventTimeframe.start}\n\tEnd: ${eventTimeframe.end}`);
-  logger.info(`Events: ${formatEvents(events, profile.timezone)}`);
+  const formattedEvents = formatEvents(events, profile.timezone);
+  logger.info(`Events: ${JSON.stringify(formattedEvents, null, 2)}`);
   // TODO: Figure out if they are asking for future or past events
-  const systemPrompt = `{
-    "role": "You are to answer questions about the user's events.",
-    "now": "${now.format(DATE_TIME_FORMAT)}",
-    "events": ${formatEvents(events, profile.timezone)},
-    "timezone": "${profile.timezone}",
-    "instructions": "You are given a list of events sorted by start time within the time frame the user is asking about. All events are in the same timezone as the user.
-    Answer the user's question about the event(s) they are referencing.",
-    "constraints": [
+  const systemPrompt = JSON.stringify({
+    role: "You are to answer questions about the user's events.",
+    now: now.format(DATE_TIME_FORMAT),
+    events: formattedEvents,
+    timezone: profile.timezone,
+    instructions: "You are given a list of events sorted by start time within the time frame the user is asking about. All events are in the same timezone as the user. Answer the user's question about the event(s) they are referencing.",
+    constraints: [
       "You are to respond in 1600 characters or less.",
       "You are to respond in a colloquial and concise manner befitting an sms conversation.",
       "Don't mention the time frame or the current time in your response.",
     ]
-  }`;
+  }, null, 2);
   logger.info(`System prompt: ${systemPrompt}`);
   const memory = await zep.memory.get(sessionId);
   const messagesToSend = buildMessages(systemPrompt, memory.messages);

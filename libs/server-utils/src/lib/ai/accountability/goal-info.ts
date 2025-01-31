@@ -16,11 +16,11 @@ async function getGoals(logger: Logger, userId: string, sessionId: string): Prom
   });
   const relevantGoals: LLMGoal[] = [];
   const memory = await zep.memory.get(sessionId);
-  const systemPrompt = `{
-    "role": "You are to determine if the user is asking for advice about a goal that they already have.",
-    "context": ${JSON.stringify(memory.context, null, 2)},
-    "goals": ${formatGoals(goals)},
-  }`;
+  const systemPrompt = JSON.stringify({
+    role: "You are to determine if the user is asking for advice about a goal that they already have.",
+    context: JSON.stringify(memory.context, null, 2),
+    goals: formatGoals(goals),
+  }, null, 2);
   const messagesToSend = buildMessages(systemPrompt, memory.messages);
   const response = await generateText({
     model: openai("gpt-4o-mini"),
