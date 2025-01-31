@@ -469,6 +469,7 @@ export const syncGoogleCalendar = inngestConsumer.createFunction(
         name: InngestEvent.ScheduleGoalEvents,
         data: {
           userId: googleAuth.userId,
+          syncType: initialSync ? 'initial' : 'full',
         },
       });
     } else {

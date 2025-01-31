@@ -8,12 +8,14 @@ import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule }
 import { getFreeIntervals, getGoalScoringInstructions, getPreferredTimes, getRemainingCommitmentForPeriod, parsePreferredTimes, scoreIntervals } from "../../ai/scheduling";
 import { inngestConsumer, InngestEvent } from "../client";
 import { posthog } from "../../posthog";
+import { sendSMS } from "../../ai";
 
 interface PreparedSchedulingData {
   interval: Interval<string>;
   eventsAndRoutines: ExternalEvent<string>[];
   data: ScheduleInputData;
   goalMap: Record<string, GoalSchedulingData>;
+  phone: string;
   timezone: string;
 }
 
@@ -37,7 +39,7 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
   async ({ step, event, logger }) => {
     logger.info('Scheduling goal events');
     const { userId } = event.data;
-    const { data, interval, goalMap, eventsAndRoutines, timezone } = await step.run('get-scheduling-data', async () => {
+    const { data, interval, goalMap, eventsAndRoutines, phone, timezone } = await step.run('get-scheduling-data', async () => {
       const { goals, interval, profile, schedule, fullSyncTimeframe } = await getSchedulingData(userId);
       const { eventsAndRoutines, freeIntervals, freeWorkIntervals, wakeUpOrSleepEvents } = getFreeIntervals(logger, profile, interval, schedule);
       logger.info(`Found ${freeIntervals.length} free intervals and ${freeWorkIntervals.length} free work intervals and ${wakeUpOrSleepEvents.length} wake up or sleep events`);
@@ -120,6 +122,7 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
           };
           return prev;
         }, {} as Record<string, GoalSchedulingData>),
+        phone: profile.phone,
         timezone: profile.timezone,
       } as PreparedSchedulingData;
     });
@@ -266,7 +269,17 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
         userId,
       },
     });
-    await Promise.all([syncPromise, scheduleUpdatedPromise]);
+    const notifiedUserPromise = step.run('notify-user', async () => {
+      if (event.data.syncType === 'initial') {
+        await sendSMS(phone, `Your schedule has been created for the remainder of the week. Take a look when you have a moment: ${process.env.NEXT_PUBLIC_HOST ?? 'https://www.goaltime.ai/dashboard'}`);
+      } else if (event.data.syncType === 'full') {
+        // TODO: Send a summary of the last week's accomplishments
+        await sendSMS(phone, `Your schedule has been created for next week. Take a look when you have a moment: ${process.env.NEXT_PUBLIC_HOST ?? 'https://www.goaltime.ai/dashboard'}`);
+      } else {
+        await sendSMS(phone, `Your schedule has been updated. Take a look when you have a moment: ${process.env.NEXT_PUBLIC_HOST ?? 'https://www.goaltime.ai/dashboard'}`);
+      }
+    });
+    await Promise.all([syncPromise, scheduleUpdatedPromise, notifiedUserPromise]);
   }
 )
 

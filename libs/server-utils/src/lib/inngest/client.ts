@@ -66,6 +66,7 @@ export const inngestConsumer = new Inngest({
     [InngestEvent.ScheduleGoalEvents]: {
       data: {
         userId: string;
+        syncType?: 'full' | 'initial';
       };
     };
     [InngestEvent.SyncToClient]: {
@@ -98,6 +99,7 @@ export const inngestProducer = new Inngest({
     [InngestEvent.ScheduleGoalEvents]: {
       data: {
         userId: string;
+        syncType?: 'full' | 'initial';
       };
     };
     [InngestEvent.NewUser]: {
