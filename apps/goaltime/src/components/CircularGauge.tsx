@@ -60,7 +60,7 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
               onMouseLeave={handleMouseLeave}
             />
             <circle
-              key={goal.id}
+              key={`${goal.id}-completed`}
               cx={size / 2}
               cy={size / 2}
               r={(size / 2) - 20}
