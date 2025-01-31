@@ -1,9 +1,8 @@
 import { EventSchemas, GetEvents, Inngest } from "inngest";
-import { CalendarEvent, GoogleAuth, UserProfile } from "@prisma/client";
+import { GoogleAuth, UserProfile } from "@prisma/client";
 
 import type { NotificationData, NotificationPayload, SanitizedUser } from "@/shared/utils";
 import type { SyncEvent } from "@/shared/zod";
-import { Jsonify } from "inngest/helpers/jsonify";
 
 export enum InngestEvent {
   StartAccountabilityLoop = "accountability/loop/start",
@@ -62,7 +61,6 @@ export const inngestConsumer = new Inngest({
     [InngestEvent.ScheduleUpdated]: {
       data: {
         userId: string;
-        schedule: Jsonify<CalendarEvent[]>;
       };
     };
     [InngestEvent.ScheduleGoalEvents]: {
@@ -95,7 +93,6 @@ export const inngestProducer = new Inngest({
     [InngestEvent.ScheduleUpdated]: {
       data: {
         userId: string;
-        schedule: Jsonify<CalendarEvent[]>;
       };
     };
     [InngestEvent.ScheduleGoalEvents]: {

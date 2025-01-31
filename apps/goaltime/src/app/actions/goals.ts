@@ -124,6 +124,8 @@ export async function deleteGoalAction(goalId: string, userId: string): Promise<
   await prisma.goal.delete({ where: { id: goalId, userId } })
   await inngestProducer.send({
     name: InngestEvent.ScheduleUpdated,
-    data: {} as never,
+    data: {
+      userId,
+    },
   })
 }

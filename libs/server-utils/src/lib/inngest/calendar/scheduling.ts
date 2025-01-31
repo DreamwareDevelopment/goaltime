@@ -264,7 +264,6 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
       name: InngestEvent.ScheduleUpdated,
       data: {
         userId,
-        schedule: newEvents,
       },
     });
     await Promise.all([syncPromise, scheduleUpdatedPromise]);

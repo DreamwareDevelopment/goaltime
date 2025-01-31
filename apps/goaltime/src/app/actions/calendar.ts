@@ -1,11 +1,9 @@
 'use server'
 
 import { inngestProducer, InngestEvent } from "@/libs/server-utils/src/lib/inngest";
-import { DATE_TIME_FORMAT } from "@/libs/shared/src";
 import { getPrismaClient } from "@/server-utils/prisma";
 import { CalendarEventInput } from "@/shared/zod";
 import { CalendarEvent, GoogleAuth, UserProfile } from "@prisma/client";
-import dayjs from "dayjs";
 
 export async function updateCalendarEventAction(original: CalendarEvent, updated: CalendarEventInput): Promise<CalendarEvent> {
   const prisma = await getPrismaClient(original.userId)
@@ -17,12 +15,6 @@ export async function updateCalendarEventAction(original: CalendarEvent, updated
     name: InngestEvent.ScheduleUpdated,
     data: {
       userId: original.userId,
-      schedule: [{
-        ...updatedEvent,
-        startTime: updatedEvent.startTime ? dayjs(updatedEvent.startTime).format(DATE_TIME_FORMAT) : null,
-        endTime: updatedEvent.endTime ? dayjs(updatedEvent.endTime).format(DATE_TIME_FORMAT) : null,
-        allDay: updatedEvent.allDay ? dayjs(updatedEvent.allDay).format(DATE_TIME_FORMAT) : null,
-      }],
     },
   })
   return updatedEvent
