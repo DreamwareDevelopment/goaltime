@@ -71,7 +71,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   console.log(`Day: ${dayName}`)
   calendarStore.ensureCalendarEvents(dateString);
   const schedule = useSnapshot(calendarStore.events[dateString]);
-  console.log(`Schedule: ${JSON.stringify(schedule, null, 2)}`);
+  // console.log(`Schedule: ${JSON.stringify(schedule, null, 2)}`);
   const routine = getProfileRoutine(profile);
   const routineEvents = routineToExternalEvents(routine, timezone, day);
   const routineEventsByDay = routineEvents[dayName];

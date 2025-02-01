@@ -85,8 +85,8 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
       <foreignObject x={0} y={0} width={size} height={size} pointerEvents="none">
         <div className="w-full p-8 h-full flex flex-col items-center justify-center text-center font-bold gap-2">
           <p style={{ fontSize: hoveredGoal ? getFontSize(hoveredGoal.title) : 48 }}>{hoveredGoal ? hoveredGoal.title : `${goals.length} Goal${goals.length > 1 ? 's' : ''}`}</p>
-          <p className="text-lg sm:text-xs text-muted-foreground">{hoveredGoal ? 'Goal' : 'Total'}: {hoveredGoal ? hoveredGoal.commitment : goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0)} hours</p>
-          <p className={hoveredGoal ? 'text-lg sm:text-xs text-muted-foreground' : 'hidden'}>Completed: {hoveredGoal ? hoveredGoal.completed : goals.reduce((sum, goal) => sum + (goal.completed || 0), 0)} hours</p>
+          <p className="text-lg sm:text-xs text-muted-foreground">{hoveredGoal ? 'Goal' : 'Total'}: {hoveredGoal ? parseFloat(hoveredGoal.commitment.toFixed(2)).toString() : goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0)} hours</p>
+          <p className={hoveredGoal ? 'text-lg sm:text-xs text-muted-foreground' : 'hidden'}>Completed: {hoveredGoal ? parseFloat(hoveredGoal.completed.toFixed(2)).toString() : goals.reduce((sum, goal) => sum + (goal.completed || 0), 0)} hours</p>
         </div>
       </foreignObject>
     </svg>
