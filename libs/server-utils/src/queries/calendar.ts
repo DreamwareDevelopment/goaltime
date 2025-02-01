@@ -131,7 +131,15 @@ export async function getSchedulingData(userId: User['id']): Promise<{
   return { schedule: events, profile, goals, interval: { start, end }, fullSyncTimeframe };
 }
 
-export async function deleteGoalEvents(userId: User['id'], interval: Interval<string>): Promise<string[]> {
+export async function deleteGoalEvents(userId: User['id'], interval: Interval<string>, timezone: string): Promise<string[]> {
+  const utcOffset = Math.abs(dayjs(interval.start).tz(timezone).utcOffset())
+  const offsetStart = dayjs(interval.start).subtract(1, 'hour').utc() // This is a hack to ensure that goal events scheduled during the current user session are removed.
+  const end = dayjs(interval.end).utc()
+  const adjustedInterval = {
+    start: process.env.NODE_ENV !== 'development' ? offsetStart.add(utcOffset, 'minutes') : offsetStart,
+    end: process.env.NODE_ENV !== 'development' ? end.add(utcOffset, 'minutes') : end,
+  }
+  console.log(`Deleting goal events between: ${adjustedInterval.start.format(DATE_TIME_FORMAT)} - ${adjustedInterval.end.format(DATE_TIME_FORMAT)}`)
   const prisma = await getPrismaClient(userId);
   const idsToDelete = await prisma.calendarEvent.findMany({
     where: {
@@ -140,8 +148,8 @@ export async function deleteGoalEvents(userId: User['id'], interval: Interval<st
         not: null,
       },
       startTime: {
-        gte: dayjs(interval.start).subtract(1, 'hour').utc().toDate(), // This is a hack to ensure that goal events scheduled during the current user session are removed.
-        lte: dayjs(interval.end).utc().toDate(),
+        gte: adjustedInterval.start.toDate(),
+        lte: adjustedInterval.end.toDate(),
       },
     },
     select: {

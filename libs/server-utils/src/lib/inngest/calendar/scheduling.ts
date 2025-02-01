@@ -149,7 +149,6 @@ export const scheduleGoalEvents = inngestConsumer.createFunction(
     const schedule: Array<GoalEvent<dayjs.Dayjs>> = [];
     logger.info(`Scheduling ${data.goals.length} goals...`, data.goals.map(goal => goal.title));
     const goalsScheduledSoFar: string[] = [];
-    console.log(`data.goals: ${data.goals.map(goal => goal.title).join(', ')}`)
     for (const goal of data.goals) {
       const minimalGoal: MinimalScheduleableGoal = {
         title: goal.title,
