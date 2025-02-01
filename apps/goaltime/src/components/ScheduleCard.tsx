@@ -287,7 +287,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
 
   const TimelineView = () => {
     if (!schedule || isLoading) return (
-      <div className="flex items-center justify-center h-[500px]">
+      <div className="flex items-center justify-center h-[500px] lg:h-[576px]">
         <LoadingSpinner />
       </div>
     );
@@ -331,7 +331,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         )}
   
         {/* Scrollable Timeline */}
-        <ScrollArea className="h-[500px] pr-4" scrollRef={scrollRef}>
+        <ScrollArea className="h-[500px] lg:h-[576px] pr-4" scrollRef={scrollRef}>
           <div className="relative" style={{ height: `${currentHeight}px` }}>
             {/* Hour markers and separators */}
             {Array.from({ length: markerHeights.length }, (_, i) => (
@@ -458,12 +458,12 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
 
   const ListView = () => {
     if (!schedule || isLoading) return (
-      <div className="flex items-center justify-center h-[500px]">
+      <div className="flex items-center justify-center h-[500px] lg:h-[576px]">
         <LoadingSpinner />
       </div>
     );
     return (
-      <ScrollArea className="h-[500px] pt-4 pr-4 w-full">
+      <ScrollArea className="h-[500px] lg:h-[576px] pt-4 pr-4 w-full">
         {schedule.map(event => {
           const startTime = dayjs(event.startTime);
           const endTime = dayjs(event.endTime);
