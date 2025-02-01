@@ -231,25 +231,17 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
 }
 
 export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Dayjs): Interval<dayjs.Dayjs> {
-  let dayName = date.format('dddd') as DaysOfTheWeekType;
-  let sleep = routine.sleep[dayName];
-  let start = dayjs(sleep.start);
-  if (date.hour() >= 0 && date.hour() < start.hour()) {
-    // If we sleep the next day and it's already after midnight, we need to use the previous day's sleep schedule
-    dayName = date.subtract(1, 'day').format('dddd') as DaysOfTheWeekType;
-    sleep = routine.sleep[dayName];
-    start = dayjs(sleep.start);
-  }
-  const end = dayjs(sleep.end);
-  if (start.hour() > end.hour()) {
-    return {
-      start: start.year(date.year()).month(date.month()).date(date.date()),
-      end: end.year(date.year()).month(date.month()).date(date.date()),
-    }
+  console.log(`Getting sleep routine for ${date.format(DATE_TIME_FORMAT)}`)
+  const todayName = date.format('dddd') as DaysOfTheWeekType;
+  const todayRoutine = routine.sleep[todayName];
+  const end = dayjs(todayRoutine.end).year(date.year()).month(date.month()).date(date.date());
+  let start = dayjs(todayRoutine.start).year(date.year()).month(date.month()).date(date.date());
+  if (start.hour() >= 0 && start.hour() < end.hour()) {
+    start = start.add(1, 'day');
   }
   return {
-    start: start.year(date.year()).month(date.month()).date(date.date() + 1),
-    end: end.year(date.year()).month(date.month()).date(date.date()),
+    start,
+    end,
   }
 }
 
