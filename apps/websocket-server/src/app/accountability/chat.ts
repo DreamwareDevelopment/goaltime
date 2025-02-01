@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 import { Logger } from "inngest/middleware/logger";
 
 import { UserProfile } from "@prisma/client";
-import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, formatEvent, formatGoal, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
+import { accountabilityUpdateAgent, buildMessages, eventInformationAgent, goalInformationAgent, helpAgent, zep, zepMessagesToCoreMessages } from "@/server-utils/ai";
 import { inngestConsumer, InngestEvent } from "@/server-utils/inngest";
 import { posthog } from "@/server-utils/posthog";
 import { getPrismaClient } from "@/server-utils/prisma";

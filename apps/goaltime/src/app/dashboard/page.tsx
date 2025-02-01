@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getGoals, getNotifications } from '@/server-utils/queries/goal'
 
 import { Card } from "@/ui-components/card"
+import { offsetDay } from '../../components/data/proxies/calendar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { ScheduleCard } from '../../components/ScheduleCard'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
@@ -42,7 +43,7 @@ export default async function Dashboard() {
     getGoals(profile),
     getAggregates(),
     getNotifications(profile),
-    getSchedule(profile, dayjs().tz(profile.timezone)),
+    getSchedule(profile, offsetDay(dayjs(), profile.timezone)),
   ])
   const hasGoals = goals.length > 0;
   return (

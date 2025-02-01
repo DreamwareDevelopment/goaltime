@@ -9,10 +9,8 @@ export const calendarContract = c.router({
     method: 'GET',
     path: `/api/schedule`,
     query: z.object({
-      /** The UTC date to get the schedule for */
+      /** The date in the user\'s timezone to get the schedule for */
       date: z.coerce.date(),
-      /** The timezone to get the schedule in */
-      timezone: z.string(),
     }),
     responses: {
       200: c.type<CalendarEvent[]>(),

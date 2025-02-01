@@ -27,10 +27,7 @@ export default server.plugin(server.router(baseContract, {
           body: { error: 'Profile not found' },
         };
       }
-      // Use the timezone sent from the client so that events are filtered by the correct timezone's day
-      const timezone = args.query.timezone;
-      const day = dayjs.tz(args.query.date, timezone);
-      const schedule = await getSchedule(profile, day);
+      const schedule = await getSchedule(profile, dayjs(args.query.date));
       return {
         status: 200,
         body: schedule,

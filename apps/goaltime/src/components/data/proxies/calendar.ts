@@ -8,11 +8,17 @@ import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
 import { goalStore } from './goals'
 import { getTokenInfo, refreshTokenIfNeeded } from '@/libs/ui-components/src/hooks/supabase'
 
+export function offsetDay(day: dayjs.Dayjs, timezone: string) {
+  const dayTz = day.tz(timezone);
+  const dayHour = dayTz.hour();
+  return (dayHour >= 0 && dayHour < 4 ? dayTz.subtract(1, 'day').hour(12) : dayTz) // Account for sleep after midnight by setting to 12pm the previous day
+}
+
 export const calendarStore = proxy<{
   events: Record<string, CalendarEvent[]>,
   init(events: CalendarEvent[]): void,
   ensureCalendarEvents(date: string): void,
-  loadCalendarEvents(date: dayjs.Dayjs, timezone: string): Promise<void>,
+  loadCalendarEvents(date: dayjs.Dayjs): Promise<void>,
   createCalendarEvent(event: CalendarEventInput): Promise<void>,
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
   updateEventColors(goalId: string, color: string): Promise<void>,
@@ -30,7 +36,7 @@ export const calendarStore = proxy<{
       calendarStore.events[date] = []
     }
   },
-  async loadCalendarEvents(day: dayjs.Dayjs, timezone: string) {
+  async loadCalendarEvents(day: dayjs.Dayjs) {
     const dayString = day.format(DATE_FORMAT);
     console.log(`Loading calendar events for ${day.format(DATE_TIME_FORMAT)}`)
     if (calendarStore.events[dayString] && calendarStore.events[dayString].length > 0) {
@@ -42,7 +48,6 @@ export const calendarStore = proxy<{
     let response = await client.calendar.getSchedule({
       query: {
         date: day.toDate(),
-        timezone,
       }
     });
     if (response.status === 401 || response.status === 403) {
@@ -51,7 +56,6 @@ export const calendarStore = proxy<{
       response = await client.calendar.getSchedule({
         query: {
           date: day.toDate(),
-          timezone,
         }
       });
     }
@@ -68,7 +72,8 @@ export const calendarStore = proxy<{
     }
   },
   async createCalendarEvent(event: CalendarEventInput) {
-    const dayString = dayjs(event.startTime).format(DATE_FORMAT);
+    const dayOffset = offsetDay(event.startTime ? dayjs(event.startTime) : dayjs(event.allDay).hour(12), event.timezone)
+    const dayString = dayOffset.format(DATE_FORMAT)
     const newEvent = await createCalendarEventAction(event);
     binarySearchInsert(calendarStore.events[dayString], newEvent, (a, b) => {
       if (!a.startTime || !b.startTime) {
@@ -78,7 +83,8 @@ export const calendarStore = proxy<{
     })
   },
   async updateCalendarEvent(original, updated) {
-    const dayString = original.startTime ? dayjs(original.startTime).format(DATE_FORMAT) : dayjs(original.allDay).format(DATE_FORMAT)
+    const dayOffset = offsetDay(original.startTime ? dayjs(original.startTime) : dayjs(original.allDay).hour(12), original.timezone)
+    const dayString = dayOffset.format(DATE_FORMAT)
     if (!calendarStore.events[dayString]) {
       throw new Error(`Invariant: day: ${dayString} not initialized in calendarStore`)
     }
@@ -97,7 +103,8 @@ export const calendarStore = proxy<{
     calendarStore.events[dayString].splice(newIndex, 1, updatedEvent)
   },
   async deleteCalendarEvent(event) {
-    const dayString = event.startTime ? dayjs(event.startTime).format(DATE_FORMAT) : dayjs(event.allDay).format(DATE_FORMAT)
+    const dayOffset = offsetDay(event.startTime ? dayjs(event.startTime) : dayjs(event.allDay).hour(12), event.timezone)
+    const dayString = dayOffset.format(DATE_FORMAT)
     if (!calendarStore.events[dayString]) {
       throw new Error(`Invariant: day: ${dayString} not initialized in calendarStore`)
     }

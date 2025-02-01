@@ -29,6 +29,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/ui-c
 import { syncCalendarAction } from "../app/actions/calendar";
 import { useMediaQuery } from "@/ui-components/hooks/use-media-query";
 import { DaysOfTheWeekType, getProfileRoutine, routineToExternalEvents } from "@/shared/zod";
+import { offsetDay } from "./data/proxies/calendar";
 
 export interface ViewFields {
   top: number;
@@ -53,22 +54,24 @@ function isRoutineEvent(event: ViewFieldsWithExternalEvent | ViewFieldsWithCalen
 }
 
 export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
-  const [date, setDate] = useState(new Date());
-  const day = dayjs(date);
-  const dateString = day.format(DATE_FORMAT);
-  const dayName = day.format('dddd') as DaysOfTheWeekType;
-  const now = dayjs();
-  console.log(`Date: ${day.format(DATE_TIME_FORMAT)}`)
-  console.log(`Now: ${now.format(DATE_TIME_FORMAT)}`)
-  console.log(`Day: ${dayName}`)
-  const { calendarStore, userStore } = useValtio();
   const isDesktop = useMediaQuery('(min-width: 500px)');
-  calendarStore.ensureCalendarEvents(dateString);
-  const schedule = useSnapshot(calendarStore.events[dateString]);
-  console.log(`Schedule: ${JSON.stringify(schedule)}`)
+  const { calendarStore, userStore } = useValtio();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const profile = useSnapshot(userStore.profile!);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
+
+  const [date, setDate] = useState(new Date());
+  const day = dayjs(date);
+  const dayOffset = offsetDay(day, timezone);
+  const dateString = dayOffset.format(DATE_FORMAT);
+  const dayName = dayOffset.format('dddd') as DaysOfTheWeekType;
+  const now = dayjs();
+  console.log(`Date: ${day.format(DATE_TIME_FORMAT)}`)
+  console.log(`DayTZ: ${dayOffset.format(DATE_TIME_FORMAT)}`)
+  console.log(`Day: ${dayName}`)
+  calendarStore.ensureCalendarEvents(dateString);
+  const schedule = useSnapshot(calendarStore.events[dateString]);
+  console.log(`Schedule: ${JSON.stringify(schedule, null, 2)}`);
   const routine = getProfileRoutine(profile);
   const routineEvents = routineToExternalEvents(routine, timezone, day);
   const routineEventsByDay = routineEvents[dayName];
@@ -100,7 +103,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     setIsLoading(true);
     const clearDebounce = debounce(async () => {
       try {
-        await calendarStore.loadCalendarEvents(day, timezone)
+        await calendarStore.loadCalendarEvents(dayOffset)
       } catch (error) {
         console.error(error);
         toast({
