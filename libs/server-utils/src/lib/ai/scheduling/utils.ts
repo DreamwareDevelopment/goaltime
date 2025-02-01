@@ -446,7 +446,7 @@ export function getRemainingCommitmentForPeriod(
   });
   const getScalingFactor = (timeframe: Interval<dayjs.Dayjs>) => {
     const daysBetween = timeframe.end.diff(timeframe.start, 'days') + 1;
-    const scalingFactor = Math.pow(1 - (0.01 * daysBetween), daysBetween); // The more days between, the higher likelihood that we are accounting for non-free intervals
+    const scalingFactor = Math.pow(1 - (0.005 * daysBetween), daysBetween); // The more days between, the higher likelihood that we are accounting for non-free intervals
     logger.info(`Scaling factor for ${timeframe.start.format(DATE_TIME_FORMAT)} - ${timeframe.end.format(DATE_TIME_FORMAT)}: ${scalingFactor}`);
     return scalingFactor;
   }
