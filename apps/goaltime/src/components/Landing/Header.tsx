@@ -2,10 +2,11 @@
 
 import type React from "react"
 import Link from "next/link"
-import { ArrowRight, Clock } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import MobileMenu from "./MobileMenu"
 import { usePostHog } from 'posthog-js/react'
+import Logo from '@/ui-components/svgs/logos/goaltime'
 
 interface HeaderProps {
   isLoggedIn: boolean
@@ -27,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn }) => {
   return (
     <header className="px-4 lg:px-6 h-14 flex items-center bg-black/30 backdrop-blur-lg fixed w-full z-50">
         <Link href="/" className="flex items-center justify-center">
-          <Clock className="h-6 w-6" />
+          <Logo className="h-6 w-6" />
           <ShinyButton variant="linkHover2" className="text-background-foreground">
             <span className="font-bold">GoalTime</span>
           </ShinyButton>

@@ -6,7 +6,7 @@ import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { loginAction, signupAction } from '../actions/auth'
 import { AuthCard, AuthTab } from '../../components/Auth/AuthCard'
 import Link from 'next/link'
-import { Clock } from 'lucide-react'
+import Logo from '@/ui-components/svgs/logos/goaltime'
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -38,7 +38,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <div className="w-full 2xl:w-[67%] mx-auto p-4 h-screen">
       <header className="flex justify-center items-center my-6 md:my-14 lg:mt-16 lg:mb-20">
         <Link href="/" className="hidden md:flex items-center justify-center">
-          <Clock className="h-6 w-6" />
+          <Logo className="h-6 w-6" />
           <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground">
             <span className="font-bold text-lg md:text-xl lg:text-2xl">GoalTime</span>
           </ShinyButton>

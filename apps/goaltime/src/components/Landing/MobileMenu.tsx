@@ -2,10 +2,12 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Clock, Menu } from "lucide-react"
+import { ArrowRight, Menu } from "lucide-react"
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
 import { Sheet, SheetContent, SheetTrigger } from "@/ui-components/sheet"
 import { Separator } from "@/ui-components/separator"
+import Logo from '@/ui-components/svgs/logos/goaltime'
+import { DialogTitle, DialogDescription } from "@/ui-components/dialog"
 
 export interface MobileMenuProps {
   isLoggedIn: boolean
@@ -26,9 +28,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isLoggedIn }) => {
         </ShinyButton>
       </SheetTrigger>
       <SheetContent>
+        <DialogTitle className="sr-only">GoalTime Mobile Menu</DialogTitle>
+        <DialogDescription className="sr-only">Navigate through the menu options to explore features, testimonials, pricing, and set goals.</DialogDescription>
         <div className="flex flex-col space-y-4">
           <Link href="/" className="flex items-center justify-center">
-            <Clock className="h-6 w-6" />
+            <Logo className="h-6 w-6" />
             <ShinyButton variant="linkHover2" className="bg-background hover:bg-background/80 text-background-foreground" onClick={handleLinkClick}>
               <span className="font-bold">GoalTime</span>
             </ShinyButton>
