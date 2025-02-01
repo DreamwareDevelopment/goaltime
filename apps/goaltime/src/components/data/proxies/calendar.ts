@@ -83,7 +83,7 @@ export const calendarStore = proxy<{
     })
   },
   async updateCalendarEvent(original, updated) {
-    const dayOffset = offsetDay(original.startTime ? dayjs(original.startTime) : dayjs(original.allDay).hour(12), original.timezone)
+    const dayOffset = offsetDay(original.startTime ? dayjs(original.startTime) : dayjs(original.allDay).hour(12), updated.timezone)
     const dayString = dayOffset.format(DATE_FORMAT)
     if (!calendarStore.events[dayString]) {
       throw new Error(`Invariant: day: ${dayString} not initialized in calendarStore`)
@@ -103,7 +103,7 @@ export const calendarStore = proxy<{
     calendarStore.events[dayString].splice(newIndex, 1, updatedEvent)
   },
   async deleteCalendarEvent(event) {
-    const dayOffset = offsetDay(event.startTime ? dayjs(event.startTime) : dayjs(event.allDay).hour(12), event.timezone)
+    const dayOffset = offsetDay(event.startTime ? dayjs(event.startTime) : dayjs(event.allDay).hour(12), event.timezone ?? 'America/Los_Angeles')
     const dayString = dayOffset.format(DATE_FORMAT)
     if (!calendarStore.events[dayString]) {
       throw new Error(`Invariant: day: ${dayString} not initialized in calendarStore`)

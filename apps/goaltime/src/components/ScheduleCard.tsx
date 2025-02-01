@@ -440,6 +440,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                     </CredenzaTrigger>
                     <EventModal
                       userId={profile.userId}
+                      timezone={timezone}
                       event={event.event}
                       is24Hour={is24Hour}
                       isEditable={event.event.provider === CalendarProvider.goaltime}
@@ -500,6 +501,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
               </CredenzaTrigger>
               <EventModal
                 userId={profile.userId}
+                timezone={timezone}
                 event={event}
                 is24Hour={is24Hour}
                 isEditable={event.provider === CalendarProvider.goaltime}
@@ -634,6 +636,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         </CredenzaTrigger>
         <EventModal
           userId={profile.userId}
+          timezone={timezone}
           event={null}
           date={day}
           is24Hour={is24Hour}

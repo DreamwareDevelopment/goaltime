@@ -23,6 +23,7 @@ interface EventModalProps extends React.HTMLAttributes<HTMLDivElement> {
   isEditable: boolean;
   is24Hour: boolean;
   userId: string;
+  timezone: string;
   setOpen: (open: boolean) => void;
 }
 
@@ -105,7 +106,16 @@ const DescriptionInput: React.FC<{ form: UseFormReturn<CalendarEventInput> }> = 
   )
 }
 
-export function EventModal({ event, date, isEditable, is24Hour, userId, setOpen, ...props }: EventModalProps) {
+export function EventModal({
+  event,
+  date,
+  isEditable,
+  is24Hour,
+  userId,
+  timezone,
+  setOpen,
+  ...props
+}: EventModalProps) {
   const { calendarStore, goalStore } = useValtio()
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const goals = useSnapshot(goalStore.goals!)
@@ -115,9 +125,10 @@ export function EventModal({ event, date, isEditable, is24Hour, userId, setOpen,
     ...getDefaults(CalendarEventSchema),
     ...event,
     userId,
+    timezone,
     startTime: dayjs(event.startTime).toDate(),
     endTime: dayjs(event.endTime).toDate(),
-  } : getDefaults(CalendarEventSchema, { goalId: goals[0].id, color: goals[0].color, userId });
+  } : getDefaults(CalendarEventSchema, { goalId: goals[0].id, color: goals[0].color, userId, timezone });
   const form = useForm<CalendarEventInput>({
     defaultValues,
     resolver: getZodResolver(CalendarEventSchema, async (data) => {

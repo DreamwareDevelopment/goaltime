@@ -18,6 +18,7 @@ export const CalendarEventSchema = z.object({
   startTime: z.date(),
   endTime: z.date(),
   allDay: z.date().optional().nullable().default(null),
+  timezone: z.string(),
 });
 
 export type CalendarEventInput = z.infer<typeof CalendarEventSchema>;
