@@ -463,7 +463,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       </div>
     );
     return (
-      <ScrollArea className="h-[576px] pt-4 pr-4 w-full">
+      <ScrollArea className="h-[500px] pt-4 pr-4 w-full">
         {schedule.map(event => {
           const startTime = dayjs(event.startTime);
           const endTime = dayjs(event.endTime);
