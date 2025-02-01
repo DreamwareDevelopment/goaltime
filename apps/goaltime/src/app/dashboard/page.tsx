@@ -8,7 +8,7 @@ import { offsetDay } from '../../components/data/proxies/calendar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { ScheduleCard } from '../../components/ScheduleCard'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
-import { GoalyticsCard } from '../../components/GoalyticsCard'
+// import { GoalyticsCard } from '../../components/GoalyticsCard'
 import { ActionsCard } from '../../components/ActionsCard'
 import { ValtioProvider } from '../../components/data/valtio'
 import { UserAvatar } from '../../components/UserAvatar'
@@ -71,9 +71,9 @@ export default async function Dashboard() {
             <Card className="col-span-full overflow-hidden">
               <GoalCarousel />
             </Card>
-            <Card className="col-span-full xl:col-span-5">
+            {/* <Card className="col-span-full xl:col-span-5">
               <GoalyticsCard />
-            </Card>
+            </Card> */}
             <Card className="col-span-1 xl:col-span-2">
               <ActionsCard />
             </Card>
