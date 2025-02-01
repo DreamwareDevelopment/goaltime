@@ -14,6 +14,7 @@ export async function getNotifications(profile: UserProfile): Promise<Notificati
 }
 
 export function sortGoals(a: Goal, b: Goal) {
+  console.log(`aTitle: ${a.title}, bTitle: ${b.title}`)
   if (a.priority === b.priority) {
     // Sort by the goal that has fewer exclusive preferred times
     // This is so that we are able to schedule more restrictive goals first
@@ -30,20 +31,25 @@ export function sortGoals(a: Goal, b: Goal) {
       aDiff += (aTimes.length - intersection.length);
       bDiff += (bTimes.length - intersection.length);
     }
+    console.log(`intersectionCount: ${intersectionCount}`)
+    console.log(`aDiff: ${aDiff}, bDiff: ${bDiff}`)
     if (intersectionCount > 0) {
       return aDiff - bDiff;
     }
     // Sort by the goal that allows multiple per day
     const aCanDoMultiple = a.allowMultiplePerDay;
     const bCanDoMultiple = b.allowMultiplePerDay;
+    console.log(`aCanDoMultiple: ${aCanDoMultiple}, bCanDoMultiple: ${bCanDoMultiple}`)
     const canDoMultipleDiff = aCanDoMultiple && !bCanDoMultiple ? -1 : bCanDoMultiple && !aCanDoMultiple ? 1 : 0;
     if (canDoMultipleDiff !== 0) {
       return canDoMultipleDiff;
     }
     // Sort by the most surgical goal
+    console.log(`aMinimumDuration: ${a.minimumDuration}, bMinimumDuration: ${b.minimumDuration}`)
     const minimumDurationDiff = a.minimumDuration - b.minimumDuration;
     return minimumDurationDiff;
   }
+  console.log(`aPriority: ${a.priority}, bPriority: ${b.priority}`)
   // Sort by priority
   if (a.priority === Priority.High) {
     return -1;
