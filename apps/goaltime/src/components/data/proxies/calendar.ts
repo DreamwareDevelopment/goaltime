@@ -11,7 +11,9 @@ import { getTokenInfo, refreshTokenIfNeeded } from '@/libs/ui-components/src/hoo
 export function offsetDay(day: dayjs.Dayjs, timezone: string) {
   const dayTz = day.tz(timezone);
   const dayHour = dayTz.hour();
-  return (dayHour >= 0 && dayHour < 4 ? dayTz.subtract(1, 'day').hour(12) : dayTz) // Account for sleep after midnight by setting to 12pm the previous day
+  // TODO: 12PM is a hack to account for prod adding back in the tz offset at query time
+  const correctedDay = (dayHour >= 0 && dayHour < 4 ? dayTz.subtract(1, 'day').hour(12) : dayTz.hour(12)) // Account for sleep after midnight by setting to 12pm the previous day
+  return correctedDay
 }
 
 export const calendarStore = proxy<{
