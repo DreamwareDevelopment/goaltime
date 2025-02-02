@@ -97,6 +97,7 @@ async function fullSyncCalendarEvents(
       timeMin,
       timeMax,
       singleEvents: true,
+      eventTypes: ['default', 'fromGmail'],
       pageToken: pageToken ?? undefined,
     });
     if (res.status === 401 || res.status === 403) {
