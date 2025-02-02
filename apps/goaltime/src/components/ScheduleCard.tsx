@@ -60,7 +60,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const profile = useSnapshot(userStore.profile!);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
 
-  const [date, setDate] = useState(dayjs('2025-02-03 00:00').toDate());
+  const [date, setDate] = useState(dayjs('2025-02-02 20:00').toDate());
   const day = dayjs(date);
   const dayOffset = offsetDay(day, timezone);
   const dateString = dayOffset.format(DATE_FORMAT);
