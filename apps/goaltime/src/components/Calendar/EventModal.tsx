@@ -12,7 +12,7 @@ import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { AutosizeTextarea } from "@/ui-components/text-area";
 import { useValtio } from "../data/valtio";
 import { CalendarEvent, Goal } from "@prisma/client";
-import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
+import { toast } from "@/libs/ui-components/src/hooks/use-toast";
 import { useSnapshot } from "valtio";
 import { useEffect } from "react";
 import { cn } from "@/libs/ui-components/src/utils";
@@ -119,7 +119,6 @@ export function EventModal({
   const { calendarStore, goalStore } = useValtio()
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const goals = useSnapshot(goalStore.goals!)
-  const { toast } = useToast();
 
   const defaultValues = event ? {
     ...getDefaults(CalendarEventSchema),

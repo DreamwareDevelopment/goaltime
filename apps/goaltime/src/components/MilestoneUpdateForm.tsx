@@ -9,7 +9,7 @@ import { MilestoneInput } from "@/shared/zod"
 import { useValtio } from "./data/valtio"
 import { useState } from "react"
 import { Input } from "@/libs/ui-components/src/components/ui/input"
-import { useToast } from "@/libs/ui-components/src/hooks/use-toast"
+import { toast } from "@/libs/ui-components/src/hooks/use-toast"
 import { useSnapshot } from "valtio"
 
 
@@ -19,7 +19,6 @@ export interface MilestoneUpdateFormProps extends React.HTMLAttributes<HTMLLIEle
 
 export function MilestoneUpdateForm({ milestoneProxy, ...props }: MilestoneUpdateFormProps) {
   const { milestoneDynamicStore } = useValtio()
-  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const milestone = useSnapshot(milestoneProxy)
   const { deleteMilestone, updateMilestone } = milestoneDynamicStore

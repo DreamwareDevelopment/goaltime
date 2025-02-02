@@ -5,11 +5,11 @@ import { createContext, useContext, useEffect, useRef } from 'react'
 import { CalendarEvent, Goal, NotificationSettings, UserProfile } from '@prisma/client'
 import { SyncEvent } from '@/shared/zod'
 import { SanitizedUser } from '@/shared/utils'
-import { useToast } from '@/ui-components/hooks/use-toast'
 
 import { calendarStore, goalStore, milestoneDynamicStore, userStore } from './proxies'
 import { processSyncEvent } from './sync/events'
 import { WebSocketClient } from './websocket'
+import { WebsocketHandler } from './websocketConsumer'
 
 interface DashboardData {
   goals: Goal[]
@@ -27,11 +27,10 @@ export function useValtio() {
 }
 
 export function ValtioProvider({ children, dashboardData }: { children: React.ReactNode, dashboardData: DashboardData }) {
-  const { toast } = useToast()
-  const hasShownSyncToast = useRef(false)
   // Create stores once for the lifetime of the app
   const stores = useRef({ calendarStore, goalStore, userStore, milestoneDynamicStore }).current
-  userStore.init(dashboardData.user, dashboardData.profile);
+  const handler = new WebsocketHandler()
+  userStore.init(dashboardData.user, dashboardData.profile, handler);
   goalStore.init(dashboardData.goals, dashboardData.notifications, dashboardData.goalAggregates);
   calendarStore.init(dashboardData.initialSchedule);
 
@@ -43,46 +42,24 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
         await client.init()
         await client.connect({
           onOpen: () => {
-            console.log('WebSocket connection opened')
-            if (!hasShownSyncToast.current) {
-              toast({
-                title: 'Sync is active',
-                description: `We'll notify you when we update your schedule`
-              })
-              hasShownSyncToast.current = true
-            }
+            handler.emitOpen()
           },
           onMessage: (event) => {
-            console.log('WebSocket message received:', event)
             const data = JSON.parse(event.data) as SyncEvent
             processSyncEvent(data)
             if (data.calendarEvents?.length) {
-              toast({
-                title: `${data.calendarEvents?.length} ${data.calendarEvents?.length === 1 ? 'event' : 'events'} synced`,
-                description: 'Your schedule has been updated'
-              })
+              handler.emitCalendarUpdate(data.calendarEvents)
             } else if (data.goals?.length) {
-              toast({
-                title: `${data.goals?.length} ${data.goals?.length === 1 ? 'goal' : 'goals'} synced`,
-                description: 'Your goals have been updated'
-              })
+              handler.emitGoalsUpdate(data.goals)
             }
           },
           onError: (error) => {
-            console.error('WebSocket error:', error)
-            toast({
-              title: 'Error during sync',
-              description: 'Your changes are safe'
-            })
+            handler.emitError(new Error(JSON.stringify(error, null, 2)))
           },
         })
       } catch (error) {
         console.error('WebSocket client failed to connect:', error)
-        toast({
-          title: 'Sync is stopped',
-          description: 'Your changes will still be saved'
-        })
-        hasShownSyncToast.current = false
+        handler.emitError(error as Error)
       }
     }
 
@@ -95,7 +72,8 @@ export function ValtioProvider({ children, dashboardData }: { children: React.Re
     })
 
     return cleanupWebSocket
-  }, [toast])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <ValtioContext.Provider value={{ ...stores, dashboardData }}>

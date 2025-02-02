@@ -7,7 +7,7 @@ import { useState } from "react";
 import { GoalInput } from "@/shared/zod";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { Credenza, CredenzaContent, CredenzaDescription, CredenzaHeader, CredenzaTitle, CredenzaTrigger, CredenzaBody } from "@/ui-components/credenza";
-import { useToast } from "@/ui-components/hooks/use-toast";
+import { toast } from "@/ui-components/hooks/use-toast";
 import { ScrollArea } from "@/ui-components/scroll-area";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 
@@ -27,7 +27,6 @@ export function GoalCreationButton({
   onDidCreate,
   className
 }: GoalCreationButtonProps) {
-  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const { goalStore, userStore } = useValtio();
   const [recommendation, setRecommendation] = useState<GoalRecommendation | null>(null);

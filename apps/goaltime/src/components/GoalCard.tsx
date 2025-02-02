@@ -6,7 +6,7 @@ import { useSnapshot } from "valtio";
 import { Goal, NotificationSettings } from "@prisma/client";
 import { getGoalPreferredTimes, GoalInput } from "@/shared/zod";
 // import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui-components/accordion";
-import { useToast } from "@/ui-components/hooks/use-toast";
+import { toast } from "@/ui-components/hooks/use-toast";
 import { ScrollArea } from "@/ui-components/scroll-area";
 // import { Separator } from "@/ui-components/separator";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
@@ -49,7 +49,6 @@ export interface GoalCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function GoalCard({ goal, className }: GoalCardProps) {
-  const { toast } = useToast();
   const { goalStore } = useValtio()
   if (!goalStore.notifications || !goalStore.notifications[goal.id]) {
     throw new Error('Notifications not initialized')

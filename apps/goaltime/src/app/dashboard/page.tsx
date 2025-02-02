@@ -19,6 +19,7 @@ import { getNextFullSync } from '@/server-utils/inngest'
 import { dayjs } from '@/shared/utils'
 import { getAggregateTimeByGoal, getSchedule } from '@/libs/server-utils/src/queries/calendar'
 import { Paywall } from '../../components/Paywall'
+import { WebsocketConsumer } from '../../components/data/websocketConsumer'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,7 @@ export default async function Dashboard() {
     <ValtioProvider
       dashboardData={{ goals, profile, user, notifications, goalAggregates, initialSchedule: schedule }}
     >
+      <WebsocketConsumer />
       <Paywall />
       <div className="w-full 2xl:w-[67%] mx-auto p-1 pt-4 sm:p-4">
         <header className="flex justify-between items-center mb-5 px-4 sm:px-0">

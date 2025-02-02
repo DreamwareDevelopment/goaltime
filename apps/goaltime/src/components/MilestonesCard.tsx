@@ -11,7 +11,7 @@ import { cn } from "@/ui-components/utils";
 import { useValtio } from "./data/valtio";
 import { MilestoneCreationForm } from "./MilestoneCreationForm";
 import { MilestoneUpdateForm } from "./MilestoneUpdateForm";
-import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
+import { toast } from "@/libs/ui-components/src/hooks/use-toast";
 import { useEffect } from "react";
 import { debounce } from "@/libs/shared/src/lib/utils";
 
@@ -21,7 +21,6 @@ export interface MilestonesCardProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 export function MilestonesCard({ goalId, view, className }: MilestonesCardProps) {
-  const { toast } = useToast()
   const { userStore, milestoneDynamicStore } = useValtio();
   if (!userStore.user) {
     throw new Error('User not initialized')

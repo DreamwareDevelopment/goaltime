@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, LayoutList, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { cn } from "@/ui-components/utils";
 import { Button } from "@/ui-components/button";
@@ -22,7 +22,7 @@ import { CalendarEvent, CalendarProvider } from "@prisma/client";
 import { LoadingSpinner } from "@/ui-components/svgs/spinner";
 import { useValtio } from "./data/valtio";
 import { useSnapshot } from "valtio";
-import { useToast } from "@/ui-components/hooks/use-toast";
+import { toast } from "@/ui-components/hooks/use-toast";
 import { Credenza, CredenzaTrigger } from "@/ui-components/credenza";
 import { EventModal } from "./Calendar/EventModal";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/ui-components/tooltip";
@@ -77,7 +77,6 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const routineEventsByDay = routineEvents[dayName];
   const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
   const sleepHour = dayjs(routine.sleep[dayName].start).hour();
-  const { toast } = useToast();
   const isToday = now.format(DATE_FORMAT) === dateString;
   const [isLoading, setIsLoading] = useState(true)
   const [view, setView] = useState('timeline');
@@ -248,9 +247,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       }
     }
   };
-  shiftOverlappingEvents(events);
-
-  useEffect(() => {
+  
+  useLayoutEffect(() => {
+    if (isLoading) return;
+    shiftOverlappingEvents(events);
     const currentTime = now.hour() * 60 + now.minute();
   
     let upcomingEvent = null;
@@ -283,7 +283,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, date, is24Hour, view]);
+  }, [isLoading, date, is24Hour, view]);
 
   const TimelineView = () => {
     if (!schedule || isLoading) return (

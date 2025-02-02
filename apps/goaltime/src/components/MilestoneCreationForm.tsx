@@ -8,7 +8,7 @@ import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { MilestoneInput, MilestoneViewEnum } from "@/shared/zod";
 import { useValtio } from "./data/valtio";
-import { useToast } from "@/ui-components/hooks/use-toast";
+import { toast } from "@/ui-components/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
 
 export interface MilestoneCreationFormProps {
@@ -19,7 +19,6 @@ export interface MilestoneCreationFormProps {
 
 export function MilestoneCreationForm({ goalId, userId, view }: MilestoneCreationFormProps) {
   const { milestoneDynamicStore } = useValtio()
-  const { toast } = useToast()
   const form = useForm<MilestoneInput>({
     defaultValues: {
       goalId,

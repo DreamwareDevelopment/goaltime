@@ -11,7 +11,7 @@ import { DatetimePicker } from "@/ui-components/datetime-picker";
 import { FloatingInput } from "@/ui-components/floating-input";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form";
 import { CircularTabsTrigger, Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui-components/tabs";
-import { useToast } from "@/libs/ui-components/src/hooks/use-toast";
+import { toast } from "@/libs/ui-components/src/hooks/use-toast";
 
 export interface RoutineFieldsContainerProps {
   defaultOpen: 'Everyday' | 'Weekly' | 'Custom'
@@ -292,7 +292,6 @@ export function DaysSelector({ defaultOpen, form, activity, setOpen, onDelete, i
 
 export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsContainerProps) {
   const [value, setOpen] = useState('sleep')
-  const { toast } = useToast()
   const [customActivity, setCustomActivity] = useState('')
   const customActivities = form.watch('routine.custom')
 

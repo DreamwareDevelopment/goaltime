@@ -5,21 +5,25 @@ import { UserProfileInput } from "@/shared/zod"
 import { createUserProfileAction, updateUserProfileAction } from '../../../app/actions/user'
 import { createClient } from '@/ui-components/hooks/supabase'
 import { SanitizedUser } from '@/shared/utils'
+import { WebsocketHandler } from '../websocketConsumer'
 
 export const userStore = proxy<{
   user: SanitizedUser | null,
   profile: UserProfile | null,
+  websocketHandler: WebsocketHandler | null,
   createUserProfile(user: SanitizedUser, profile: UserProfileInput): Promise<void>,
   updateUserProfile(original: UserProfile, profile: Partial<UserProfileInput>): Promise<void>,
   uploadProfileImage(userId: string, image: File): Promise<string>,
   setProfile(profile: UserProfile): void,
-  init(user: SanitizedUser, profile: UserProfile): void,
+  init(user: SanitizedUser, profile: UserProfile, websocketHandler: WebsocketHandler): void,
 }>({
   user: null,
+  websocketHandler: null,
   profile: null,
-  init(user, profile) {
+  init(user, profile, websocketHandler) {
     this.user = user
     this.profile = profile
+    this.websocketHandler = websocketHandler
   },
   setProfile(profile: UserProfile) {
     if (this.profile) {

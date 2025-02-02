@@ -18,7 +18,7 @@ import { RoutineFieldsContainer } from '../../components/Profile/RoutineFields'
 import { useValtio } from '../../components/data/valtio'
 import { UserProfile } from '@prisma/client'
 import { useSnapshot } from 'valtio'
-import { useToast } from '@/ui-components/hooks/use-toast'
+import { toast } from '@/ui-components/hooks/use-toast'
 import { LoadingSpinner } from '@/libs/ui-components/src/svgs/spinner'
 import { ArrowLeft, ExternalLinkIcon } from 'lucide-react'
 
@@ -28,7 +28,6 @@ export interface SettingsClientProps {
 
 export default function SettingsClient({ profile: p }: SettingsClientProps) {
   const router = useRouter()
-  const { toast } = useToast()
   const { userStore } = useValtio()
   userStore.profile = p
   const profile = useSnapshot(userStore.profile)

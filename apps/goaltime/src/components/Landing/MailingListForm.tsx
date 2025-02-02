@@ -4,7 +4,7 @@ import { SubmitHandler, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form"
-import { useToast } from '@/ui-components/hooks/use-toast'
+import { toast } from '@/ui-components/hooks/use-toast'
 import { Input } from '@/ui-components/input'
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { ArrowRight } from 'lucide-react'
@@ -21,7 +21,6 @@ type EmailSubscriptionInput = z.infer<typeof EmailSubscriptionSchema>
 
 export default function MailingListForm() {
   const posthog = usePostHog()
-  const { toast } = useToast()
   const form = useForm<EmailSubscriptionInput>({
     resolver: zodResolver(EmailSubscriptionSchema),
     defaultValues: {

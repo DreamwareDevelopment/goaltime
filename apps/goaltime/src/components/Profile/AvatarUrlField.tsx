@@ -5,7 +5,7 @@ import { FileUploader, FileInput } from "@/ui-components/file-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui-components/avatar"
 import { UseFormReturn } from "react-hook-form";
 import { DropzoneOptions, FileError, ErrorCode } from "react-dropzone";
-import { useToast } from "@/ui-components/hooks/use-toast";
+import { toast } from "@/ui-components/hooks/use-toast";
 import { useAvatarUrl } from "@/ui-components/hooks/avatar-url";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 const FileSvgDraw = () => {
@@ -42,7 +42,6 @@ export interface AvatarUrlFieldProps {
 }
 
 export function AvatarUrlField({ form, setImage }: AvatarUrlFieldProps) {
-  const { toast } = useToast();
   const { setError, setValue, clearErrors } = form
   const dropzoneOptions = {
     accept: {

@@ -20,7 +20,7 @@ import { WorkFields } from '../../components/Profile/WorkFields'
 import { useValtio } from '../../components/data/valtio'
 import { LoadingSpinner } from '@/ui-components/svgs/spinner'
 import { sendOTPAction, verifyPhoneNumberAction } from '../actions/user'
-import { useToast } from '@/ui-components/hooks/use-toast'
+import { toast } from '@/ui-components/hooks/use-toast'
 import { SanitizedUser } from '@/shared/utils'
 import { WelcomeSkeleton } from './skeleton'
 
@@ -37,7 +37,6 @@ export interface WelcomeFlowClientProps {
 
 export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
   const router = useRouter()
-  const { toast } = useToast()
   const { userStore } = useValtio()
   const [currentStep, setCurrentStep] = useState(0)
   const [direction, setDirection] = useState(1)

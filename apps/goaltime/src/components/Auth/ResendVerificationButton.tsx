@@ -4,7 +4,7 @@ import { RefreshCw } from 'lucide-react'
 import React from 'react'
 
 import { Button as ShinyButton } from "@/ui-components/button-shiny"
-import { useToast } from "@/ui-components/hooks/use-toast"
+import { toast } from "@/ui-components/hooks/use-toast"
 
 interface ResendVerificationButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   email: string
@@ -12,8 +12,6 @@ interface ResendVerificationButtonProps extends React.HTMLAttributes<HTMLButtonE
 }
 
 export function ResendVerificationButton({ email, resendVerificationAction, ...props }: ResendVerificationButtonProps) {
-  const { toast } = useToast()
-
   const handleClick = () => {
     if (!email) {
       toast({
