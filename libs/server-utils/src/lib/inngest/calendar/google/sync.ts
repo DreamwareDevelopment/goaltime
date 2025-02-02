@@ -59,6 +59,7 @@ async function incrementalSyncCalendarEvents(
     const res = await calendar.events.list({
       calendarId: 'primary',
       singleEvents: true,
+      eventTypes: ['default', 'fromGmail'],
       pageToken: pageToken ?? undefined,
       syncToken: syncToken ?? undefined,
     });
