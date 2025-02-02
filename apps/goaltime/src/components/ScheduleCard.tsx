@@ -283,7 +283,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, date, is24Hour, view]);
+  }, [events, date, is24Hour, view]);
 
   const TimelineView = () => {
     if (!schedule || isLoading) return (
