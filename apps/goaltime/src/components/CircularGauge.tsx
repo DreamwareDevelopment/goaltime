@@ -5,12 +5,35 @@ import React, { useState } from 'react';
 interface CircularGaugeProps extends React.HTMLAttributes<HTMLDivElement> {
   goals: Goal[];
   size: number;
+  duration?: string;
+  delay?: number;
 }
 
-const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className }) => {
+const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className, delay = 1000 }) => {
   const totalCommitment = goals.reduce((sum, goal) => sum + (goal.commitment || goal.estimate || 0), 0);
   const circumference = 2 * Math.PI * ((size / 2) - 20);
   const [hoveredGoal, setHoveredGoal] = useState<Goal | null>(null);
+  const [currentSegment, setCurrentSegment] = useState<number>(-1); // Track the current segment being animated
+  const [animationTriggered, setAnimationTriggered] = useState<boolean>(false); // Track if animation has been triggered
+
+  // Function to animate segments
+  const animateSegments = () => {
+    if (!animationTriggered) {
+      setAnimationTriggered(true); // Mark animation as triggered
+      setTimeout(() => { // Add a short delay before starting the animation
+        goals.forEach((_, index) => {
+          setTimeout(() => {
+            setCurrentSegment(index);
+          }, index * 500 - 200); // Adjust the delay as needed
+        });
+      }, delay); // Initial delay to prevent flickering
+    }
+  };
+
+  React.useEffect(() => {
+    animateSegments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goals]);
 
   const handleMouseEnter = (goal: Goal) => {
     setHoveredGoal(goal);
@@ -52,11 +75,12 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
               stroke={goal.color}
               strokeOpacity={hoveredGoal === goal ? 0.7 : 1}
               strokeWidth="35"
-              strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
+              strokeDasharray={`${currentSegment >= index ? endAngle - startAngle - 8 : 0} ${circumference}`} // Animate the segment
               strokeDashoffset={-startAngle}
               transform={`rotate(-90, ${size / 2}, ${size / 2})`} // Rotate each circle
               onMouseEnter={() => handleMouseEnter(goal)}
               onMouseLeave={handleMouseLeave}
+              style={{ transition: 'stroke-dasharray 0.5s ease' }} // Smooth transition
             />
             <circle
               cx={size / 2}
@@ -66,11 +90,12 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ goals, size, className })
               stroke="black"
               strokeOpacity={0.3}
               strokeWidth="35"
-              strokeDasharray={`${endAngle - startAngle - 8} ${circumference}`} // 8 is the gap size
+              strokeDasharray={`${currentSegment >= index ? endAngle - startAngle - 8 : 0} ${circumference}`} // Animate the segment
               strokeDashoffset={-completedAngle}
               transform={`rotate(-90, ${size / 2}, ${size / 2})`} // Rotate each circle
               onMouseEnter={() => handleMouseEnter(goal)}
               onMouseLeave={handleMouseLeave}
+              style={{ transition: 'stroke-dasharray 0.5s ease' }} // Smooth transition
             />
           </g>
         );

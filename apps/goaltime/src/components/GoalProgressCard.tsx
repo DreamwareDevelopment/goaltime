@@ -42,8 +42,13 @@ export function GoalProgressCard() {
                   {parseFloat(goal.completed.toFixed(2)).toString()}/{parseFloat((goal.commitment ?? goal.estimate!).toFixed(2)).toString()} hours
                 </span>
               </div>
-              {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-              <Progress value={(goal.completed / (goal.commitment ?? goal.estimate!)) * 100} className="h-3" color={goal.color} />
+              <Progress
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                value={(goal.completed / (goal.commitment ?? goal.estimate!)) * 100}
+                className="h-3"
+                color={goal.color}
+                duration={`${goals.length * 0.5 - 0.2}s`}
+              />
               <span className="block md:hidden text-sm text-center text-muted-foreground">
                 {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
                 {parseFloat(goal.completed.toFixed(2)).toString()}/{parseFloat((goal.commitment ?? goal.estimate!).toFixed(2)).toString()} hours
