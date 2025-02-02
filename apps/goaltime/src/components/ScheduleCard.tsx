@@ -60,12 +60,12 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const profile = useSnapshot(userStore.profile!);
   const [timezone, setTimezone] = useState<string>(profile.timezone);
 
-  const [date, setDate] = useState(dayjs('2025-02-02 20:00').toDate());
+  const [date, setDate] = useState(dayjs('2025-02-02 16:30').toDate());
   const day = dayjs(date);
   const dayOffset = offsetDay(day, timezone);
   const dateString = dayOffset.format(DATE_FORMAT);
   const dayName = dayOffset.format('dddd') as DaysOfTheWeekType;
-  const now = dayjs('2025-02-02 20:00');
+  const now = dayjs('2025-02-02 16:30');
   console.log(`Date: ${day.format(DATE_TIME_FORMAT)}`)
   console.log(`DayTZ: ${dayOffset.format(DATE_TIME_FORMAT)}`)
   console.log(`Day: ${dayName}`)
