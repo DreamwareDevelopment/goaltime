@@ -16,6 +16,7 @@ const PrivacyPolicy = () => {
         <li>Personal Information, such as your name, email address, and phone number, that you provide when you register for an account or use certain features of the Services. This information is used to provide the Services, communicate with you, and personalize your experience.</li>
         <li>Data generated through your use of the Services, such as calendar events, goals, and progress tracking information. This data is stored with our third-party service provider, Supabase.</li>
         <li>Information collected automatically as you navigate through the Services, including usage details, IP addresses, and cookies and other tracking technologies.</li>
+        <li>Information from external calendars, such as Google Calendar, that you connect to our Services for scheduling purposes. This information is used to synchronize your events and improve your scheduling experience.</li>
       </ul>
 
       <h2 className="text-2xl font-bold mb-2">2. How We Use Your Information</h2>
