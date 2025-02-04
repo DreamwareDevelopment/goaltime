@@ -250,6 +250,9 @@ export const startAccountabilityLoop = inngestConsumer.createFunction({
             gte: now.subtract(MAX_NOTIFICATION_EVENT_OFFSET, 'minutes').toDate(), // The max notification offset is 1 hour
             lte: now.add(1, 'day').toDate(),
           },
+          goalId: {
+            not: null,
+          },
         },
         orderBy: {
           startTime: 'asc',
