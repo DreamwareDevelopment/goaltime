@@ -16,7 +16,7 @@ import GoalCreationButton from '../../components/GoalCreationButton'
 import { WelcomeCard } from '../../components/WelcomeCard'
 import { LogoButton } from '../../components/ActionButtons/LogoButton'
 import { getNextFullSync } from '@/server-utils/inngest'
-import { dayjs } from '@/shared/utils'
+import { DATE_TIME_FORMAT, dayjs } from '@/shared/utils'
 import { getAggregateTimeByGoal, getSchedule } from '@/libs/server-utils/src/queries/calendar'
 import { Paywall } from '../../components/Paywall'
 import { WebsocketConsumer } from '../../components/data/websocketConsumer'
@@ -36,9 +36,10 @@ export default async function Dashboard() {
     if (!googleAuth?.lastFullSyncAt) {
       return {} as Record<string, number>
     }
-    const lastFullSync = dayjs(googleAuth.lastFullSyncAt)
-    const nextFullSync = getNextFullSync(lastFullSync, profile.timezone)
-    return await getAggregateTimeByGoal(user.id, lastFullSync, nextFullSync.endOf('day'))
+    const now = dayjs()
+    console.log(`now: ${now.format(DATE_TIME_FORMAT)}`)
+    const nextFullSync = getNextFullSync(now, profile.timezone)
+    return await getAggregateTimeByGoal(user.id, now, nextFullSync.endOf('day'))
   }
   const [goals, goalAggregates, notifications, schedule] = await Promise.all([
     getGoals(profile),
