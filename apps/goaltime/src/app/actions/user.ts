@@ -3,7 +3,7 @@
 import { OptionalRoutine, RoutineActivities, RoutineActivity, RoutineDay, UserProfileInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import twilio from 'twilio'
-import { isDeepStrictEqual } from 'util'
+import deepEqual from 'fast-deep-equal'
 import { UserProfile } from '@prisma/client'
 import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
 import { formatUser, zep } from '@/server-utils/ai'
@@ -89,10 +89,10 @@ export async function createUserProfileAction(user: SanitizedUser, profile: User
 }
 
 function shouldScheduleGoals(original: UserProfile, updated: Partial<UserProfileInput>): boolean {
-  if (updated.routine && !isDeepStrictEqual(original.routine, updated.routine)) {
+  if (updated.routine && !deepEqual(original.routine, updated.routine)) {
     return true;
   }
-  if (updated.workDays && !isDeepStrictEqual(original.workDays, updated.workDays)) {
+  if (updated.workDays && !deepEqual(original.workDays, updated.workDays)) {
     return true;
   }
   if (updated.timezone && updated.timezone !== original.timezone) {

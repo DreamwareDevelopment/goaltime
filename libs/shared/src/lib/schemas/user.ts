@@ -1,3 +1,4 @@
+import deepEqual from 'fast-deep-equal'
 import z from 'zod'
 import { FieldErrors } from 'react-hook-form'
 import { getDefaults, ZodSchemaResolver } from '.'
@@ -197,9 +198,9 @@ export function getProfileRoutine(profile: UserProfile, excludeSkipped = true): 
           }
         }
         // Then set up aggregate days
-        entry.Everyday = { ...entry.Monday }
-        entry.Weekdays = { ...entry.Monday }
-        entry.Weekends = { ...entry.Saturday }
+        routine.custom[key].Everyday = { ...routine.custom[key].Monday }
+        routine.custom[key].Weekdays = { ...routine.custom[key].Monday }
+        routine.custom[key].Weekends = { ...routine.custom[key].Saturday }
       }
       continue
     }
@@ -243,6 +244,83 @@ export function getSleepRoutineForDay(routine: RoutineActivities, date: dayjs.Da
     start,
     end,
   }
+}
+
+export function getDefaultRoutineDisplayTab(times: RoutineDays, debug = false): "Everyday" | "Weekly" | "Custom" {
+  let lastRoutine: Routine | null = null
+  let isEveryday = true
+  let isWeekly = true
+
+  const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+  const weekends = ["Saturday", "Sunday"]
+
+  let weekdayRoutine: Routine | null = null
+  let weekendRoutine: Routine | null = null
+
+  let hasSetWeekdayRoutine = false
+  let hasSetWeekendRoutine = false
+  let hasSetLastRoutine = false
+
+  for (const key in times) {
+    if (key === 'Everyday' || key === 'Weekdays' || key === 'Weekends') {
+      continue;
+    }
+    const routine = times[key as keyof RoutineDays]
+
+    if (debug) {
+      console.log(`key: ${key}`)
+      console.log(`routine: ${JSON.stringify(routine, null, 2)}`)
+      console.log(`lastRoutine: ${JSON.stringify(lastRoutine, null, 2)}`)
+      console.log(`deepEqual: ${deepEqual(lastRoutine, routine)}`)
+    }
+    if (!hasSetLastRoutine) {
+      lastRoutine = routine
+      hasSetLastRoutine = true
+    } else if (isEveryday && !deepEqual(lastRoutine, routine)) {
+      isEveryday = false
+      if (debug) {
+        console.log(`isEveryday: ${isEveryday}`)
+      }
+    }
+
+    if (weekdays.includes(key)) {
+      if (!hasSetWeekdayRoutine) {
+        weekdayRoutine = routine
+        hasSetWeekdayRoutine = true
+      } else if (isWeekly && !deepEqual(weekdayRoutine, routine)) {
+        isWeekly = false
+        if (debug) {
+          console.log(`isWeekly: ${isWeekly}`)
+        }
+      }
+    } else if (weekends.includes(key)) {
+      if (!hasSetWeekendRoutine) {
+        weekendRoutine = routine
+        hasSetWeekendRoutine = true
+      } else if (isWeekly && !deepEqual(weekendRoutine, routine)) {
+        isWeekly = false
+        if (debug) {
+          console.log(`isWeekly: ${isWeekly}`)
+        }
+      }
+    }
+    if (weekends.includes(key)) {
+      weekendRoutine = routine
+    } else {
+      weekdayRoutine = routine
+    }
+    lastRoutine = routine
+  }
+
+  if (isEveryday) {
+    return "Everyday"
+  }
+
+  if (isWeekly && weekdayRoutine && weekendRoutine && !deepEqual(weekdayRoutine, weekendRoutine)) {
+    return "Weekly"
+  }
+
+  return "Custom"
 }
 
 export function routineToExternalEvents(routine: RoutineActivities, timezone: string, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {

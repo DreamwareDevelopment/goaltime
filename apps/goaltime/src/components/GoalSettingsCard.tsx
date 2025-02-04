@@ -1,11 +1,11 @@
 import { FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cn } from "@/ui-components/utils"
 import { Button as ShinyButton } from '@/ui-components/button-shiny'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui-components/card'
 import { Form } from '@/ui-components/form'
-import { getDefaults, getZodResolver, GoalInput, GoalSchema, NotificationSettingsSchema } from '@/shared/zod'
+import { getDefaults, getDefaultPreferredTimesDisplayTab, getZodResolver, GoalInput, GoalSchema, NotificationSettingsSchema } from '@/shared/zod'
 
 import { NotificationSettings } from './Settings/Notifications'
 import { MaximumTimeInput, MinimumTimeInput } from './Settings/TimeInputs.tsx'
@@ -143,6 +143,9 @@ export function GoalSettingsCard({
     }
   }, [recommendation, form, setRecommendation])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const defaultDisplayTab = useMemo(() => getDefaultPreferredTimesDisplayTab(form.getValues("preferredTimes")), [form.getValues("preferredTimes")])
+
   const { formState } = form
   const { isSubmitting, isValidating } = formState
 
@@ -230,7 +233,7 @@ export function GoalSettingsCard({
                 <AccordionItem value="schedule">
                   <AccordionTrigger className="text-lg font-bold">Scheduling Settings</AccordionTrigger>
                   <AccordionContent className="space-y-4">
-                    <PreferredTimesSelector form={form} defaultOpen="Everyday" />
+                    <PreferredTimesSelector form={form} defaultOpen={defaultDisplayTab} />
                     <PrioritySelector form={form} />
                     <div className="flex flex-wrap gap-4">
                       <CanDoDuringWorkCheckbox form={form} />

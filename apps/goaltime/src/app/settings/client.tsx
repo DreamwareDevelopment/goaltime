@@ -34,6 +34,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
   const [image, setImage] = useState<File | null>(null)
 
   const routine = getProfileRoutine(profile, false)
+  // console.log(`routine: ${JSON.stringify(routine, null, 2)}`)
   const form = useForm<UserProfileInput>({
     resolver: getZodResolver(UserProfileSchema, refineUserProfileSchema),
     values: {
@@ -124,7 +125,7 @@ export default function SettingsClient({ profile: p }: SettingsClientProps) {
             <p className="text-xl text-foreground text-center">Work</p>
             <WorkFields form={form} />
             <Separator />
-            <RoutineFieldsContainer defaultOpen="Everyday" form={form} />
+            <RoutineFieldsContainer form={form} />
           </CardContent>
           <CardFooter className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-center justify-between gap-4">
             <ShinyButton

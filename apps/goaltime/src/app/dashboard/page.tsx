@@ -64,11 +64,11 @@ export default async function Dashboard() {
 
         { hasGoals ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-            <Card className="col-span-1 lg:col-span-2 xl:col-span-4 max-h-[704px] overflow-hidden">
-              <ScheduleCard />
-            </Card>
             <Card className="col-span-1 xl:col-span-3 max-h-[704px]">
               <GoalProgressCard />
+            </Card>
+            <Card className="col-span-1 lg:col-span-2 xl:col-span-4 max-h-[704px] overflow-hidden">
+              <ScheduleCard />
             </Card>
             <Card className="col-span-full overflow-hidden">
               <GoalCarousel />

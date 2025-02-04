@@ -61,6 +61,85 @@ export function getGoalPreferredTimes(goal: Goal): PreferredTimesDays {
   return parsed
 }
 
+export function getDefaultPreferredTimesDisplayTab(times: PreferredTimesDays): "Everyday" | "Weekly" | "Custom" {
+  let lastTimes: PreferredTimesEnumType[] | null = null
+  let isEveryday = true
+  let isWeekly = true
+
+  const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+  const weekends = ["Saturday", "Sunday"]
+
+  let weekdayTimes: PreferredTimesEnumType[] | null = null
+  let weekendTimes: PreferredTimesEnumType[] | null = null
+
+  let hasSetWeekdayTimes = false
+  let hasSetWeekendTimes = false
+  let hasSetLastTimes = false
+
+  for (const key in times) {
+    if (key === "Everyday" || key === "Weekdays" || key === "Weekends") {
+      continue
+    }
+    const dayTimes = times[key as keyof PreferredTimesDays] as PreferredTimesEnumType[]
+    // console.log(`lastTimes: ${lastTimes}`)
+    // console.log(`dayTimes: ${dayTimes}`)
+    // console.log(`arraysEqual: ${arraysEqual(lastTimes, dayTimes)}`)
+    if (!hasSetLastTimes) {
+      lastTimes = dayTimes
+      hasSetLastTimes = true
+      // console.log(`hasSetLastTimes: ${hasSetLastTimes}`)
+    } else if (isEveryday && !arraysEqual(lastTimes, dayTimes)) {
+      isEveryday = false
+      // console.log(`isEveryday: ${isEveryday}`)
+    }
+
+    if (weekdays.includes(key)) {
+      if (!hasSetWeekdayTimes) {
+        weekdayTimes = dayTimes
+        hasSetWeekdayTimes = true
+        // console.log(`hasSetWeekdayTimes: ${hasSetWeekdayTimes}`)
+      } else if (isWeekly && !arraysEqual(weekdayTimes, dayTimes)) {
+        isWeekly = false
+        // console.log(`isWeekly: ${isWeekly}`)
+      }
+    } else if (weekends.includes(key)) {
+      if (!hasSetWeekendTimes) {
+        weekendTimes = dayTimes
+        hasSetWeekendTimes = true
+        // console.log(`hasSetWeekendTimes: ${hasSetWeekendTimes}`)
+      } else if (isWeekly && !arraysEqual(weekendTimes, dayTimes)) {
+        isWeekly = false
+        // console.log(`isWeekly: ${isWeekly}`)
+      }
+    }
+    if (weekends.includes(key)) {
+      weekendTimes = dayTimes
+    } else {
+      weekdayTimes = dayTimes
+    }
+    lastTimes = dayTimes
+  }
+
+  if (isEveryday) {
+    return "Everyday"
+  }
+
+  if (isWeekly && weekdayTimes && weekendTimes && !arraysEqual(weekdayTimes, weekendTimes)) {
+    return "Weekly"
+  }
+
+  return "Custom"
+}
+
+function arraysEqual<T>(a: T[] | null, b: T[] | null): boolean {
+  if (a === null || b === null) return a === b
+  if (a.length !== b.length) return false
+  for (const item of a) {
+    if (!b.includes(item)) return false
+  }
+  return true
+}
+
 // Goal Schema
 export const GoalSchema = z.object({
   id: z.string().uuid().optional(),

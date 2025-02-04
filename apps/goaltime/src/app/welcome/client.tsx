@@ -261,7 +261,7 @@ export default function WelcomeFlowClient({ user }: WelcomeFlowClientProps) {
                   <WorkFields form={form} />
                 )}
                 {currentStepFields.includes('routine') && (
-                  <RoutineFieldsContainer defaultOpen="Everyday" form={form} />
+                  <RoutineFieldsContainer form={form} />
                 )}
               </motion.div>
             </AnimatePresence>

@@ -3,7 +3,7 @@
 import { GoalInput } from '@/shared/zod'
 import { getPrismaClient } from '@/server-utils/prisma'
 import { Goal } from '@prisma/client'
-import { isDeepStrictEqual } from 'util'
+import deepEqual from 'fast-deep-equal'
 import { inngestProducer, InngestEvent } from '@/server-utils/inngest'
 import { GoalWithNotifications } from '@/shared/utils'
 import { formatGoal, zep } from '@/server-utils/ai'
@@ -70,7 +70,7 @@ function shouldScheduleGoals(original: Goal, updated: GoalInput): boolean {
   if (original.priority !== updated.priority) {
     return true
   }
-  if (!isDeepStrictEqual(original.preferredTimes, updated.preferredTimes)) {
+  if (!deepEqual(original.preferredTimes, updated.preferredTimes)) {
     return true
   }
   return false

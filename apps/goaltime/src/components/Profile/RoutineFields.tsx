@@ -1,9 +1,9 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 
 import { dayjs } from '@/shared/utils'
-import { DaysSelectionEnum, DaysSelectionEnumType, getDefaults, RoutineActivity, RoutineDaysSchema, UserProfileInput } from "@/shared/zod";
+import { DaysSelectionEnum, DaysSelectionEnumType, getDefaults, getDefaultRoutineDisplayTab, RoutineActivity, RoutineDaysSchema, UserProfileInput, RoutineDays } from "@/shared/zod";
 import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from "@/ui-components/accordion";
 import { Button as ShinyButton } from "@/ui-components/button-shiny";
 import { Checkbox } from "@/ui-components/checkbox";
@@ -14,7 +14,6 @@ import { CircularTabsTrigger, Tabs, TabsContent, TabsList, TabsTrigger } from "@
 import { toast } from "@/libs/ui-components/src/hooks/use-toast";
 
 export interface RoutineFieldsContainerProps {
-  defaultOpen: 'Everyday' | 'Weekly' | 'Custom'
   form: UseFormReturn<UserProfileInput>
 }
 
@@ -290,7 +289,7 @@ export function DaysSelector({ defaultOpen, form, activity, setOpen, onDelete, i
   )
 }
 
-export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsContainerProps) {
+export function RoutineFieldsContainer({ form }: RoutineFieldsContainerProps) {
   const [value, setOpen] = useState('sleep')
   const [customActivity, setCustomActivity] = useState('')
   const customActivities = form.watch('routine.custom')
@@ -311,6 +310,19 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
     })
     setCustomActivity('')
   }
+  const defaultOpen = useMemo(() => {
+    const openStates: Record<string, 'Everyday' | 'Weekly' | 'Custom'> = {};
+    for (const activity of Object.keys(customActivities)) {
+      openStates[activity] = getDefaultRoutineDisplayTab(customActivities[activity]);
+    }
+    for (const activity of Object.keys(form.watch('routine'))) {
+      if (activity !== 'custom') {
+        openStates[activity] = getDefaultRoutineDisplayTab(form.getValues(`routine.${activity as RoutineActivity}`) as RoutineDays);
+      }
+    }
+    return openStates;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const onDelete = (activity: string) => {
     delete customActivities[activity]
     form.setValue('routine.custom', customActivities)
@@ -325,7 +337,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
             <AccordionTrigger className="text-md font-bold">Sleep</AccordionTrigger>
             <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
               <DaysSelector
-                defaultOpen={defaultOpen}
+                defaultOpen={defaultOpen.sleep}
                 form={form}
                 activity="sleep"
                 setOpen={setOpen}
@@ -336,7 +348,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
             <AccordionTrigger className="text-md font-bold">Breakfast</AccordionTrigger>
             <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
               <DaysSelector
-                defaultOpen={defaultOpen}
+                defaultOpen={defaultOpen.breakfast}
                 form={form}
                 activity="breakfast"
                 setOpen={setOpen}
@@ -347,7 +359,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
             <AccordionTrigger className="text-md font-bold">Lunch</AccordionTrigger>
             <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
               <DaysSelector
-                defaultOpen={defaultOpen}
+                defaultOpen={defaultOpen.lunch}
                 form={form}
                 activity="lunch"
                 setOpen={setOpen}
@@ -358,7 +370,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
             <AccordionTrigger className="text-md font-bold">Dinner</AccordionTrigger>
             <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
               <DaysSelector
-                defaultOpen={defaultOpen}
+                defaultOpen={defaultOpen.dinner}
                 form={form}
                 activity="dinner"
                 setOpen={setOpen}
@@ -370,7 +382,7 @@ export function RoutineFieldsContainer({ defaultOpen, form }: RoutineFieldsConta
               <AccordionTrigger className="text-md font-bold">{key}</AccordionTrigger>
               <AccordionContent className="flex flex-wrap items-center justify-between gap-4">
                 <DaysSelector
-                  defaultOpen={defaultOpen}
+                  defaultOpen={defaultOpen[key]}
                   form={form}
                   activity={key as RoutineActivity}
                   setOpen={setOpen}
