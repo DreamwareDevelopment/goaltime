@@ -37,7 +37,6 @@ export default async function Dashboard() {
       return {} as Record<string, number>
     }
     const now = dayjs()
-    console.log(`now: ${now.format(DATE_TIME_FORMAT)}`)
     const nextFullSync = getNextFullSync(now, profile.timezone)
     return await getAggregateTimeByGoal(user.id, now, nextFullSync.endOf('day'))
   }
