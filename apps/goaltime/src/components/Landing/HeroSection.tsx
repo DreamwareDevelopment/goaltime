@@ -20,7 +20,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               Achieve Your Goals with GoalTime
             </h1>
             <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-              AI Accountability Coach
+              AI Accountability Agent
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6">

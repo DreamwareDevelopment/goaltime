@@ -82,7 +82,7 @@ export default async function (fastify: FastifyInstance) {
             }
           });
           console.log('Sending welcome SMS')
-          await sendSMS(user.phone, `Welcome to GoalTime, we're glad to have you onboard! I'm your GoalTime accountability coach, go ahead and save my contact info so we can keep in touch.`);
+          await sendSMS(user.phone, `Welcome to GoalTime, we're glad to have you onboard! I'm your GoalTime accountability agent, go ahead and save my contact info so we can keep in touch.`);
           break;
         }
         case 'customer.subscription.deleted': {
