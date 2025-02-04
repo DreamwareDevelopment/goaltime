@@ -229,7 +229,7 @@ export function GoalSettingsCard({
               <DescriptionInput form={form} />
               <GoalTypeInput form={form} goal={goal} />
               <Separator className="mt-4" />
-              <Accordion type="multiple" defaultValue={['schedule']} className="w-full h-full">
+              <Accordion type="multiple" defaultValue={goal ? ['schedule'] : ['schedule', 'notifications']} className="w-full h-full">
                 <AccordionItem value="schedule">
                   <AccordionTrigger className="text-lg font-bold">Scheduling Settings</AccordionTrigger>
                   <AccordionContent className="space-y-4">
