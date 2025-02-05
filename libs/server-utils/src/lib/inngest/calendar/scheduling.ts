@@ -4,7 +4,8 @@ import { Logger } from "inngest/middleware/logger";
 import { dayjs, DATE_TIME_FORMAT, ExternalEvent, GoalEvent, Interval, IntervalWithScore, TypedIntervalWithScore } from "@/shared/utils";
 import { DaysOfTheWeekType, MinimalScheduleableGoal, ScheduleableGoal, ScheduleInputData } from "@/shared/zod";
 
-import { deleteGoalEvents, getSchedulingData, GoalSchedulingData, saveSchedule } from "../../../queries/calendar";
+import { deleteGoalEvents, saveSchedule, GoalSchedulingData } from "../../../commands/calendar";
+import { getSchedulingData } from "../../../queries/calendar";
 import { getFreeIntervals, getGoalScoringInstructions, getPreferredTimes, getRemainingCommitmentForPeriod, parsePreferredTimes, scoreIntervals } from "../../ai/scheduling";
 import { inngestConsumer, InngestEvent } from "../client";
 import { posthog } from "../../posthog";

@@ -17,6 +17,8 @@ export const milestonesContract = c.router({
     }),
     responses: {
       200: c.type<Milestone[]>(),
+      401: c.type<{ error: string }>(),
+      403: c.type<{ error: string }>(),
       404: c.type<{ error: string }>(),
     },
     summary: 'Get the milestones for a goal under the given view',

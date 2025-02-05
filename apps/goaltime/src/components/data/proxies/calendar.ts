@@ -1,6 +1,6 @@
 import { proxy } from 'valtio'
 
-import { CalendarEventInput } from "@/shared/zod"
+import { CalendarEventInput, CalendarLinkEventInput } from "@/shared/zod"
 import { CalendarEvent } from '@prisma/client'
 import { createCalendarEventAction, deleteCalendarEventAction, updateCalendarEventAction, updateCalendarEventColorsAction } from '../../../app/actions/calendar'
 import { binarySearchInsert, DATE_FORMAT, DATE_TIME_FORMAT, dayjs } from '@/libs/shared/src'
@@ -21,6 +21,7 @@ export const calendarStore = proxy<{
   init(events: CalendarEvent[]): void,
   ensureCalendarEvents(date: string): void,
   loadCalendarEvents(date: dayjs.Dayjs): Promise<void>,
+  linkCalendarEvent(data: CalendarLinkEventInput): Promise<void>,
   createCalendarEvent(event: CalendarEventInput): Promise<void>,
   updateCalendarEvent(original: CalendarEvent, updated: CalendarEventInput): Promise<void>,
   updateEventColors(goalId: string, color: string): Promise<void>,
@@ -69,6 +70,34 @@ export const calendarStore = proxy<{
       console.error(`Calendar events not found for ${dayString}`)
       const errorMessage = response.body.error;
       throw new Error(errorMessage);
+    } else {
+      throw new Error(`Unexpected status code: ${status}`)
+    }
+  },
+  async linkCalendarEvent(data: CalendarLinkEventInput) {
+    let tokenInfo = await getTokenInfo();
+    let client = await getTsRestClient(tokenInfo);
+    let response = await client.calendar.linkEventToGoal({
+      body: {
+        id: data.id,
+        goalId: data.goalId,
+        linkFutureEvents: data.linkFutureEvents,
+      },
+    });
+    if (response.status === 401 || response.status === 403) {
+      tokenInfo = await refreshTokenIfNeeded(tokenInfo);
+      client = await getTsRestClient(tokenInfo);
+      response = await client.calendar.linkEventToGoal({
+        body: {
+          id: data.id,
+          goalId: data.goalId,
+          linkFutureEvents: data.linkFutureEvents,
+        },
+      });
+    }
+    const { status } = response;
+    if (status === 200) {
+      console.log(`Calendar event ${data.id} linked to goal ${data.goalId}`)
     } else {
       throw new Error(`Unexpected status code: ${status}`)
     }
@@ -136,6 +165,7 @@ export const calendarStore = proxy<{
     await updateCalendarEventColorsAction(userId, eventIdsToUpdate, color)
   },
   setCalendarEvents(events: CalendarEvent[], eventsToDelete: string[]) {
+    console.log(`Setting calendar events: ${JSON.stringify(events)}`)
     if (eventsToDelete.length > 0) {
       // TODO: Improve performance of this
       for (const day of Object.keys(calendarStore.events)) {

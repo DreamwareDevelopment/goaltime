@@ -1,1 +1,5 @@
-export const commands = {};
+import { calendarCommandContract } from './calendar';
+
+export const commands = {
+  calendar: calendarCommandContract,
+};

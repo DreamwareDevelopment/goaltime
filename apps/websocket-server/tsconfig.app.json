@@ -10,6 +10,7 @@
       "@/server-utils/stripe": ["libs/server-utils/src/lib/stripe/index.ts"],
       "@/server-utils/posthog": ["libs/server-utils/src/lib/posthog/index.ts"],
       "@/server-utils/queries/*": ["libs/server-utils/src/queries/*"],
+      "@/server-utils/commands/*": ["libs/server-utils/src/commands/*"],
       "@/shared/utils": ["libs/shared/src/index.ts"],
       "@/shared/zod": ["libs/shared/src/lib/schemas/index.ts"],
       "@/shared/contracts": ["libs/shared/src/lib/contracts/index.ts"],

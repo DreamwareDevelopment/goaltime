@@ -4,10 +4,10 @@ import { DatetimePicker } from "@/ui-components/datetime-picker";
 import { dayjs } from "@/shared/utils"
 import { Label } from "@/ui-components/label";
 import { LoadingSpinner } from "@/libs/ui-components/src/svgs/spinner";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/ui-components/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/ui-components/form";
 import { FieldErrors, useForm, UseFormReturn } from "react-hook-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui-components/select";
-import { CalendarEventInput, CalendarEventSchema, getDefaults, getZodResolver } from "@/shared/zod";
+import { CalendarEventInput, CalendarEventSchema, CalendarLinkEventSchema, CalendarLinkEventInput, getDefaults, getZodResolver } from "@/shared/zod";
 import { FloatingLabelInput } from "@/ui-components/floating-input";
 import { AutosizeTextarea } from "@/ui-components/text-area";
 import { useValtio } from "../data/valtio";
@@ -16,6 +16,7 @@ import { toast } from "@/libs/ui-components/src/hooks/use-toast";
 import { useSnapshot } from "valtio";
 import { useEffect } from "react";
 import { cn } from "@/libs/ui-components/src/utils";
+import { Checkbox } from "@/libs/ui-components/src/components/ui/checkbox";
 
 interface EventModalProps extends React.HTMLAttributes<HTMLDivElement> {
   event: CalendarEvent | null;
@@ -53,27 +54,36 @@ const TitleInput: React.FC<{ form: UseFormReturn<CalendarEventInput> }> = ({ for
   )
 }
 
-const GoalSelect: React.FC<{ goals: ReadonlyArray<Goal>, form: UseFormReturn<CalendarEventInput> }> = ({ goals, form }) => {
+interface GoalSelectProps {
+  goals: ReadonlyArray<Goal>;
+  selectedGoal: Goal | null;
+  onChange: (value: string | null) => void;
+  nullable?: boolean;
+}
+
+enum GoalSelectValue {
+  None = 'none',
+}
+
+const GoalSelect: React.FC<GoalSelectProps> = ({ goals, selectedGoal, onChange, nullable = false }) => {
   return (
-    <FormField
-      control={form.control}
-      name="goalId"
-      render={({ field }) => {
-        const selectedGoal = goals.find(goal => goal.id === field.value)
-        return (
-          <Select value={field.value ?? undefined} onValueChange={field.onChange}>
-            <SelectTrigger style={{ backgroundColor: selectedGoal?.color }} className="w-full mt-2 text-white">
-              <SelectValue placeholder="Select a goal" />
-            </SelectTrigger>
-            <SelectContent>
-              {goals.map(goal => (
-                <SelectItem key={goal.id} value={goal.id} style={{ backgroundColor: goal.color }} className="text-white">{goal.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )
-      }}
-    />
+    <Select value={selectedGoal?.id ?? (nullable ? GoalSelectValue.None : undefined)} onValueChange={(value) => {
+      if (value === GoalSelectValue.None) {
+        onChange(null);
+      } else {
+        onChange(value);
+      }
+    }}>
+      <SelectTrigger style={{ backgroundColor: selectedGoal?.color }} className="w-full mt-2 text-white">
+        <SelectValue placeholder="Select a goal" />
+      </SelectTrigger>
+      <SelectContent>
+        {nullable && <SelectItem key={GoalSelectValue.None} value={GoalSelectValue.None} className="text-white bg-background">None</SelectItem>}
+        {goals.map(goal => (
+          <SelectItem key={goal.id} value={goal.id} style={{ backgroundColor: goal.color }} className="text-white">{goal.title}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -128,7 +138,7 @@ export function EventModal({
     startTime: dayjs(event.startTime).toDate(),
     endTime: dayjs(event.endTime).toDate(),
   } : getDefaults(CalendarEventSchema, { goalId: goals[0].id, color: goals[0].color, userId, timezone });
-  const form = useForm<CalendarEventInput>({
+  const editForm = useForm<CalendarEventInput>({
     defaultValues,
     resolver: getZodResolver(CalendarEventSchema, async (data) => {
       const errors: FieldErrors<CalendarEventInput> = {}
@@ -142,29 +152,44 @@ export function EventModal({
     }),
   });
 
-  const { formState, handleSubmit } = form
-  const { isSubmitting, isValidating } = formState
+  const linkForm = useForm<CalendarLinkEventInput>({
+    defaultValues: {
+      id: event?.id,
+      goalId: event?.goalId ?? null,
+      linkFutureEvents: false,
+    },
+    resolver: getZodResolver(CalendarLinkEventSchema, async (data) => {
+      const errors: FieldErrors<CalendarLinkEventInput> = {}
+      return errors;
+    }),
+  });
+
+
+  const { formState: editFormState, handleSubmit: editHandleSubmit } = editForm
+  const { isSubmitting: editIsSubmitting, isValidating: editIsValidating } = editFormState
+  const { formState: linkFormState, handleSubmit: linkHandleSubmit } = linkForm
+  const { isSubmitting: linkIsSubmitting, isValidating: linkIsValidating } = linkFormState
   useEffect(() => {
     if (!event) {
-      form.setValue('startTime', (date ?? dayjs()).toDate());
-      form.setValue('endTime', (date ?? dayjs()).add(1, 'hour').toDate());
+      editForm.setValue('startTime', (date ?? dayjs()).toDate());
+      editForm.setValue('endTime', (date ?? dayjs()).add(1, 'hour').toDate());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const onSubmit = async () => {
+  const onEditSubmit = async () => {
     // This is intentionally closing the modal before the update to avoid the update
     // rerendering the open animation. It's instant so it's fine.
     setOpen(false);
     try {
       if (event) {
-        await calendarStore.updateCalendarEvent(event, form.getValues());
+        await calendarStore.updateCalendarEvent(event, editForm.getValues());
         toast({
           title: 'Event updated',
           description: 'Your event has been updated.',
         });
       } else {
-        await calendarStore.createCalendarEvent(form.getValues());
+        await calendarStore.createCalendarEvent(editForm.getValues());
         toast({
           title: 'Event created',
           description: 'Your event has been created.',
@@ -174,6 +199,22 @@ export function EventModal({
       console.error(error);
       toast({
         title: 'Error updating event',
+        description: 'Please try again later.',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  const onLinkSubmit = async () => {
+    setOpen(false);
+    try {
+      await calendarStore.linkCalendarEvent(linkForm.getValues());
+      // TODO: This is a hack to reload the page to get the new event colors, should use SyncToClient
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error linking event',
         description: 'Please try again later.',
         variant: 'destructive',
       });
@@ -204,20 +245,58 @@ export function EventModal({
   if (!isEditable && event) {
     return (
       <CredenzaContent {...props}>
-        <CredenzaDescription className="text-right pr-4">
+        <CredenzaDescription className="text-right pt-4 pr-10">
           <span className="font-bold capitalize">{event.provider}</span> event
         </CredenzaDescription>
-        <CredenzaHeader className="flex flex-col items-start gap-2 md:py-4 px-4">
-          <CredenzaTitle>{event.title}</CredenzaTitle>
+        <CredenzaHeader className="flex flex-col items-center gap-2 px-4">
+          <CredenzaTitle className="text-md font-semibold text-foreground">{event.title}</CredenzaTitle>
           { event.description && <p className="text-md text-muted-foreground">{event.description}</p> }
         </CredenzaHeader>
-        <CredenzaBody className="px-0">
-          <div className="flex flex-col gap-4 px-4 pt-0 pb-4">
-            <p className="text-md text-muted-foreground">
-              {dayjs(event.startTime).format(is24Hour ? 'HH:mm' : 'h:mm A')} - {dayjs(event.endTime).format(is24Hour ? 'HH:mm' : 'h:mm A')}
-            </p>
-          </div>
-        </CredenzaBody>
+        <Form {...linkForm}>
+          <form onSubmit={linkHandleSubmit(onLinkSubmit)}>
+            <CredenzaBody className="px-0">
+              <div className="flex flex-col justify-center items-center gap-4 px-4 pt-0 pb-4">
+                <p className="text-md text-muted-foreground">
+                  {dayjs(event.startTime).format(is24Hour ? 'HH:mm' : 'h:mm A')} - {dayjs(event.endTime).format(is24Hour ? 'HH:mm' : 'h:mm A')}
+                </p>
+                <FormField
+                  control={linkForm.control}
+                  name="goalId"
+                  render={({ field }) => {
+                    const selectedGoal = goals.find(goal => goal.id === field.value)
+                    return (
+                      <>
+                        <FormLabel className="sr-only">
+                          Goal
+                        </FormLabel>
+                        <GoalSelect goals={goals} nullable selectedGoal={selectedGoal ?? null} onChange={field.onChange} />
+                        <FormMessage className="ml-2" />
+                      </>
+                    )
+                  }}
+                />
+                { linkForm.watch('goalId') && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <FormField
+                      control={linkForm.control}
+                      name="linkFutureEvents"
+                      render={({ field }) => (
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label>Link future events like this</Label>
+                  </div>
+                )}
+                <ShinyButton className="w-28 h-[34px] sm:h-[51px]" variant="gooeyLeft" type="submit">
+                  {linkIsValidating || linkIsSubmitting ? <LoadingSpinner /> : "Link to goal"}
+                </ShinyButton>
+              </div>
+            </CredenzaBody>
+          </form>
+        </Form>
       </CredenzaContent>
     )
   }
@@ -227,19 +306,28 @@ export function EventModal({
       <CredenzaDescription className="sr-only">
         {event ? 'Edit single event' : 'Create event'}
       </CredenzaDescription>
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+      <Form {...editForm}>
+        <form onSubmit={editHandleSubmit(onEditSubmit)}>
           <CredenzaHeader className="flex flex-col items-center gap-2 md:py-4 px-4">
             <p className="text-md font-semibold text-foreground text-center w-full">{ event ? 'Edit single event' : 'Create event' }</p>
-            <TitleInput form={form} />
-            { (form.watch('description') || !event) && <DescriptionInput form={form} /> }
-            <GoalSelect goals={goals} form={form} />
+            <TitleInput form={editForm} />
+            { (editForm.watch('description') || !event) && <DescriptionInput form={editForm} /> }
+            <FormField
+              control={editForm.control}
+              name="goalId"
+              render={({ field }) => {
+                const selectedGoal = goals.find(goal => goal.id === field.value)
+                return (
+                  <GoalSelect goals={goals} selectedGoal={selectedGoal ?? null} onChange={field.onChange} />
+                )
+              }}
+            />
           </CredenzaHeader>
           <CredenzaBody className="px-0">
             <div className="flex flex-col gap-4 px-4 pt-0 pb-4">
               <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-4">
                 <FormField
-                  control={form.control}
+                  control={editForm.control}
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
@@ -260,7 +348,7 @@ export function EventModal({
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={editForm.control}
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
@@ -291,7 +379,7 @@ export function EventModal({
                   </ShinyButton>
                 )}
                 <ShinyButton className="w-28 h-[34px] sm:h-[51px]" variant="gooeyLeft" type="submit">
-                  {isValidating || isSubmitting ? <LoadingSpinner /> : "Save"}
+                  {editIsValidating || editIsSubmitting ? <LoadingSpinner /> : "Save"}
                 </ShinyButton>
               </div>
             </div>

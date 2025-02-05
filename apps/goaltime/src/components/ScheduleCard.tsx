@@ -305,10 +305,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                     key={event.id}
                     className={cn(
                       "p-2 mb-2 rounded-md",
-                      event.provider === CalendarProvider.goaltime ? "text-white" : "text-background"
+                      event.provider === CalendarProvider.goaltime || event.goalId ? "text-white" : "text-background"
                     )}
                     style={{
-                      backgroundColor: event.provider === CalendarProvider.goaltime ? event.color : "hsl(var(--accent-foreground))",
+                      backgroundColor: event.provider === CalendarProvider.goaltime || event.goalId ? event.color : "hsl(var(--accent-foreground))",
                     }}
                   >
                     <div className="flex justify-between">
@@ -397,16 +397,16 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
                   <Credenza key={event.event.id} open={modalOpen[event.event.id]} onOpenChange={(open) => setModalOpen({ ...modalOpen, [event.event.id]: open })}>
                     <CredenzaTrigger>
                       <div
-                        role={event.event.provider === CalendarProvider.goaltime ? "button" : undefined}
+                        role="button"
                         className={cn(
-                          "absolute px-2 mt-2 rounded-sm w-[calc(100%-8px)] hover:z-50",
-                          event.event.provider === CalendarProvider.goaltime ? "text-white hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
+                          "absolute px-2 mt-2 rounded-sm w-[calc(100%-8px)] hover:z-50 hover:scale-y-105 hover:opacity-95 transition-all duration-150",
+                          event.event.provider === CalendarProvider.goaltime || event.event.goalId ? "text-white" : "text-background"
                         )}
                         onClick={() => {
                           console.log(`Event: ${JSON.stringify(event)}`)
                         }}
                         style={{
-                          backgroundColor: event.event.provider === CalendarProvider.goaltime ? event.event.color : "hsl(var(--accent-foreground))",
+                          backgroundColor: event.event.provider === CalendarProvider.goaltime || event.event.goalId ? event.event.color : "hsl(var(--accent-foreground))",
                           top: `${event.viewFields.top}px`,
                           height: `${event.viewFields.height - 8}px`,
                           minHeight: '8px',
@@ -472,11 +472,11 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
               <CredenzaTrigger className="w-full">
                 <div
                   className={cn(
-                    "flex-shrink-0 px-2 py-1 mb-2 rounded-md text-left",
-                    event.provider === CalendarProvider.goaltime ? "text-white cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150" : "text-background"
+                    "flex-shrink-0 px-2 py-1 mb-2 rounded-md text-left cursor-pointer hover:scale-y-105 hover:opacity-95 transition-all duration-150",
+                    event.provider === CalendarProvider.goaltime || event.goalId ? "text-white" : "text-background"
                   )}
                   style={{
-                    backgroundColor: event.provider === CalendarProvider.goaltime ? event.color : "hsl(var(--accent-foreground))",
+                    backgroundColor: event.provider === CalendarProvider.goaltime || event.goalId ? event.color : "hsl(var(--accent-foreground))",
                   }}
                 >
                   <div className="flex justify-between">

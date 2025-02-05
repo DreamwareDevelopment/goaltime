@@ -32,3 +32,11 @@ export const LLMEventSchema = z.object({
 });
 
 export type LLMEvent = z.infer<typeof LLMEventSchema>;
+
+export const CalendarLinkEventSchema = z.object({
+  id: z.string().describe("The id of the event to link"),
+  goalId: z.string().nullable().describe("The goal id to link the event to"),
+  linkFutureEvents: z.boolean().describe("Whether to link future events to the goal"),
+});
+
+export type CalendarLinkEventInput = z.infer<typeof CalendarLinkEventSchema>;

@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 const c = initContract();
 
-export const calendarContract = c.router({
+export const calendarQueryContract = c.router({
   getSchedule: {
     method: 'GET',
     path: `/api/schedule`,
@@ -14,7 +14,10 @@ export const calendarContract = c.router({
     }),
     responses: {
       200: c.type<CalendarEvent[]>(),
+      401: c.type<{ error: string }>(),
+      403: c.type<{ error: string }>(),
       404: c.type<{ error: string }>(),
+      500: c.type<{ error: string }>(),
     },
     summary: 'Get the schedule for a user at a given date',
   },

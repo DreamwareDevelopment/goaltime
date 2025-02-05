@@ -1,7 +1,7 @@
-import { calendarContract } from './calendar';
+import { calendarQueryContract } from './calendar';
 import { milestonesContract } from './milestones';
 
 export const queries = {
-  calendar: calendarContract,
+  calendar: calendarQueryContract,
   milestones: milestonesContract,
 };
