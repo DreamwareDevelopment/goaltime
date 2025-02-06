@@ -236,7 +236,7 @@ function logError(logger: Logger, message: string, error: unknown) {
   logger.error(`${message}: ${error instanceof Error ? error.message : JSON.stringify(error, null, 2)}`);
 }
 
-function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string): CalendarEvent {
+function transformCalendarEvent(event: calendar_v3.Schema$Event, goalId: string | null, goalColor: string | null, userId: string): CalendarEvent {
   const start = event.start?.dateTime ? dayjs.utc(event.start.dateTime) : null;
   const end = event.end?.dateTime ? dayjs.utc(event.end.dateTime) : null;
   return {
@@ -255,9 +255,9 @@ function transformCalendarEvent(event: calendar_v3.Schema$Event, userId: string)
     eventType: event.eventType as EventType | undefined ?? EventType.default,
     locked: Boolean(event.locked),
     allDay: event.start?.date ? dayjs.utc(event.start.date).toDate() : event.end?.date ? dayjs.utc(event.end.date).toDate() : null,
-    color: "#f8fafc",
+    color: goalColor ?? "#f8fafc",
     provider: CalendarProvider.google,
-    goalId: null,
+    goalId,
   }
 }
 
@@ -354,14 +354,43 @@ export const syncGoogleCalendar = inngestConsumer.createFunction(
   async ({ step, event, logger }) => {
     const { profile, googleAuth, forceFullSync } = event.data;
     const prisma = await getPrismaClient(googleAuth.userId);
-    let freshGoogleAuth = await step.run(`get-google-auth`, async () => {
-      return await prisma.googleAuth.findUniqueOrThrow({
+    const syncData = await step.run(`get-calendar-sync-data`, async () => {
+      const gAuth = await prisma.googleAuth.findUniqueOrThrow({
         where: {
           id: googleAuth.id,
           userId: googleAuth.userId,
         },
       });
+      // Fetch all the linked calendar events for the user
+      const linkedCalendarEvents = await prisma.linkedCalendarEvent.findMany({
+        where: {
+          userId: googleAuth.userId,
+        },
+      });
+      const goalColors: Record<string, string> = {};
+      const goalIds = linkedCalendarEvents.map(event => event.goalId).filter(goalId => goalId !== null) as string[];
+      if (goalIds.length > 0) {
+        const goals = await prisma.goal.findMany({
+          where: {
+            id: { in: goalIds },
+          },
+        });
+        for (const goal of goals) {
+          goalColors[goal.id] = goal.color;
+        }
+      }
+      const eventToGoalMap: Record<string, { goalId: string | null, goalColor: string | null }> = {};
+      for (const event of linkedCalendarEvents) {
+        if (event.goalId) {
+          eventToGoalMap[event.eventTitle] = { goalId: event.goalId, goalColor: goalColors[event.goalId] ?? null };
+        } else {
+          eventToGoalMap[event.eventTitle] = { goalId: null, goalColor: null };
+        }
+      }
+      return { freshGoogleAuth: gAuth, eventToGoalMap };
     });
+    let { freshGoogleAuth } = syncData;
+    const { eventToGoalMap } = syncData;
     const oauth2Client = getGoogleOAuth2Client(freshGoogleAuth);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
@@ -393,7 +422,10 @@ export const syncGoogleCalendar = inngestConsumer.createFunction(
             await refreshGoogleAccessToken(logger, prisma, freshGoogleAuth, oauth2Client);
             throw new Error(`Google access token refreshed, retrying...`);
           }
-          const events = res.list.map(event => transformCalendarEvent(event, freshGoogleAuth.userId));
+          const events = res.list.map(event => {
+            const { goalId, goalColor } = eventToGoalMap[event.summary ?? ""];
+            return transformCalendarEvent(event, goalId, goalColor, freshGoogleAuth.userId);
+          });
           logger.info(`Saving ${events.length} events for full sync`);
           const gAuth = await saveFullSync(logger, prisma, freshGoogleAuth, res.nextSyncToken, events);
           return {
@@ -433,7 +465,8 @@ export const syncGoogleCalendar = inngestConsumer.createFunction(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               deletedEvents.push(event.id ?? event.iCalUID!);
             } else {
-              events.push(transformCalendarEvent(event, freshGoogleAuth.userId));
+              const { goalId, goalColor } = eventToGoalMap[event.summary ?? ""];
+              events.push(transformCalendarEvent(event, goalId, goalColor, freshGoogleAuth.userId));
             }
           }
           logger.info(`Saving ${events.length} events for incremental sync`);

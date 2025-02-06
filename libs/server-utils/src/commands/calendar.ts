@@ -68,6 +68,16 @@ export async function linkEventToGoal(
     where: { id: eventId, userId },
     data: { goalId, color: goal?.color ?? undefined },
   });
+  // TODO: Doing it this way means we're not updating the goal completed time for all events with the same title
+  // To do so we'd have to first find all the events with the same title that are within the current sync time range
+  // in order to get the correct duration to add/subtract.
+  await prisma.calendarEvent.updateMany({
+    where: {
+      userId,
+      title: event.title,
+    },
+    data: { goalId },
+  });
   if (goalId) {
     console.log(`Adding ${(event.duration ?? 0) / 60} hours to goal ${goalId} with completed: ${goal?.completed}`)
     await prisma.goal.update({
@@ -113,6 +123,24 @@ export async function linkEventToGoal(
   //     } as Jsonify<Goal>] : [],
   //   },
   // });
+  if (linkFutureEvents || !goalId) {
+    await prisma.linkedCalendarEvent.upsert({
+      where: {
+        eventId,
+        userId,
+      },
+      update: {
+        goalId,
+        eventTitle: event.title,
+      },
+      create: {
+        eventTitle: event.title,
+        eventId,
+        goalId,
+        userId,
+      },
+    });
+  }
   console.log(`Updated user ${userId} event ${eventId} to have goalId ${goalId}`)
 }
 

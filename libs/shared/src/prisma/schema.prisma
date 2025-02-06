@@ -428,6 +428,7 @@ model UserProfile {
   notifications       NotificationSettings[]
   milestones          Milestone[]
   calendarEvents      CalendarEvent[]
+  linkedCalendarEvents LinkedCalendarEvent[]
   User                User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
@@ -474,6 +475,7 @@ model Goal {
   userId          String            @db.Uuid @map("user_id")
   userProfile     UserProfile       @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
   calendarEvents  CalendarEvent[]
+  linkedEvents    LinkedCalendarEvent[]
 
   @@schema("public")
   @@map("goals")
@@ -549,6 +551,21 @@ enum CalendarProvider {
   @@map("calendar_providers")
 }
 
+model LinkedCalendarEvent {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(1024)
+  eventId     String           @unique @db.VarChar(1024) @map("event_id")
+  eventTitle  String           @db.VarChar(1024) @map("event_title")
+  event       CalendarEvent    @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  goalId      String?          @db.Uuid @map("goal_id")
+  goal        Goal?            @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userId      String           @db.Uuid @map("user_id")
+  user        UserProfile      @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId, eventId, goalId, eventTitle])
+  @@schema("public")
+  @@map("linked_calendar_events")
+}
+
 // https://developers.google.com/calendar/api/v3/reference/events
 model CalendarEvent {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(1024)
@@ -570,6 +587,7 @@ model CalendarEvent {
   color       String
   goal        Goal?            @relation(fields: [goalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   user        UserProfile      @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+  linkedCalendarEvent LinkedCalendarEvent?
 
   @@index([userId, startTime, allDay])
   @@index([userId, goalId, startTime, duration])

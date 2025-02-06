@@ -27,7 +27,7 @@
       "outputs": [],
       "dependsOn": [],
       "options": {
-        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name fix_timezone",
+        "command": "npx prisma migrate dev --schema ./src/prisma/schema.prisma --name add_linked_calendar_event",
         "cwd": "libs/shared"
       }
     },
