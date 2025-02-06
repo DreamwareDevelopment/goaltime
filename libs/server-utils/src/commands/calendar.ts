@@ -58,90 +58,93 @@ export async function linkEventToGoal(
 ): Promise<void> {
   console.log(`Linking user ${userId} event ${eventId} to goal ${goalId} with linkFutureEvents: ${linkFutureEvents}`)
   const prisma = await getPrismaClient(userId);
+
   let goal = goalId ? await prisma.goal.findUnique({
     where: { id: goalId, userId },
   }) : null;
   const originalEvent = await prisma.calendarEvent.findUnique({
     where: { id: eventId, userId },
   });
-  const event = await prisma.calendarEvent.update({
-    where: { id: eventId, userId },
-    data: { goalId, color: goal?.color ?? undefined },
-  });
-  // TODO: Doing it this way means we're not updating the goal completed time for all events with the same title
-  // To do so we'd have to first find all the events with the same title that are within the current sync time range
-  // in order to get the correct duration to add/subtract.
-  await prisma.calendarEvent.updateMany({
-    where: {
-      userId,
-      title: event.title,
-    },
-    data: { goalId },
-  });
-  if (goalId) {
-    console.log(`Adding ${(event.duration ?? 0) / 60} hours to goal ${goalId} with completed: ${goal?.completed}`)
-    await prisma.goal.update({
-      where: { id: goalId, userId },
-      data: {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        completed: goal!.completed + (event.duration ?? 0) / 60,
-      },
+  await prisma.$transaction(async (tx) => {
+    const event = await tx.calendarEvent.update({
+      where: { id: eventId, userId },
+      data: { goalId, color: goal?.color ?? undefined },
     });
-    console.log(`Updated goal ${goalId} to have completed: ${goal?.completed}`)
-  } else {
-    console.log(`Original event: ${JSON.stringify(originalEvent)}`)
-    if (originalEvent?.goalId) {
-      goal = await prisma.goal.findUnique({
-        where: { id: originalEvent.goalId, userId },
-      });
-      console.log(`Removing ${(originalEvent.duration ?? 0) / 60} hours from goal ${originalEvent.goalId} with completed: ${goal?.completed}`)
-      goal = await prisma.goal.update({
-        where: { id: originalEvent.goalId, userId },
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        data: { completed: goal!.completed - (originalEvent.duration ?? 0) / 60 },
-      });
-      console.log(`Updated goal ${originalEvent.goalId} to have completed: ${goal?.completed}`)
-    }
-  }
-  // TODO: This is hard to do because the timezone issue in production
-  // await inngestConsumer.send({
-  //   id: `sync-link-event-to-goal-${eventId}-${goalId}`,
-  //   name: InngestEvent.SyncToClient,
-  //   data: {
-  //     userId,
-  //     calendarEvents: [{
-  //       ...event,
-  //       startTime: dayjs(event.startTime).format(DATE_TIME_FORMAT),
-  //       endTime: dayjs(event.endTime).format(DATE_TIME_FORMAT),
-  //       allDay: event.allDay ? dayjs(event.allDay).format(DATE_TIME_FORMAT) : null,
-  //     }],
-  //     goals: goal ? [{
-  //       ...goal,
-  //       createdAt: dayjs(goal.createdAt).format(DATE_TIME_FORMAT),
-  //       updatedAt: dayjs(goal.updatedAt).format(DATE_TIME_FORMAT),
-  //       deadline: goal.deadline ? dayjs(goal.deadline).format(DATE_TIME_FORMAT) : null,
-  //     } as Jsonify<Goal>] : [],
-  //   },
-  // });
-  if (linkFutureEvents || !goalId) {
-    await prisma.linkedCalendarEvent.upsert({
+    // TODO: Doing it this way means we're not updating the goal completed time for all events with the same title
+    // To do so we'd have to first find all the events with the same title that are within the current sync time range
+    // in order to get the correct duration to add/subtract.
+    await tx.calendarEvent.updateMany({
       where: {
-        eventId,
         userId,
+        title: event.title,
       },
-      update: {
-        goalId,
-        eventTitle: event.title,
-      },
-      create: {
-        eventTitle: event.title,
-        eventId,
-        goalId,
-        userId,
-      },
+      data: { goalId },
     });
-  }
-  console.log(`Updated user ${userId} event ${eventId} to have goalId ${goalId}`)
+    if (goalId) {
+      console.log(`Adding ${(event.duration ?? 0) / 60} hours to goal ${goalId} with completed: ${goal?.completed}`)
+      await tx.goal.update({
+        where: { id: goalId, userId },
+        data: {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          completed: goal!.completed + (event.duration ?? 0) / 60,
+        },
+      });
+      console.log(`Updated goal ${goalId} to have completed: ${goal?.completed}`)
+    } else {
+      console.log(`Original event: ${JSON.stringify(originalEvent)}`)
+      if (originalEvent?.goalId) {
+        goal = await tx.goal.findUnique({
+          where: { id: originalEvent.goalId, userId },
+        });
+        console.log(`Removing ${(originalEvent.duration ?? 0) / 60} hours from goal ${originalEvent.goalId} with completed: ${goal?.completed}`)
+        goal = await tx.goal.update({
+          where: { id: originalEvent.goalId, userId },
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          data: { completed: goal!.completed - (originalEvent.duration ?? 0) / 60 },
+        });
+        console.log(`Updated goal ${originalEvent.goalId} to have completed: ${goal?.completed}`)
+      }
+    }
+    // TODO: This is hard to do because the timezone issue in production
+    // await inngestConsumer.send({
+    //   id: `sync-link-event-to-goal-${eventId}-${goalId}`,
+    //   name: InngestEvent.SyncToClient,
+    //   data: {
+    //     userId,
+    //     calendarEvents: [{
+    //       ...event,
+    //       startTime: dayjs(event.startTime).format(DATE_TIME_FORMAT),
+    //       endTime: dayjs(event.endTime).format(DATE_TIME_FORMAT),
+    //       allDay: event.allDay ? dayjs(event.allDay).format(DATE_TIME_FORMAT) : null,
+    //     }],
+    //     goals: goal ? [{
+    //       ...goal,
+    //       createdAt: dayjs(goal.createdAt).format(DATE_TIME_FORMAT),
+    //       updatedAt: dayjs(goal.updatedAt).format(DATE_TIME_FORMAT),
+    //       deadline: goal.deadline ? dayjs(goal.deadline).format(DATE_TIME_FORMAT) : null,
+    //     } as Jsonify<Goal>] : [],
+    //   },
+    // });
+    if (linkFutureEvents || !goalId) {
+      await tx.linkedCalendarEvent.upsert({
+        where: {
+          eventId,
+          userId,
+        },
+        update: {
+          goalId,
+          eventTitle: event.title,
+        },
+        create: {
+          eventTitle: event.title,
+          eventId,
+          goalId,
+          userId,
+        },
+      });
+    }
+    console.log(`Updated user ${userId} event ${eventId} to have goalId ${goalId}`)
+  });
 }
 
 export async function deleteGoalEvents(userId: User['id'], interval: Interval<string>, timezone: string): Promise<string[]> {

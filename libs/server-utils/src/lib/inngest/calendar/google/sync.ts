@@ -423,9 +423,15 @@ export const syncGoogleCalendar = inngestConsumer.createFunction(
             throw new Error(`Google access token refreshed, retrying...`);
           }
           const events = res.list.map(event => {
-            const { goalId, goalColor } = eventToGoalMap[event.summary ?? ""];
+            const eventKey = event.summary ?? "";
+            const goalData = eventToGoalMap[eventKey];
+            logger.info(`Goal data for event ${eventKey}: ${JSON.stringify(goalData, null, 2)}`);
+            if (!goalData) {
+              return transformCalendarEvent(event, null, "#f8fafc", freshGoogleAuth.userId);
+            }
+            const { goalId, goalColor } = goalData;
             return transformCalendarEvent(event, goalId, goalColor, freshGoogleAuth.userId);
-          });
+          }).filter(event => event !== null) as CalendarEvent[];
           logger.info(`Saving ${events.length} events for full sync`);
           const gAuth = await saveFullSync(logger, prisma, freshGoogleAuth, res.nextSyncToken, events);
           return {
@@ -465,7 +471,14 @@ export const syncGoogleCalendar = inngestConsumer.createFunction(
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               deletedEvents.push(event.id ?? event.iCalUID!);
             } else {
-              const { goalId, goalColor } = eventToGoalMap[event.summary ?? ""];
+              const eventKey = event.summary ?? "";
+              const goalData = eventToGoalMap[eventKey];
+              if (!goalData) {
+                logger.warn(`No goal data found for event summary: ${eventKey}`);
+                events.push(transformCalendarEvent(event, null, "#f8fafc", freshGoogleAuth.userId));
+                continue;
+              }
+              const { goalId, goalColor } = goalData;
               events.push(transformCalendarEvent(event, goalId, goalColor, freshGoogleAuth.userId));
             }
           }
