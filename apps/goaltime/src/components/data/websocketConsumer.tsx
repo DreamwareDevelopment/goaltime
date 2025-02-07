@@ -78,15 +78,19 @@ export class WebsocketEventConsumer {
 
 export function WebsocketConsumer() {
   const consumerRef = useRef<WebsocketEventConsumer | null>(null);
+  const hasShownSyncToast = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _ = useSnapshot(userStore).websocketHandler;
   const handler = userStore.websocketHandler; // Needs to be mutable, so we don't use useSnapshot but rely on the snapshot for re-renders
 
   const handleOpen = useCallback(() => {
-    toast({
-      title: 'Sync is active',
-      description: 'You are now connected to the server',
-    });
+    if (!hasShownSyncToast.current) {
+      toast({
+        title: 'Sync is active',
+        description: 'You are now connected to the server',
+      });
+      hasShownSyncToast.current = true;
+    }
   }, []);
 
   const handleGoalsUpdate = useCallback((goals: Jsonify<Goal[]>) => {

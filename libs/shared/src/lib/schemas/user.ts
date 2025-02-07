@@ -323,6 +323,7 @@ export function getDefaultRoutineDisplayTab(times: RoutineDays, debug = false): 
   return "Custom"
 }
 
+// TODO: Actually get the right day/date for each routine.
 export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
   const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
     Monday: [],

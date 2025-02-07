@@ -74,7 +74,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   // console.log(`Schedule: ${JSON.stringify(schedule, null, 2)}`);
   const routine = getProfileRoutine(profile);
   const routineEvents = routineToExternalEvents(routine, dayOffset);
-  console.log(`Routine Events: ${JSON.stringify(routineEvents, null, 2)}`);
+  // console.log(`Routine Events: ${JSON.stringify(routineEvents, null, 2)}`);
   const routineEventsByDay = routineEvents[dayName];
   const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
   const sleepHour = dayjs(routine.sleep[dayName].start).hour();
