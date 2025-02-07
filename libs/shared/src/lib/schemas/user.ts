@@ -333,6 +333,8 @@ export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.
     Saturday: [],
     Sunday: [],
   };
+  console.log(`Routine date: ${date.format(DATE_TIME_FORMAT)}`)
+
   for (const activity in routine) {
     if (activity === 'sleep' || activity === 'custom') {
       continue;
@@ -343,8 +345,9 @@ export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.
       if (routine.start === null && routine.end === null) {
         continue;
       }
-      const start = date ? dayjs(routine.start).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start);
-      const end = date ? dayjs(routine.end).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end);
+      const start = dayjs(routine.start).year(date.year()).month(date.month()).date(date.date());
+      const end = dayjs(routine.end).year(date.year()).month(date.month()).date(date.date());
+      console.log(`Activity: ${activity}, Day: ${day}, Start: ${start.format(DATE_TIME_FORMAT)}, End: ${end.format(DATE_TIME_FORMAT)}`);
       events[day].push({
         id: activity,
         title: activity.charAt(0).toUpperCase() + activity.slice(1),
@@ -353,6 +356,7 @@ export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.
       });
     }
   }
+
   for (const activity in routine.custom) {
     const routineDays = routine.custom[activity];
     for (const day of Object.values(daysOfTheWeek.Values)) {
@@ -360,8 +364,9 @@ export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.
       if (routine.start === null && routine.end === null) {
         continue;
       }
-      const start = date ? dayjs(routine.start).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start).tz(timezone);
-      const end = date ? dayjs(routine.end).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end).tz(timezone);
+      const start = dayjs(routine.start).year(date.year()).month(date.month()).date(date.date());
+      const end = dayjs(routine.end).year(date.year()).month(date.month()).date(date.date());
+      console.log(`Custom Activity: ${activity}, Day: ${day}, Start: ${start.format(DATE_TIME_FORMAT)}, End: ${end.format(DATE_TIME_FORMAT)}`);
       events[day].push({
         id: activity,
         title: activity,
