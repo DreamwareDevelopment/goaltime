@@ -14,7 +14,7 @@ export async function getScheduleInterval(profile: UserProfile, date: dayjs.Dayj
   console.log(`${profile.userId} Sleep Routine: ${dayjs(sleepRoutine.start).format(DATE_TIME_FORMAT)} - ${dayjs(sleepRoutine.end).format(DATE_TIME_FORMAT)}`);
   return {
     start: sleepRoutine.end.startOf('day'),
-    end: sleepRoutine.start.endOf('day'),
+    end: sleepRoutine.start,
   };
 }
 
