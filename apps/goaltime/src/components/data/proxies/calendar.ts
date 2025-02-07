@@ -8,13 +8,16 @@ import { getTsRestClient } from '@/libs/ui-components/src/hooks/ts-rest'
 import { goalStore } from './goals'
 import { getTokenInfo, refreshTokenIfNeeded } from '@/libs/ui-components/src/hooks/supabase'
 
+// TODO: This should be removed completely as it doesn't take into account the user's sleep schedule
 export function offsetDay(day: dayjs.Dayjs, timezone: string) {
   const dayTz = day.tz(timezone);
   const utcOffset = dayTz.utcOffset();
   console.log(`Timezone day: ${dayTz.format(DATE_TIME_FORMAT)}`);
   console.log(`UTC Offset: ${utcOffset / 60}`);
   const dayHour = dayTz.hour();
-  // TODO: 12PM is a hack to account for prod adding back in the tz offset at query time
+  // This is hardcoding 12AM - 4AM as the previous day.
+  // That means that it is wrong when the user is up past 12AM even if they sleep before midnight.
+  // TODO: Fix this
   const correctedDay = (dayHour >= 0 && dayHour < 4 ? dayTz.subtract(1, 'day').hour(12) : dayTz.hour(12)) // Account for sleep after midnight by setting to 12pm the previous day
   return correctedDay
 }

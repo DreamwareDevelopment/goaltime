@@ -28,8 +28,7 @@ import { EventModal } from "./Calendar/EventModal";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/ui-components/tooltip";
 import { syncCalendarAction } from "../app/actions/calendar";
 import { useMediaQuery } from "@/ui-components/hooks/use-media-query";
-import { DaysOfTheWeekType, getProfileRoutine, routineToExternalEvents } from "@/shared/zod";
-import { offsetDay } from "./data/proxies/calendar";
+import { DaysOfTheWeekType, getProfileRoutine, getSleepRoutineForDay, routineToExternalEvents } from "@/shared/zod";
 
 export interface ViewFields {
   top: number;
@@ -62,23 +61,27 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
 
   const [date, setDate] = useState(new Date());
   const day = dayjs(date).utc(false);
-  const dayOffset = offsetDay(day, timezone);
-  const dateString = dayOffset.format(DATE_FORMAT);
-  const dayName = dayOffset.format('dddd') as DaysOfTheWeekType;
-  const now = dayjs().utc(false);
-  console.log(`Date: ${day.format(DATE_TIME_FORMAT)}`)
-  console.log(`DayTZ: ${dayOffset.format(DATE_TIME_FORMAT)}`)
-  console.log(`Day: ${dayName}`)
+  const routine = getProfileRoutine(profile);
+  const sleepRoutine = getSleepRoutineForDay(routine, day);
+  const dayTz = process.env.NODE_ENV === 'development' ? day.tz(timezone) : day;
+  const dateString = dayTz.format(DATE_FORMAT);
+  const now = process.env.NODE_ENV === 'development' ? dayjs().tz(timezone) : dayjs();
+  console.log(`Now: ${now.format(DATE_TIME_FORMAT)}`)
+  console.log(`Day: ${day.format(DATE_TIME_FORMAT)}`)
+  console.log(`DayString: ${day.format('dddd')}`)
+  console.log(`DayTZ: ${dayTz.format(DATE_TIME_FORMAT)}`)
+  console.log(`DayTzString: ${dayTz.format('dddd')}`)
   calendarStore.ensureCalendarEvents(dateString);
   const schedule = useSnapshot(calendarStore.events[dateString]);
   // console.log(`Schedule: ${JSON.stringify(schedule, null, 2)}`);
-  const routine = getProfileRoutine(profile);
-  const routineEvents = routineToExternalEvents(routine, dayOffset);
-  // console.log(`Routine Events: ${JSON.stringify(routineEvents, null, 2)}`);
-  const routineEventsByDay = routineEvents[dayName];
-  const wakeUpHour = dayjs(routine.sleep[dayName].end).hour();
-  const sleepHour = dayjs(routine.sleep[dayName].start).hour();
+  const wakeUpHour = sleepRoutine.end.hour();
+  const sleepHour = sleepRoutine.start.hour();
+  const routineEvents = routineToExternalEvents(routine, dayTz);
+  const routineEventsByDay = routineEvents[dayTz.format('dddd') as DaysOfTheWeekType];
+  console.log(`Wake Up At: ${sleepRoutine.end.format(DATE_TIME_FORMAT)}`)
+  console.log(`Sleep At: ${sleepRoutine.start.format(DATE_TIME_FORMAT)}`)
   const isToday = now.format(DATE_FORMAT) === dateString;
+  console.log(`Is Today: ${isToday}`)
   const [isLoading, setIsLoading] = useState(true)
   const [view, setView] = useState('timeline');
   const [is24Hour, setIs24Hour] = useState(false);
@@ -103,7 +106,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     setIsLoading(true);
     const clearDebounce = debounce(async () => {
       try {
-        await calendarStore.loadCalendarEvents(dayOffset)
+        // We shouldn't use dayTz here because we're fetching from the server
+        await calendarStore.loadCalendarEvents(day)
       } catch (error) {
         console.error(error);
         toast({
@@ -201,9 +205,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     }
   }
   
-  const getEventPosition = (startTime: dayjs.Dayjs) => {
+  const getEventPosition = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
     const hour = startTime.hour() < wakeUpHour ? startTime.hour() + 24 : startTime.hour();
-    return markerHeights[hour] + ((startTime.minute() / 60) * HOUR_HEIGHT);
+    const multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
+    return markerHeights[hour] + ((startTime.minute() / 60) * multiplier);
   };
 
   const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
@@ -224,7 +229,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       const viewFields = {
         hours: startTime.hour(),
         minutes: startTime.minute(),
-        top: getEventPosition(startTime),
+        top: getEventPosition(startTime, endTime),
         height: getEventHeight(startTime, endTime),
         left: 0
       };
@@ -237,7 +242,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     const viewFields = {
       hours: event.start.hour(),
       minutes: event.start.minute(),
-      top: getEventPosition(event.start),
+      top: getEventPosition(event.start, event.end),
       height: getEventHeight(event.start, event.end),
       left: 0
     };

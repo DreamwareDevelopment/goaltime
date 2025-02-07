@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import { getGoals, getNotifications } from '@/server-utils/queries/goal'
 
 import { Card } from "@/ui-components/card"
-import { offsetDay } from '../../components/data/proxies/calendar'
 import { GoalCarousel } from '../../components/GoalCarousel'
 import { ScheduleCard } from '../../components/ScheduleCard'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
@@ -32,11 +31,11 @@ export default async function Dashboard() {
     redirect('/welcome')
   }
 
+  const now = dayjs().utc(false)
   const getAggregates = async () => {
     if (!googleAuth?.lastFullSyncAt) {
       return {} as Record<string, number>
     }
-    const now = dayjs()
     const nextFullSync = getNextFullSync(now, profile.timezone)
     return await getAggregateTimeByGoal(user.id, now, nextFullSync.endOf('day'))
   }
@@ -44,7 +43,7 @@ export default async function Dashboard() {
     getGoals(profile),
     getAggregates(),
     getNotifications(profile),
-    getSchedule(profile, offsetDay(dayjs().utc(false), profile.timezone)),
+    getSchedule(profile, now),
   ])
   const hasGoals = goals.length > 0;
   return (
