@@ -49,7 +49,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ isLoggedIn }) => {
               className="bg-accent hover:bg-accent/80 text-accent-foreground h-[36px] sm:h-[53px]"
               onClick={() => {
                 posthog?.capture('watch demo clicked')
-                window.open('https://youtu.be/qvuq7BZDM1w', '_blank')
+                window.open('https://youtu.be/HORt3nCvys0', '_blank')
               }}
             >
               Watch Demo
