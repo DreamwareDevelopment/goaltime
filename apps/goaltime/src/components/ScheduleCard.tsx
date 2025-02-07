@@ -160,10 +160,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   let currentHeight = 0;
   const maxHour = sleepHour < wakeUpHour && sleepHour > 0 ? 24 + sleepHour : 25;
   // Helper function to check if there are events between two hours
-  const hasEventsInHourRange = (startHour: number) => {
+  const getEventInHourRange = (startHour: number) => {
     const markerStartHour = dayjs.tz(date, timezone).hour(startHour).minute(1);
     const markerEndHour = dayjs.tz(date, timezone).hour(startHour).minute(59);
-    return schedule.some(
+    const foundEvent = schedule.find(
       (event) => {
         const startTime = dayjs(event.startTime);
         const endTime = dayjs(event.endTime);
@@ -175,7 +175,10 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         if (startTime.isBefore(markerStartHour) && endTime.isAfter(markerEndHour)) return true;
         return false;
       }
-    ) || routineEventsByDay.some(event => {
+    );
+    if (foundEvent) return foundEvent;
+
+    return routineEventsByDay.find(event => {
       // Check if the event starts in the range
       if (event.start.isSame(markerStartHour, 'hour')) return true;
       // Check if the event ends in the range, accounting for events that end on the hour
@@ -187,7 +190,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   for (let i = 0; i <= maxHour; i++) {
-    if (hasEventsInHourRange(i)) {
+    const event = getEventInHourRange(i)
+    if (event && (event.duration ?? 0) < 60) {
+      console.log(`Event: ${JSON.stringify(event, null, 2)}`)
       markerHeights.push(currentHeight);
       currentHeight += HOUR_HEIGHT;
     } else {
@@ -206,7 +211,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     const startsAfterMidnight = startTime.hour() < wakeUpHour;
     const endsAfterMidnight = endTime.hour() < wakeUpHour;
     const endInMinutes = (endsAfterMidnight && !startsAfterMidnight ? (24 + endTime.hour()) * 60 : endTime.hour() * 60) + endTime.minute();
-    return ((endInMinutes - startInMinutes) / 60) * HOUR_HEIGHT;
+    const multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
+    return ((endInMinutes - startInMinutes) / 60) * multiplier;
   };
 
   const allDayEvents: CalendarEvent[] = [];

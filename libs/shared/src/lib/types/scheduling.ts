@@ -18,9 +18,11 @@ export interface WakeUpOrSleepEvent<T> {
   start: T;
 }
 
+// TODO: Add duration everywhere it's needed.
 export interface ExternalEvent<T> extends Interval<T> {
   id: string;
   title: string;
+  duration?: number;
   subtitle?: string;
   description?: string;
   location?: string;

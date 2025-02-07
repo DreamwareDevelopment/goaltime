@@ -352,6 +352,7 @@ export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.
       events[day].push({
         id: activity,
         title: activity.charAt(0).toUpperCase() + activity.slice(1),
+        duration: Math.abs(end.diff(start, 'minutes')),
         start,
         end,
       });
@@ -371,6 +372,7 @@ export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.
       events[day].push({
         id: activity,
         title: activity,
+        duration: Math.abs(end.diff(start, 'minutes')),
         start,
         end,
       });
