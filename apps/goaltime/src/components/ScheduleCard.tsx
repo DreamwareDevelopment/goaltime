@@ -65,7 +65,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const dayOffset = offsetDay(day, timezone);
   const dateString = dayOffset.format(DATE_FORMAT);
   const dayName = dayOffset.format('dddd') as DaysOfTheWeekType;
-  const now = dayjs();
+  const now = dayjs().utc(false);
   console.log(`Date: ${day.format(DATE_TIME_FORMAT)}`)
   console.log(`DayTZ: ${dayOffset.format(DATE_TIME_FORMAT)}`)
   console.log(`Day: ${dayName}`)

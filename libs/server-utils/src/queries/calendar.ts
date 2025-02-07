@@ -20,7 +20,7 @@ export async function getScheduleInterval(profile: UserProfile, date: dayjs.Dayj
 
 export async function getSchedule(profile: UserProfile, date: dayjs.Dayjs): Promise<CalendarEvent[]> {
   const interval = await getScheduleInterval(profile, date);
-  console.log(`Getting schedule: ${dayjs(interval.start).format(DATE_TIME_FORMAT)} - ${dayjs(interval.end).format(DATE_TIME_FORMAT)}`);
+  console.log(`Getting day: ${date.format(DATE_TIME_FORMAT)} schedule: ${dayjs(interval.start).format(DATE_TIME_FORMAT)} - ${dayjs(interval.end).format(DATE_TIME_FORMAT)}`);
   const prisma = await getPrismaClient(profile.userId);
   const schedule = await prisma.calendarEvent.findMany({
     where: {
