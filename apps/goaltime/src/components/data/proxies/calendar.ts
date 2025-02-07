@@ -10,6 +10,9 @@ import { getTokenInfo, refreshTokenIfNeeded } from '@/libs/ui-components/src/hoo
 
 export function offsetDay(day: dayjs.Dayjs, timezone: string) {
   const dayTz = day.tz(timezone);
+  const utcOffset = dayTz.utcOffset();
+  console.log(`Timezone day: ${dayTz.format(DATE_TIME_FORMAT)}`);
+  console.log(`UTC Offset: ${utcOffset / 60}`);
   const dayHour = dayTz.hour();
   // TODO: 12PM is a hack to account for prod adding back in the tz offset at query time
   const correctedDay = (dayHour >= 0 && dayHour < 4 ? dayTz.subtract(1, 'day').hour(12) : dayTz.hour(12)) // Account for sleep after midnight by setting to 12pm the previous day
