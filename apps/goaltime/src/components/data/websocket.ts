@@ -88,7 +88,7 @@ export class WebSocketClient {
   }
 
   private handleSocketClose(event: CloseEvent) {
-    console.log('WebSocket connection closed:', event.reason)
+    console.log(`WebSocket connection closed: ${event.reason}: ${event.code}`)
     this.reconnect()
   }
 

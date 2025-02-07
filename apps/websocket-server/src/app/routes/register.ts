@@ -8,7 +8,7 @@ export default async function (fastify: FastifyInstance) {
     function (socket, request) {
       console.log(`Registering websocket connection for ${request.supabaseUser.id}`);
       socket.on('close', (event) => {
-        console.log(`WebSocket closed for ${request.supabaseUser.id}: ${event.reason}`);
+        console.log(`WebSocket closed for ${request.supabaseUser.id}: ${event}`);
         ConnectionManager.getInstance().removeConnection(request.supabaseUser.id);
       });
       socket.on('error', (error) => {
