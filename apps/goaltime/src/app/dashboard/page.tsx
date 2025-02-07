@@ -44,7 +44,7 @@ export default async function Dashboard() {
     getGoals(profile),
     getAggregates(),
     getNotifications(profile),
-    getSchedule(profile, offsetDay(dayjs(), profile.timezone)),
+    getSchedule(profile, offsetDay(dayjs().utc(false), profile.timezone)),
   ])
   const hasGoals = goals.length > 0;
   return (
