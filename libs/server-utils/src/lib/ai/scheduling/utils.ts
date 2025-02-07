@@ -111,7 +111,7 @@ export function getFreeIntervals(
   const freeWorkIntervals: Interval[] = [];
   const daysBetween = end.diff(start, 'days');
   const routine = getProfileRoutine(profile);
-  const routineEventsByDay = routineToExternalEvents(routine, profile.timezone);
+  const routineEventsByDay = routineToExternalEvents(routine, start);
   const eventsAndRoutines: ExternalEvent<dayjs.Dayjs>[] = [];
   logger.info(`Days between: ${daysBetween}`);
   // TODO: Take holidays into account

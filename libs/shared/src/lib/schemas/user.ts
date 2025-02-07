@@ -323,7 +323,7 @@ export function getDefaultRoutineDisplayTab(times: RoutineDays, debug = false): 
   return "Custom"
 }
 
-export function routineToExternalEvents(routine: RoutineActivities, timezone: string, date?: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
+export function routineToExternalEvents(routine: RoutineActivities, date: dayjs.Dayjs): Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> {
   const events: Record<DaysOfTheWeekType, ExternalEvent<dayjs.Dayjs>[]> = {
     Monday: [],
     Tuesday: [],
@@ -343,8 +343,8 @@ export function routineToExternalEvents(routine: RoutineActivities, timezone: st
       if (routine.start === null && routine.end === null) {
         continue;
       }
-      const start = date ? dayjs(routine.start).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start).tz(timezone);
-      const end = date ? dayjs(routine.end).tz(timezone).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end).tz(timezone);
+      const start = date ? dayjs(routine.start).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.start);
+      const end = date ? dayjs(routine.end).year(date.year()).month(date.month()).date(date.date()) : dayjs(routine.end);
       events[day].push({
         id: activity,
         title: activity.charAt(0).toUpperCase() + activity.slice(1),
