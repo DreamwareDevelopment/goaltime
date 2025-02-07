@@ -49,7 +49,7 @@ function PostHogPageView() : null {
       if (searchParams.toString()) {
         url = url + `?${searchParams.toString()}`
       }
-
+      console.log(`Capturing pageview: ${url}`)
       posthog?.capture('$pageview', { '$current_url': url })
     }
   }, [pathname, searchParams, posthog])
