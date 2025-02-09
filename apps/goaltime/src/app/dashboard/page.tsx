@@ -8,7 +8,7 @@ import { GoalCarousel } from '../../components/GoalCarousel'
 import { ScheduleCard } from '../../components/ScheduleCard'
 import { GoalProgressCard } from '../../components/GoalProgressCard'
 // import { GoalyticsCard } from '../../components/GoalyticsCard'
-import { ActionsCard } from '../../components/ActionsCard'
+// import { ActionsCard } from '../../components/ActionsCard'
 import { ValtioProvider } from '../../components/data/valtio'
 import { UserAvatar } from '../../components/UserAvatar'
 import GoalCreationButton from '../../components/GoalCreationButton'
@@ -75,9 +75,9 @@ export default async function Dashboard() {
             {/* <Card className="col-span-full xl:col-span-5">
               <GoalyticsCard />
             </Card> */}
-            <Card className="col-span-1 xl:col-span-2">
+            {/* <Card className="col-span-1 xl:col-span-2">
               <ActionsCard />
-            </Card>
+            </Card> */}
           </div>
         ) : (
           <div className="md:mt-8 lg:mt-12">
