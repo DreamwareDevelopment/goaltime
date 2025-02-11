@@ -25,6 +25,7 @@ export const monthlyPricingPlans: PricingPlan[] = [
     price: "$35.99/month",
     priceId: process.env['NODE_ENV'] === "development" ? "price_1QlNv3GgKXfQOqA9vAmIX7fZ" : "price_1QljS7GjEzBfLZlUXdY0fKWb",
     features: [`All Committed features`, "AI Accountability Agent", "AI Rescheduling", "Priority support"],
+    comingSoon: true,
     link: process.env['NODE_ENV'] === "development" ? "https://buy.stripe.com/test_28o5kr41b5Nl1kA003" : "https://buy.stripe.com/3cs16x6UActFaisaEG",
   },
   {
@@ -53,6 +54,7 @@ export const yearlyPricingPlans: PricingPlan[] = [
     price: "$359.99/year",
     priceId: process.env['NODE_ENV'] === "development" ? "price_1QlNyqGgKXfQOqA9pHVKG200" : "price_1QljTUGjEzBfLZlUsLPP5fGj",
     features: [`All Committed features`, "AI Accountability Agent", "AI Rescheduling", "Priority support"],
+    comingSoon: true,
     link: process.env['NODE_ENV'] === "development" ? "https://buy.stripe.com/test_6oEcMT0OZ1x58N29AC" : "https://buy.stripe.com/eVaaH75Qw1P1gGQ8wz",
   },
   {
