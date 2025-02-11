@@ -52,6 +52,10 @@ function isRoutineEvent(event: ViewFieldsWithExternalEvent | ViewFieldsWithCalen
   return 'start' in event.event;
 }
 
+function getTzCorrectedDate(date: dayjs.ConfigType, timezone: string): dayjs.Dayjs {
+  return process.env.NODE_ENV === 'development' ? dayjs.tz(date, timezone) : dayjs(date);
+}
+
 export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   const isDesktop = useMediaQuery('(min-width: 500px)');
   const { calendarStore, userStore } = useValtio();
@@ -63,9 +67,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const day = dayjs(date).utc(false);
   const routine = getProfileRoutine(profile);
   const sleepRoutine = getSleepRoutineForDay(routine, day);
-  const dayTz = process.env.NODE_ENV === 'development' ? day.tz(timezone) : day;
+  const dayTz = getTzCorrectedDate(day, timezone);
   const dateString = dayTz.format(DATE_FORMAT);
-  const now = process.env.NODE_ENV === 'development' ? dayjs().tz(timezone) : dayjs();
+  const now = getTzCorrectedDate(dayjs(), timezone);
   console.log(`Now: ${now.format(DATE_TIME_FORMAT)}`)
   console.log(`Day: ${day.format(DATE_TIME_FORMAT)}`)
   console.log(`DayString: ${day.format('dddd')}`)
@@ -106,8 +110,7 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     setIsLoading(true);
     const clearDebounce = debounce(async () => {
       try {
-        // We shouldn't use dayTz here because we're fetching from the server
-        await calendarStore.loadCalendarEvents(day)
+        await calendarStore.loadCalendarEvents(dayTz)
       } catch (error) {
         console.error(error);
         toast({
@@ -164,13 +167,14 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   let currentHeight = 0;
   const maxHour = sleepHour < wakeUpHour && sleepHour > 0 ? 24 + sleepHour : 25;
   // Helper function to check if there are events between two hours
-  const getEventInHourRange = (startHour: number) => {
-    const markerStartHour = dayjs.tz(date, timezone).hour(startHour).minute(1);
-    const markerEndHour = dayjs.tz(date, timezone).hour(startHour).minute(59);
-    const foundEvent = schedule.find(
+  const getEventsInHourRange = (startHour: number) => {
+    const markerStartHour = dayjs(dayTz).hour(startHour).minute(1);
+    const markerEndHour = dayjs(dayTz).hour(startHour).minute(59);
+    const foundEvents = schedule.filter(
       (event) => {
-        const startTime = dayjs(event.startTime);
-        const endTime = dayjs(event.endTime);
+        const startTime = getTzCorrectedDate(event.startTime, timezone);
+        const endTime = getTzCorrectedDate(event.endTime, timezone);
+        console.log(`Checking event: ${event.title} - ${startTime.format(DATE_TIME_FORMAT)} - ${endTime.format(DATE_TIME_FORMAT)} is in range: ${markerStartHour.format(DATE_TIME_FORMAT)} - ${markerEndHour.format(DATE_TIME_FORMAT)}`)
         // Check if the event starts in the range
         if (startTime.isSame(markerStartHour, 'hour')) return true;
         // Check if the event ends in the range, accounting for events that end on the hour
@@ -179,10 +183,15 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
         if (startTime.isBefore(markerStartHour) && endTime.isAfter(markerEndHour)) return true;
         return false;
       }
-    );
-    if (foundEvent) return foundEvent;
+    ).map(event => ({
+      ...event,
+      duration: event.duration ?? Math.abs(dayjs(event.endTime).diff(dayjs(event.startTime), 'minutes')),
+      start: getTzCorrectedDate(event.startTime, timezone),
+      end: getTzCorrectedDate(event.endTime, timezone),
+      allDay: event.allDay ? dayjs(event.allDay) : undefined
+    }));
 
-    return routineEventsByDay.find(event => {
+    const foundRoutineEvents = routineEventsByDay.filter(event => {
       // Check if the event starts in the range
       if (event.start.isSame(markerStartHour, 'hour')) return true;
       // Check if the event ends in the range, accounting for events that end on the hour
@@ -191,32 +200,55 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
       if (event.start.isBefore(markerStartHour) && event.end.isAfter(markerEndHour)) return true;
       return false;
     });
+    if (foundEvents.length <= 0 && foundRoutineEvents.length <= 0) return null;
+    return (foundEvents as ReadonlyArray<ExternalEvent<dayjs.Dayjs>>).concat(foundRoutineEvents as ReadonlyArray<ExternalEvent<dayjs.Dayjs>>);
   };
 
+  const eventsInHour: Record<string, Array<ExternalEvent<dayjs.Dayjs>>> = {};
   for (let i = 0; i <= maxHour; i++) {
-    const event = getEventInHourRange(i)
-    if (event && (event.duration ?? 0) < 60) {
-      console.log(`Event: ${JSON.stringify(event, null, 2)}`)
-      markerHeights.push(currentHeight);
-      currentHeight += HOUR_HEIGHT;
+    markerHeights.push(currentHeight);
+    const events = getEventsInHourRange(i)
+    console.log(`${i}: ${events ? events.length : 0} events`)
+    if (events && events.length > 0) {
+      eventsInHour[i] = events;
+      const shortEvent = events.find(event => event.duration && event.duration < 60);
+      if (shortEvent) {
+        currentHeight += HOUR_HEIGHT;
+      } else {
+        currentHeight += 60;
+      }
     } else {
-      markerHeights.push(currentHeight);
       currentHeight += 60;
     }
   }
   
-  const getEventPosition = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
+  const getEventPosition = (id: string, startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
+    console.log(`Getting event position for: ${startTime.format(DATE_TIME_FORMAT)} - ${endTime.format(DATE_TIME_FORMAT)}`)
     const hour = startTime.hour() < wakeUpHour ? startTime.hour() + 24 : startTime.hour();
-    const multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
+    let multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
+    const events = eventsInHour[hour];
+    if (events && events.length > 1) {
+      const event = events.find(event => event.id !== id && (event.duration ?? 60) < 60);
+      if (event) {
+        multiplier = HOUR_HEIGHT;
+      }
+    }
     return markerHeights[hour] + ((startTime.minute() / 60) * multiplier);
   };
 
-  const getEventHeight = (startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
+  const getEventHeight = (id: string, startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
     const startInMinutes = (startTime.hour() * 60) + startTime.minute();
     const startsAfterMidnight = startTime.hour() < wakeUpHour;
     const endsAfterMidnight = endTime.hour() < wakeUpHour;
     const endInMinutes = (endsAfterMidnight && !startsAfterMidnight ? (24 + endTime.hour()) * 60 : endTime.hour() * 60) + endTime.minute();
-    const multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
+    let multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
+    const events = eventsInHour[startTime.hour()];
+    if (events && events.length > 1) {
+      const event = events.find(event => event.id !== id && (event.duration ?? 60) < 60);
+      if (event) {
+        multiplier = HOUR_HEIGHT
+      }
+    }
     return ((endInMinutes - startInMinutes) / 60) * multiplier;
   };
 
@@ -224,13 +256,13 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const events: Array<ViewFieldsWithCalendarEvent | ViewFieldsWithExternalEvent> = [];
   for (const event of schedule ?? []) {
     if (!event.allDay && event.startTime && event.endTime) {
-      const startTime = dayjs.utc(event.startTime).tz(timezone);
-      const endTime = dayjs.utc(event.endTime).tz(timezone);
+      const startTime = getTzCorrectedDate(event.startTime, timezone);
+      const endTime = getTzCorrectedDate(event.endTime, timezone);
       const viewFields = {
         hours: startTime.hour(),
         minutes: startTime.minute(),
-        top: getEventPosition(startTime, endTime),
-        height: getEventHeight(startTime, endTime),
+        top: getEventPosition(event.id, startTime, endTime),
+        height: getEventHeight(event.id, startTime, endTime),
         left: 0
       };
       binarySearchInsert(events, { event, viewFields }, (a, b) => a.viewFields.top - b.viewFields.top);
@@ -242,8 +274,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     const viewFields = {
       hours: event.start.hour(),
       minutes: event.start.minute(),
-      top: getEventPosition(event.start, event.end),
-      height: getEventHeight(event.start, event.end),
+      top: getEventPosition(event.id, event.start, event.end),
+      height: getEventHeight(event.id, event.start, event.end),
       left: 0
     };
     binarySearchInsert(events, { event, viewFields }, (a, b) => a.viewFields.top - b.viewFields.top);
@@ -367,8 +399,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
             <div className="absolute left-[100px] lg:left-[117px] right-0 lg:right-2">
               {events.map((event, index) => {
                 const routineEvent = isRoutineEvent(event);
-                const startTime = routineEvent ? event.event.start : dayjs.utc(event.event.startTime).tz(timezone);
-                const endTime = routineEvent ? event.event.end : dayjs.utc(event.event.endTime).tz(timezone);
+                const startTime = routineEvent ? event.event.start : getTzCorrectedDate(event.event.startTime, timezone);
+                const endTime = routineEvent ? event.event.end : getTzCorrectedDate(event.event.endTime, timezone);
                 if (routineEvent) {
                   return (
                     <div
@@ -477,8 +509,8 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
     return (
       <ScrollArea className="h-[500px] lg:h-[576px] pt-4 pr-4 w-full">
         {schedule.map(event => {
-          const startTime = dayjs(event.startTime);
-          const endTime = dayjs(event.endTime);
+          const startTime = getTzCorrectedDate(event.startTime, timezone);
+          const endTime = getTzCorrectedDate(event.endTime, timezone);
           return (
             <Credenza key={event.id} open={modalOpen[event.id]} onOpenChange={(open) => setModalOpen({ ...modalOpen, [event.id]: open })}>
               <CredenzaTrigger className="w-full">

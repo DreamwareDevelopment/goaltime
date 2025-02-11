@@ -15,7 +15,7 @@ import GoalCreationButton from '../../components/GoalCreationButton'
 import { WelcomeCard } from '../../components/WelcomeCard'
 import { LogoButton } from '../../components/ActionButtons/LogoButton'
 import { getNextFullSync } from '@/server-utils/inngest'
-import { dayjs } from '@/shared/utils'
+import { DATE_TIME_FORMAT, dayjs } from '@/shared/utils'
 import { getAggregateTimeByGoal, getSchedule } from '@/libs/server-utils/src/queries/calendar'
 import { Paywall } from '../../components/Paywall'
 import { WebsocketConsumer } from '../../components/data/websocketConsumer'
@@ -31,13 +31,15 @@ export default async function Dashboard() {
     redirect('/welcome')
   }
 
-  const now = dayjs().utc(false)
+  const now = dayjs().utc(false).tz(profile.timezone)
   const getAggregates = async () => {
     if (!googleAuth?.lastFullSyncAt) {
       return {} as Record<string, number>
     }
     const nextFullSync = getNextFullSync(now, profile.timezone)
-    return await getAggregateTimeByGoal(user.id, now, nextFullSync.endOf('day'))
+    console.log(`Aggregate period: ${now.format(DATE_TIME_FORMAT)} - ${nextFullSync.format(DATE_TIME_FORMAT)}`)
+    console.log(`Aggregate period UTC: ${now.utc().format(DATE_TIME_FORMAT)} - ${nextFullSync.utc().format(DATE_TIME_FORMAT)}`)
+    return await getAggregateTimeByGoal(user.id, now.utc(), nextFullSync.utc())
   }
   const [goals, goalAggregates, notifications, schedule] = await Promise.all([
     getGoals(profile),

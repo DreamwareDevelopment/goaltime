@@ -31,7 +31,10 @@ interface CalendarEventsIterationResult {
 
 type CalendarSyncAction = "refresh" | "full-sync";
 
-export function getNextFullSync(lastFullSync: dayjs.Dayjs, timezone: string): dayjs.Dayjs {
+export function getNextFullSync(lastFullSync: dayjs.Dayjs, timezone?: string): dayjs.Dayjs {
+  if (!timezone) {
+    return lastFullSync.day(7).hour(15).minute(30);
+  }
   return lastFullSync.tz(timezone).day(7).hour(15).minute(30);
 }
 
