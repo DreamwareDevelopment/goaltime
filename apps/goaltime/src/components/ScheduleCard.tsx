@@ -67,9 +67,9 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   const day = dayjs(date).utc(false);
   const routine = getProfileRoutine(profile);
   const sleepRoutine = getSleepRoutineForDay(routine, day);
-  const dayTz = getTzCorrectedDate(day, timezone);
+  const dayTz = day.tz(timezone);
   const dateString = dayTz.format(DATE_FORMAT);
-  const now = getTzCorrectedDate(dayjs(), timezone);
+  const now = dayjs().tz(timezone);
   console.log(`Now: ${now.format(DATE_TIME_FORMAT)}`)
   console.log(`Day: ${day.format(DATE_TIME_FORMAT)}`)
   console.log(`DayString: ${day.format('dddd')}`)
