@@ -237,19 +237,45 @@ export const ScheduleCard = ({ className }: React.HTMLAttributes<HTMLDivElement>
   };
 
   const getEventHeight = (id: string, startTime: dayjs.Dayjs, endTime: dayjs.Dayjs) => {
-    const startInMinutes = (startTime.hour() * 60) + startTime.minute();
-    const startsAfterMidnight = startTime.hour() < wakeUpHour;
-    const endsAfterMidnight = endTime.hour() < wakeUpHour;
-    const endInMinutes = (endsAfterMidnight && !startsAfterMidnight ? (24 + endTime.hour()) * 60 : endTime.hour() * 60) + endTime.minute();
-    let multiplier = Math.abs(endTime.diff(startTime, 'minutes')) < 60 ? HOUR_HEIGHT : 60;
-    const events = eventsInHour[startTime.hour()];
-    if (events && events.length > 1) {
-      const event = events.find(event => event.id !== id && (event.duration ?? 60) < 60);
-      if (event) {
-        multiplier = HOUR_HEIGHT
+    const duration = Math.abs(endTime.diff(startTime, 'minutes'));
+    if (duration < 60) {
+      return (duration / 60) * HOUR_HEIGHT;
+    }
+    let size = 0;
+    if (startTime.hour() === endTime.hour()) {
+      const events = eventsInHour[startTime.hour()];
+      if (events && events.length > 1) {
+        const event = events.find(event => event.id !== id && (event.duration ?? 60) < 60);
+        if (event) {
+          return (duration / 60) * HOUR_HEIGHT;
+        } else {
+          return duration;
+        }
+      } else {
+        return duration;
       }
     }
-    return ((endInMinutes - startInMinutes) / 60) * multiplier;
+    const adjustedEndHour = endTime.hour() < startTime.hour() ? endTime.hour() + 24 : endTime.hour();
+    for (let i = startTime.hour(); i <= adjustedEndHour; i++) {
+      const events = eventsInHour[i];
+      let minutesInHour = 60;
+      if (i === startTime.hour()) {
+        minutesInHour = 60 - startTime.minute();
+      } else if (i === adjustedEndHour) {
+        minutesInHour = endTime.minute();
+      }
+      if (events && events.length > 1) {
+        const event = events.find(event => event.id !== id && (event.duration ?? 60) < 60);
+        if (event) {
+          size += (minutesInHour / 60) * HOUR_HEIGHT;
+        } else {
+          size += minutesInHour;
+        }
+      } else {
+        size += minutesInHour;
+      }
+    }
+    return size;
   };
 
   const allDayEvents: CalendarEvent[] = [];
